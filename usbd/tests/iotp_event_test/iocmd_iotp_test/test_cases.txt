@@ -1,0 +1,100 @@
+/** ---------------------------------------- LICENSE SECTION -------------------------------------------------------------------
+ *
+ * Copyright (c) 2024 Piotr Wojtowicz
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * -----------------------------------------------------------------------------------------------------------------------------
+ */
+
+without DMA:
+IN:
+done - test send irq - incremental size in range 0 - n
+done - test send irq - random size in range 0 - n
+done - test send 1 connected transaction irq - incremental size in range 1 - n
+done - test send 2 connected transactions irq - incremental size in range 1 - n
+NOT  - test send irq - interrupted by OUT status - CONTROL ONLY - incremental size in range 0 - n
+NOT  - test send irq - interrupted by SETUP - CONTROL ONLY - incremental size in range 0 - n
+done - test send irq - aborted by user - incremental size in range 0 - n
+done - test send irq - aborted by port(reconfigure) - incremental size in range 0 - n
+done - test send status 
+
+OUT:
+done - test recv and ready irq - incremental size in range 0 - n
+done - test recv and ready irq - random size in range 0 - n
+done - test recv and wait irq - incremental size in range 0 - n
+done - test recv and wait irq - random size in range 0 - n
+done - test recv and ready irq - incremental size in range 0 - n
+done - test recv and ready irq - random size in range 0 - n
+done - test recv and wait irq - incremental size in range 0 - n
+done - test recv and wait irq - random size in range 0 - n
+done - test recv 2 connected transactions irq - incremental size in range 1 - n
+done - test recv 3 connected transactions irq - incremental size in range 1 - n
+done - test recv and ready on irq - incremental size in range 0 - n
+done - test recv and wait on irq - incremental size in range 0 - n
+done - test recv and ready irq too less space - incremental size in range 0 - n
+done - test recv and ready irq too less space - random size in range 0 - n
+done - test recv and wait irq too less space - incremental size in range 0 - n
+done - test recv and wait irq too less space - random size in range 0 - n
+done - test recv and ready irq - msg shorten than declared - incremental size in range 0 - n
+done - test recv and ready irq - msg shorten than declared - random size in range 0 - n
+done - test recv and wait irq - msg shorten than declared - incremental size in range 0 - n
+done - test recv and wait irq - msg shorten than declared - random size in range 0 - n
+done - test recv 2 connected transactions irq - msg shorten than declared - incremental size in range 1 - n
+done - test recv 3 connected transactions irq - msg shorten than declared - incremental size in range 1 - n
+done - test recv and ready irq - aborted by user - incremental size in range 0 - n
+done - test recv and wait irq - aborted by user - incremental size in range 0 - n
+done - test recv and ready irq - aborted by port(reconfigure) - incremental size in range 0 - n
+done - test recv and wait irq - aborted by port(reconfigure) - incremental size in range 0 - n
+NOT  - test recv and ready irq - interrupted by SETUP - CONTROL ONLY - incremental size in range 0 - n
+NOT  - test recv and ready irq - interrupted by SETUP - CONTROL ONLY - random size in range 0 - n
+NOT  - test recv and wait irq - interrupted by SETUP - CONTROL ONLY - incremental size in range 0 - n
+NOT  - test recv and wait irq - interrupted by SETUP - CONTROL ONLY - random size in range 0 - n
+
+DMA:
+IN:
+done - test send irq dma - incremental size in range 0 - n
+done - test send irq dma - random size in range 0 - n
+done - test send 1 connected transaction irq - incremental size in range 1 - n
+done - test send 2 connected transactions irq - incremental size in range 1 - n
+NOT  - test send irq dma - interrupted by OUT status - CONTROL ONLY - incremental size in range 0 - n
+NOT  - test send irq - interrupted by SETUP - CONTROL ONLY - incremental size in range 0 - n
+done - test send irq dma - aborted by user - incremental size in range 0 - n
+done - test send irq dma - aborted by port(reconfigure) - incremental size in range 0 - n
+
+OUT:
+done - test recv and ready irq dma - incremental size in range 0 - n
+done - test recv and ready irq dma - random size in range 0 - n
+done - test recv and wait irq dma - incremental size in range 0 - n
+done - test recv and wait irq dma - random size in range 0 - n
+done - test recv 2 connected transactions irq dma - incremental size in range 1 - n
+done - test recv and ready irq dma - msg shorten than declared - incremental size in range 0 - n
+done - test recv and ready irq dma - msg shorten than declared - random size in range 0 - n
+done - test recv and wait irq dma - msg shorten than declared - incremental size in range 0 - n
+done - test recv and wait irq dma - msg shorten than declared - random size in range 0 - n
+done - test recv 2 connected transactions irq dma - msg shorten than declared - incremental size in range 1 - n
+done - test recv 3 connected transactions irq dma - msg shorten than declared - incremental size in range 1 - n
+half - test recv and ready irq dma - aborted by user - incremental size in range 0 - n
+half - test recv and wait irq dma - aborted by user - incremental size in range 0 - n
+half - test recv and ready irq dma - aborted by port(reconfigure) - incremental size in range 0 - n
+half - test recv and wait irq dma - aborted by port(reconfigure) - incremental size in range 0 - n
+NOT  - test recv and ready irq dma - interrupted by SETUP - CONTROL ONLY - incremental size in range 0 - n
+NOT  - test recv and ready irq dma - interrupted by SETUP - CONTROL ONLY - random size in range 0 - n
+NOT  - test recv and wait irq dma - interrupted by SETUP - CONTROL ONLY - incremental size in range 0 - n
+NOT  - test recv and wait irq dma - interrupted by SETUP - CONTROL ONLY - random size in range 0 - n
