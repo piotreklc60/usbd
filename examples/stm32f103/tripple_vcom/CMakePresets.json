@@ -1,0 +1,35 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "hidden": true,
+            "name": "arm-none-eabi",
+            "cacheVariables":
+            {
+                "COMPILER_PATH": "/usr/gcc_arm/bin/",
+                "REMOVE_UNUSED_CODE": "true",
+                "REMOVE_PATHS_FROM_SYMBOLS": "true"
+            }
+        },
+        {
+            "name": "zet6",
+            "inherits": ["arm-none-eabi"],
+            "cacheVariables":
+            {
+                "VARIANT_DIR": "zet6",
+                "VENDOR_ID":  "???",
+                "PRODUCT_ID": "???"
+            }
+        },
+        {
+            "name": "rbt6",
+            "inherits": ["arm-none-eabi"],
+            "cacheVariables":
+            {
+                "VARIANT_DIR": "rbt6",
+                "VENDOR_ID":  "???",
+                "PRODUCT_ID": "???"
+            }
+        }
+    ]
+}
