@@ -56,10 +56,10 @@
 
 /* USB clock source */
 #ifndef RCC_USBCLKSource_PLLCLK_1Div5
-#define RCC_USBCLKSource_PLLCLK_1Div5   ((u8)0x00)
+#define RCC_USBCLKSource_PLLCLK_1Div5   ((uint8_t)0x00)
 #endif
 #ifndef RCC_USBCLKSource_PLLCLK_Div1
-#define RCC_USBCLKSource_PLLCLK_Div1    ((u8)0x01)
+#define RCC_USBCLKSource_PLLCLK_Div1    ((uint8_t)0x01)
 #endif
 
 

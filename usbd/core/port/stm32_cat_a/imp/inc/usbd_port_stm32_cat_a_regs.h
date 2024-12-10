@@ -336,7 +336,7 @@ typedef union
    port_stm32_cat_a_print_ep_reg_state("<- ", (_after), __LINE__, (_ep_reg_num))
 
 #ifndef RCC_APB1Periph_USB
-#define RCC_APB1Periph_USB            ((u32)0x00800000)
+#define RCC_APB1Periph_USB            ((uint32_t)0x00800000)
 #endif
 
 #ifndef USBD_STM32_CAT_A_RESET_AND_ENABLE_PERIPH
