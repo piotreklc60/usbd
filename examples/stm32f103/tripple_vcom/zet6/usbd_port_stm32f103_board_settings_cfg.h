@@ -55,7 +55,7 @@
 #define USBD_Port_STM32F103_Vbus_IrqHandler     EXTI4_IRQHandler
 
 /* USB clock source */
-#ifnded RCC_USBCLKSource_PLLCLK_1Div5
+#ifndef RCC_USBCLKSource_PLLCLK_1Div5
 #define RCC_USBCLKSource_PLLCLK_1Div5   ((u8)0x00)
 #endif
 #ifndef RCC_USBCLKSource_PLLCLK_Div1
