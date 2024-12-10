@@ -36,8 +36,9 @@ USBD_CORE_USBD_REQUEST_PATH = $(USBD_CORE_USBD_ELEMENTS_PATH)/usbd_request/
 USBD_CORE_USBD_IO_PATH = $(USBD_CORE_USBD_ELEMENTS_PATH)/usbd_io/
 USBD_CORE_USBD_EVENT_PATH = $(USBD_CORE_USBD_ELEMENTS_PATH)/usbd_event/
 USBD_CORE_USBDC_PATH = $(USBD_CORE_USBD_ELEMENTS_PATH)/usbdc/
-IOCMD_PATH = ./../../../../../../lib/my_lib/iocmd/github/iocmd/iocmd/
-BUFF_PATH = ./../../../../../../lib/my_lib/buff/1/
+DEPEDENCIES_PATH = $(USBD_PATH)/../examples/depedencies/
+IOCMD_PATH = $(DEPEDENCIES_PATH)/iocmd/iocmd/
+BUFF_PATH = $(DEPEDENCIES_PATH)/buff/
 
 UINCDIR =  -I $(APP_THIS_PATH)
 UINCDIR += -I $(TEST_HELPERS_PATH)

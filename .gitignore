@@ -1,6 +1,9 @@
 /examples/stm32f103/tripple_vcom/common/FreeRTOS
 /examples/stm32f103/tripple_vcom/common/STM32F10xFWLib
 /examples/stm32f103/tripple_vcom/common/system_tools
+/examples/depedencies/buff
+/examples/depedencies/iocmd
+/examples/stm32f103/tripple_vcom/build
 
 *.ld
 *.S

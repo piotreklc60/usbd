@@ -37,16 +37,9 @@ USBD_CORE_USBD_EVENT_PATH = $(USBD_CORE_USBD_ELEMENTS_PATH)/usbd_event
 USBD_CORE_USBDC_PATH = $(USBD_CORE_USBD_ELEMENTS_PATH)/usbdc
 USBD_PORT_PATH = $(USBD_PATH)/core/port
 USBD_PORT_TEST_PATH = $(USBD_PORT_PATH)/test
-IOCMD_PATH = ./../../../../../../lib/my_lib/iocmd/github/iocmd/iocmd/
-BUFF_PATH = ./../../../../../../lib/my_lib/buff/1/
-
-#USBD_CORE_USBD_SRC_PATH = $(USBD_PATH)/core/core/core_elements/usbd/src/
-#USBD_CORE_USBDC_INC_PATH = $(USBD_PATH)/core/core/core_elements/usbdc/inc/
-#USBD_CORE_USBDC_SRC_PATH = $(USBD_PATH)/core/core/core_elements/usbdc/src/
-#USBD_CORE_USBDP_INC_PATH = $(USBD_PATH)/core/core/core_elements/usbdp/inc/
-#USBD_CORE_USBDP_SRC_PATH = $(USBD_PATH)/core/core/core_elements/usbdp/src/
-#USBD_CORE_USBDTP_EVENT_INC_PATH = $(USBD_PATH)/core/core/core_elements/usbdtp/event/inc/
-#USBD_CORE_USBDTP_EVENT_SRC_PATH = $(USBD_PATH)/core/core/core_elements/usbdtp/event/src/
+DEPEDENCIES_PATH = $(USBD_PATH)/../examples/depedencies/
+IOCMD_PATH = $(DEPEDENCIES_PATH)/iocmd/iocmd/
+BUFF_PATH = $(DEPEDENCIES_PATH)/buff/
 
 UINCDIR =  -I $(APP_THIS_PATH)
 UINCDIR += -I $(TEST_HELPERS_PATH)

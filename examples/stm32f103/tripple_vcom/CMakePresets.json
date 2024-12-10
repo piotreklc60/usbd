@@ -17,8 +17,8 @@
             "cacheVariables":
             {
                 "VARIANT_DIR": "zet6",
-                "VENDOR_ID":  "???",
-                "PRODUCT_ID": "???"
+                "VENDOR_ID":  "0x0483",
+                "PRODUCT_ID": "0x5740"
             }
         },
         {
@@ -27,8 +27,8 @@
             "cacheVariables":
             {
                 "VARIANT_DIR": "rbt6",
-                "VENDOR_ID":  "???",
-                "PRODUCT_ID": "???"
+                "VENDOR_ID":  "0x0483",
+                "PRODUCT_ID": "0x5740"
             }
         }
     ]
