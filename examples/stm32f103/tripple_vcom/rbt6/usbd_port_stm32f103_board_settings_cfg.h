@@ -54,6 +54,14 @@
 #define USBD_VBUS_EXTI_IRQChannel               EXTI9_5_IRQChannel
 #define USBD_Port_STM32F103_Vbus_IrqHandler     EXTI9_5_IRQHandler
 
+/* USB clock source */
+#ifnded RCC_USBCLKSource_PLLCLK_1Div5
+#define RCC_USBCLKSource_PLLCLK_1Div5   ((u8)0x00)
+#endif
+#ifndef RCC_USBCLKSource_PLLCLK_Div1
+#define RCC_USBCLKSource_PLLCLK_Div1    ((u8)0x01)
+#endif
+
 
 #define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_Div1
 //#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_1Div5

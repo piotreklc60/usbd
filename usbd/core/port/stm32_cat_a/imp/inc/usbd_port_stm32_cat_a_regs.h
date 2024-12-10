@@ -37,7 +37,7 @@
 #ifndef USBD_PORT_STM32_CAT_A_REGS_H_
 #define USBD_PORT_STM32_CAT_A_REGS_H_
 
-#include <stdint.h>
+#include "std_libs.h"
 
 
 /*  non-USB part - taken from STM32 libs */
@@ -335,7 +335,11 @@ typedef union
    port_stm32_cat_a_print_ep_reg_state("-> ", (_before), __LINE__, (_ep_reg_num));\
    port_stm32_cat_a_print_ep_reg_state("<- ", (_after), __LINE__, (_ep_reg_num))
 
+#ifndef RCC_APB1Periph_USB
+#define RCC_APB1Periph_USB            ((u32)0x00800000)
+#endif
 
+#ifndef USBD_STM32_CAT_A_RESET_AND_ENABLE_PERIPH
 #define USBD_STM32_CAT_A_RESET_AND_ENABLE_PERIPH() \
 { \
    /* turn ON USBD peripherial clock */                           \
@@ -361,15 +365,18 @@ typedef union
    USBD_STM32_REG->ISTR = 0;                                      \
                                                                   \
    /* enable interruption from host reset */                      \
-   USBD_STM32_REG->CNTR = USBD_STM32_CAT_A_CNTR_RESETM;             \
+   USBD_STM32_REG->CNTR = USBD_STM32_CAT_A_CNTR_RESETM;           \
 }
 
+#endif
+
+#ifndef USBD_STM32_CAT_A_DISABLE
 #define USBD_STM32_CAT_A_DISABLE() \
 { \
     /* disable all interruptions, forces peripheral reset */      \
     /* and turns OFF transceiver */                               \
    USBD_STM32_REG->CNTR =                                         \
-      USBD_STM32_CAT_A_CNTR_PDWN | USBD_STM32_CAT_A_CNTR_FRES;        \
+      USBD_STM32_CAT_A_CNTR_PDWN | USBD_STM32_CAT_A_CNTR_FRES;    \
                                                                   \
    /* enable peripherial reset on APB bus layer */                \
    STM32_RCC->APB1RSTR |= RCC_APB1Periph_USB;                     \
@@ -381,6 +388,7 @@ typedef union
    STM32_RCC->APB1ENR &= ~RCC_APB1Periph_USB;                     \
 }
 
+#endif
+
 
 #endif /*USBD_PORT_STM32_CAT_A_REGS_H_*/
-
