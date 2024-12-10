@@ -758,6 +758,9 @@ static void USBD_IOTP_BUFF_process_extension_on_write(
 static void USBD_IOTP_BUFF_extension_on_write(
    Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, bool_t rewind_occured)
 {
+   USBD_UNUSED_PARAM(size);
+   USBD_UNUSED_PARAM(rewind_occured);
+
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
    USBD_IOTP_BUFF_process_extension_on_write(buf, extension, USBD_TRUE);
@@ -768,6 +771,9 @@ static void USBD_IOTP_BUFF_extension_on_write(
 static void USBD_IOTP_BUFF_extension_on_write_connect_memcpy_only(
    Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, bool_t rewind_occured)
 {
+   USBD_UNUSED_PARAM(size);
+   USBD_UNUSED_PARAM(rewind_occured);
+
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
    USBD_IOTP_BUFF_process_extension_on_write(buf, extension, USBD_FALSE);
@@ -1147,6 +1153,9 @@ static void USBD_IOTP_BUFF_extension_on_read_remove(Buff_Ring_XT *buf, Buff_Ring
 static void USBD_IOTP_BUFF_extension_on_read(
    Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, bool_t rewind_occured)
 {
+   USBD_UNUSED_PARAM(size);
+   USBD_UNUSED_PARAM(rewind_occured);
+
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
    USBD_IOTP_BUFF_extension_on_read_remove(buf, extension);
@@ -1156,6 +1165,8 @@ static void USBD_IOTP_BUFF_extension_on_read(
 
 static void USBD_IOTP_BUFF_extension_on_remove(Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, bool_t rewind_occured)
 {
+   USBD_UNUSED_PARAM(rewind_occured);
+
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
    USBD_IOTP_BUFF_extension_on_read_remove(buf, extension);
@@ -1183,7 +1194,7 @@ static Buff_Size_DT USBD_IOTP_BUFF_vendor_memcpy_out(const Buff_Memcpy_Params_XT
 
    if(params->is_last_part)
    {
-      if(params->size >= vendor_data->out_left_data_size)
+      if(params->size >= (Buff_Size_DT)(vendor_data->out_left_data_size))
       {
          is_last_part = USBD_TRUE;
       }
@@ -1682,6 +1693,10 @@ static void USBD_IOTP_BUFF_io_abort(void *tp_params, USBD_IO_UP_DOWN_Transaction
  */
 static void USBD_IOTP_BUFF_io_error(void *tp_params, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_IO_Inout_Data_Size_DT size)
 {
+#if(USBD_FEATURE_PRESENT != USBD_IOTP_BUFF_USE_UP_LINK)
+   USBD_UNUSED_PARAM(size);
+#endif
+
    USBD_IOTP_BUFF_Params_XT *tp = (USBD_IOTP_BUFF_Params_XT*)tp_params;
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
@@ -1890,6 +1905,10 @@ static void USBD_IOTP_BUFF_proc_event(USBD_IOTP_BUFF_Params_XT *tp, uint8_t req)
 static USBD_Bool_DT USBD_IOTP_BUFF_trigger_in(
    USBD_IOTP_BUFF_Params_XT *tp, Buff_Ring_Extensions_XT *extension, USBD_Params_XT *usbd, uint8_t ep_num, USBD_Bool_DT call_trigger)
 {
+#if(USBD_FEATURE_PRESENT != USBD_IOTP_BUFF_USE_UP_LINK)
+   USBD_UNUSED_PARAM(tp);
+#endif
+
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
@@ -1981,6 +2000,10 @@ static void USBD_IOTP_BUFF_event(
    USBD_IOTP_BUFF_Params_XT *tp;
    uint8_t ep_num;
    uint8_t req;
+
+   USBD_UNUSED_PARAM(usbdc);
+   USBD_UNUSED_PARAM(event_params);
+   USBD_UNUSED_PARAM(reason);
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
 

@@ -190,6 +190,9 @@ static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_D
    USBD_REQUEST_Req_DT req;
    uint8_t addr;
 
+   USBD_UNUSED_PARAM(dir);
+   USBD_UNUSED_PARAM(size);
+
    USBD_ENTER_FUNC(USBD_DBG_REQ_PROCESSING);
 
    if(USBD_CHECK_PTR(void, tp))

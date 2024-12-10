@@ -148,6 +148,10 @@
 #define USBD_INVALIDATE_HANDLER(type, handler)                    (handler) = USBD_MAKE_INVALID_HANDLER(type)
 #endif
 
+#ifndef USBD_UNUSED_PARAM
+#define USBD_UNUSED_PARAM(param)                                  (void)(param)
+#endif
+
 #ifndef USBD_USE_INVALIDATION_ON_INIT
 #define USBD_USE_INVALIDATION_ON_INIT                             USBD_FEATURE_PRESENT
 #endif

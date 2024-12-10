@@ -565,6 +565,8 @@ static USBD_Bool_DT port_stm32_cat_a_dev_parse_cfg(
    uint8_t num_ocupied_registers;
    USBD_Bool_DT result = USBD_TRUE;
 
+   USBD_UNUSED_PARAM(details);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
    bulk_eps_num_bufs = 2;
@@ -658,6 +660,8 @@ static USBD_DEV_Speed_ET port_stm32_cat_a_dev_get_supported_speed(USBD_Params_XT
 {
    USBD_DEV_Speed_ET result;
 
+   USBD_UNUSED_PARAM(usbd);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
    result = USBD_DEV_FULL_SPEED;
@@ -669,6 +673,8 @@ static USBD_DEV_Speed_ET port_stm32_cat_a_dev_get_supported_speed(USBD_Params_XT
 
 static USBD_DEV_Speed_ET port_stm32_cat_a_dev_get_current_speed(USBD_Params_XT *usbd)
 {
+   USBD_UNUSED_PARAM(usbd);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
@@ -678,6 +684,8 @@ static USBD_DEV_Speed_ET port_stm32_cat_a_dev_get_current_speed(USBD_Params_XT *
 
 static uint16_t port_stm32_cat_a_dev_get_dev_status(USBD_Params_XT *usbd)
 {
+   USBD_UNUSED_PARAM(usbd);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
@@ -688,6 +696,8 @@ static uint16_t port_stm32_cat_a_dev_get_dev_status(USBD_Params_XT *usbd)
 static uint16_t port_stm32_cat_a_dev_get_frame_nr(USBD_Params_XT *usbd)
 {
    uint16_t result;
+
+   USBD_UNUSED_PARAM(usbd);
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
@@ -700,6 +710,8 @@ static uint16_t port_stm32_cat_a_dev_get_frame_nr(USBD_Params_XT *usbd)
 
 static const USB_Endpoint_Desc_DT* port_stm32_cat_a_dev_get_ep0_desc(USBD_Params_XT* usbd)
 {
+   USBD_UNUSED_PARAM(usbd);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
@@ -794,6 +806,13 @@ static void port_stm32_cat_a_check_out_on_delay(void)
 
 static void port_stm32_cat_a_print_ep_reg_state(const char *desc, uint32_t reg, uint16_t line, uint8_t ep_reg_num)
 {
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(desc);
+   USBD_UNUSED_PARAM(reg);
+   USBD_UNUSED_PARAM(line);
+   USBD_UNUSED_PARAM(ep_reg_num);
+#endif
+
 #ifdef IOCMD__LINE__LOCAL
 #undef IOCMD__LINE__LOCAL
 #endif
@@ -821,7 +840,10 @@ static void port_stm32_cat_a_print_ep_reg_state(const char *desc, uint32_t reg, 
 
 void USBD_Port_STM32_CAT_A_Print_HW_Dump(const char *desc, uint16_t line)
 {
-#ifdef USBD_USE_IOCMD
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(desc);
+   USBD_UNUSED_PARAM(line);
+#else
    USBDEP_STM32_CAT_A_Mem_Descriptor *mem = USBD_STM32_EPMEM;
    uint32_t reg;
    uint_fast8_t ep_reg_num;
@@ -1985,6 +2007,10 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_in_provide(
    port_stm32_cat_a_io_ep_XT *ep;
    USBD_IO_Inout_Data_Size_DT result = 0;
 
+   USBD_UNUSED_PARAM(usbd);
+   USBD_UNUSED_PARAM(dir);
+   USBD_UNUSED_PARAM(is_last_part);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
    if((ep_num < USBD_MAX_NUM_ENDPOINTS) && USBD_CHECK_PTR(void, data))
@@ -2026,6 +2052,9 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_in_provide(
 static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_in_memcpy(
    USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, const void *data, USBD_IO_Inout_Data_Size_DT size, USBD_Bool_DT is_last_part)
 {
+   USBD_UNUSED_PARAM(usbd);
+   USBD_UNUSED_PARAM(dir);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
    size = port_stm32_cat_a_io_data_in_process_bufs(&port_stm32_cat_a_io_ep[ep_num], data, size, is_last_part);
@@ -2042,6 +2071,10 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_out_provide(
 {
    port_stm32_cat_a_io_ep_XT *ep;
    USBD_IO_Inout_Data_Size_DT result = 0;
+
+   USBD_UNUSED_PARAM(usbd);
+   USBD_UNUSED_PARAM(dir);
+   USBD_UNUSED_PARAM(is_last_part);
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
@@ -2076,6 +2109,9 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_out_provide(
 static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_out_memcpy(
    USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, void *data, USBD_IO_Inout_Data_Size_DT size, USBD_Bool_DT is_last_part)
 {
+   USBD_UNUSED_PARAM(usbd);
+   USBD_UNUSED_PARAM(dir);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
    size = port_stm32_cat_a_process_data_out(&port_stm32_cat_a_io_ep[ep_num], data, size, is_last_part);
@@ -2280,6 +2316,12 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_get_ep_in_buffered_size(US
 
 static void port_stm32_cat_a_io_stall(USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir)
 {
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(usbd);
+   USBD_UNUSED_PARAM(ep_num);
+   USBD_UNUSED_PARAM(dir);
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
    USBD_EMERG_3(USBD_DBG_PORT_IO, "EP: %d; dir: %3s - %s", ep_num, (USB_EP_DIRECTION_OUT == dir) ? "OUT" : "IN", "STALL");
@@ -2293,6 +2335,8 @@ static void port_stm32_cat_a_io_abort(USBD_Params_XT *usbd, uint8_t ep_num, USB_
    uint32_t temp;
    uint32_t temp_before;
    uint32_t temp_after;
+
+   USBD_UNUSED_PARAM(usbd);
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
@@ -2358,6 +2402,9 @@ static void port_stm32_cat_a_io_halt(
    uint16_t mps;
    uint8_t ep_type;
    uint8_t num;
+
+   USBD_UNUSED_PARAM(usbd);
+   USBD_UNUSED_PARAM(ep_desc);
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO_ONOFF);
 
@@ -3046,6 +3093,9 @@ static void port_stm32_cat_a_req_process_incomming_setup(uint8_t ep_num, uint8_t
 
 static USBD_Bool_DT port_stm32_cat_a_req_set_address (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req)
 {
+   USBD_UNUSED_PARAM(usbd);
+   USBD_UNUSED_PARAM(ep_num);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_REQ);
 
    if(USBD_CHECK_PTR(USBD_REQUEST_Req_DT, req))
@@ -3061,6 +3111,10 @@ static USBD_Bool_DT port_stm32_cat_a_req_set_address (USBD_Params_XT *usbd, uint
 
 static USBD_Bool_DT port_stm32_cat_a_req_set_configuration (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req)
 {
+   USBD_UNUSED_PARAM(usbd);
+   USBD_UNUSED_PARAM(ep_num);
+   USBD_UNUSED_PARAM(req);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_REQ);
 
    port_stm32_cat_a_req_params.set_configuration_ongoing = USBD_TRUE;
@@ -3072,6 +3126,9 @@ static USBD_Bool_DT port_stm32_cat_a_req_set_configuration (USBD_Params_XT *usbd
 
 static USBD_Bool_DT port_stm32_cat_a_req_set_interface (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req)
 {
+   USBD_UNUSED_PARAM(usbd);
+   USBD_UNUSED_PARAM(ep_num);
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_REQ);
 
    if(USBD_CHECK_PTR(USBD_Params_XT, port_stm32_cat_a_usbd) && USBD_CHECK_PTR(USBD_REQUEST_Req_DT, req))

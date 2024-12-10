@@ -84,6 +84,9 @@ static void CDC_VCOM_send_notif_done(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direc
    USBD_IOTP_EVENT_Params_XT *tp_in;
    CDC_VCOM_Params_XT *cdc_vcom;
 
+   USBD_UNUSED_PARAM(dir);
+   USBD_UNUSED_PARAM(size);
+
    USBD_ENTER_FUNC(CDC_VCOM_EVENT);
 
    if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp))
@@ -115,6 +118,9 @@ static void CDC_VCOM_on_ready_send_status(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_
 {
    USBD_Params_XT *usbd;
    USBD_IOTP_EVENT_Params_XT *tp_in;
+
+   USBD_UNUSED_PARAM(dir);
+   USBD_UNUSED_PARAM(size);
 
    USBD_ENTER_FUNC(CDC_VCOM_REQ);
 
@@ -153,6 +159,9 @@ static void CDC_VCOM_on_ready_params_change(USBD_IOTP_EVENT_Params_XT *tp, USB_E
    CDC_VCOM_Params_XT *cdc_vcom;
    USBD_Params_XT *usbd;
    USBD_IOTP_EVENT_Params_XT *tp_in;
+
+   USBD_UNUSED_PARAM(dir);
+   USBD_UNUSED_PARAM(size);
 
    USBD_ENTER_FUNC(CDC_VCOM_REQ);
 

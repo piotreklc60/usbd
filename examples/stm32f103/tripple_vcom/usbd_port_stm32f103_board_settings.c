@@ -319,6 +319,8 @@ bool_t USBD_Port_STM32F103_OS_Is_Usbd_Context(OS_Invoke_XT *invoke_params, OS_Co
 {
    bool_t result = true;
 
+   USBD_UNUSED_PARAM(invoke_params);
+
    if((STM32F103_USB_HP_CAN1_TX_IRQ_ID == current_context_unique_id)
       || (STM32F103_USB_LP_CAN1_RX0_IRQ_ID == current_context_unique_id)
       || (STM32F103_USBWAKEUP_IRQ_ID == current_context_unique_id))
@@ -360,6 +362,8 @@ bool_t USBD_Port_STM32F103_OS_Irq_Lock (struct OS_Invoke_eXtendedTag *invoke_par
 {
    bool_t result = false;
 
+   USBD_UNUSED_PARAM(invoke_params);
+
    if(USBD_ATOMIC_BOOL_IS_FALSE(port_stm32_cat_a_irq_active))
    {
       if(USBD_ATOMIC_BOOL_IS_TRUE(port_stm32f103_irq_enabled))
@@ -376,6 +380,8 @@ bool_t USBD_Port_STM32F103_OS_Irq_Lock (struct OS_Invoke_eXtendedTag *invoke_par
 
 void USBD_Port_STM32F103_OS_Irq_Unlock (struct OS_Invoke_eXtendedTag *invoke_params)
 {
+   USBD_UNUSED_PARAM(invoke_params);
+
    if(USBD_ATOMIC_BOOL_IS_TRUE(port_stm32f103_irq_enabled))
    {
       nvic_enable_irq(USBWakeUp_IRQChannel);

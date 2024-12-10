@@ -1595,6 +1595,11 @@ static void USBD_IOTP_EVENT_io_provide_out(
    USBD_IOTP_EVENT_Params_XT *tp          = (USBD_IOTP_EVENT_Params_XT*)tp_params;
    USBD_IO_Inout_Data_Size_DT part_size   = 0;
 
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(packet_size);
+   USBD_UNUSED_PARAM(left_size);
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 
    if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp) && USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction)
@@ -2141,6 +2146,8 @@ static void USBD_IOTP_EVENT_io_error(
    void *tp_params, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_IO_Inout_Data_Size_DT size)
 {
    USBD_IOTP_EVENT_Params_XT *tp = (USBD_IOTP_EVENT_Params_XT*)tp_params;
+
+   USBD_UNUSED_PARAM(transaction);
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 

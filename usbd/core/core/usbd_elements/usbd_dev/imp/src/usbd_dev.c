@@ -122,6 +122,10 @@ static void USBD_DEV_state_change(USBD_Params_XT *usbd, uint8_t new_state, uint1
 {
    uint8_t old_state = usbd->dev.core.data.state;
 
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(line);
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_DEV_STATE);
 
    usbd->dev.core.data.state = new_state;
@@ -2083,6 +2087,10 @@ void USBD_DEV_Addressed(
       USBD_Params_XT *usbd,
       uint8_t address)
 {
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(address);
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_DEV_ONOFF);
 
    USBD_NOTICE_1(USBD_DBG_DEV_ONOFF, "DEV addressed; addr: %d", address);
@@ -2115,6 +2123,8 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
    uint8_t ep_num;
    uint8_t if_num;
    USBD_Bool_DT result;
+
+   USBD_UNUSED_PARAM(usbdc);
 
    USBD_ENTER_FUNC(USBD_DBG_DEV_ONOFF);
 
