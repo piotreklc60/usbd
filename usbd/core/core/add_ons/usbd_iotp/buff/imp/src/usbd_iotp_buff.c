@@ -989,6 +989,8 @@ static void USBD_IOTP_BUFF_io_evdata_in(
    usbd_iotp_buff_vendor_memcpy_XT vendor_data;
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_BUFF_USE_UP_LINK)
    Buff_Size_DT                    ret_size    = 0;
+#else
+   USBD_UNUSED_PARAM(size);
 #endif
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
