@@ -133,8 +133,8 @@ typedef struct USBD_EVENT_Params_eXtended_Tag
 {
    struct
    {
-      USBD_EVENT_Proc_Params_XT  data;
-      USBD_EVENT_Event_Header_XT event_tab[USBD_MAX_NUM_EVENTS];
+      /* USBD_EVENT_Proc_Params_XT */ size_t data[(sizeof(USBD_EVENT_Proc_Params_XT) + sizeof(size_t) - sizeof(uint8_t)) / sizeof(size_t)];
+      USBD_EVENT_Event_Header_XT             event_tab[USBD_MAX_NUM_EVENTS];
    }core;
 }USBD_EVENT_Params_XT;
 
@@ -154,8 +154,8 @@ typedef struct USBDC_EVENT_Params_eXtended_Tag
 {
    struct
    {
-      USBD_EVENT_Proc_Params_XT  data;
-      USBD_EVENT_Event_Header_XT event_tab[USBDC_MAX_NUM_EVENTS];
+      /* USBD_EVENT_Proc_Params_XT */ size_t data[(sizeof(USBD_EVENT_Proc_Params_XT) + sizeof(size_t) - sizeof(uint8_t)) / sizeof(size_t)];
+      USBD_EVENT_Event_Header_XT             event_tab[USBDC_MAX_NUM_EVENTS];
    }core;
 }USBDC_EVENT_Params_XT;
 
@@ -163,3 +163,4 @@ typedef struct USBDC_EVENT_Params_eXtended_Tag
 
 
 #endif
+

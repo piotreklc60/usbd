@@ -497,7 +497,7 @@ static void test_compose_events(USBD_Params_XT *usbd)
    usbdc4_event_params[2] = USBDC_EVENT_Install(usbdc4, event_usbdc4_2, USBD_EVENT_REASON_ALL);
    usbdc4_event_params[3] = USBDC_EVENT_Install(usbdc4, event_usbdc4_3, USBD_EVENT_REASON_ALL);
 
-   if(4 != usbd->event.core.data.num_installed_events)
+   if(4 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events)
    {
       printf("incorrect number of installed events\n\r");
       REPORT_ERROR();
@@ -538,7 +538,7 @@ static void test_compose_events(USBD_Params_XT *usbd)
 
 
 
-   if(3 != usbdc1->event.core.data.num_installed_events)
+   if(3 != ((USBD_EVENT_Proc_Params_XT*)(usbdc1->event.core.data))->num_installed_events)
    {
       printf("incorrect number of installed events\n\r");
       REPORT_ERROR();
@@ -572,7 +572,7 @@ static void test_compose_events(USBD_Params_XT *usbd)
 
 
 
-   if(1 != usbdc2->event.core.data.num_installed_events)
+   if(1 != ((USBD_EVENT_Proc_Params_XT*)(usbdc2->event.core.data))->num_installed_events)
    {
       printf("incorrect number of installed events\n\r");
       REPORT_ERROR();
@@ -592,7 +592,7 @@ static void test_compose_events(USBD_Params_XT *usbd)
 
 
 
-   if(4 != usbdc4->event.core.data.num_installed_events)
+   if(4 != ((USBD_EVENT_Proc_Params_XT*)(usbdc4->event.core.data))->num_installed_events)
    {
       printf("incorrect number of installed events\n\r");
       REPORT_ERROR();

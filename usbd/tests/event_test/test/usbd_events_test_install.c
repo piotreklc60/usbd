@@ -260,9 +260,9 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    event_table = USBD_EVENT_GET_EVENT_TAB_PTR(usbd);
 
-   if(0 != usbd->event.core.data.num_installed_events)
+   if(0 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events)
    {
-      printf("incorrect number of installed configs: %d\n\r", usbd->event.core.data.num_installed_events);
+      printf("incorrect number of installed configs: %d\n\r", ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events);
       REPORT_ERROR();
    }
 
@@ -273,9 +273,9 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
    event_params[4] = USBD_EVENT_Install(usbd, event_5, (USBD_EVENT_REASON_CONFIGURED | USBD_EVENT_REASON_SOF_RECEIVED));
    event_params[5] = USBD_EVENT_Install(usbd, event_6, USBD_EVENT_REASON_ALL);
 
-   if(5 != usbd->event.core.data.num_installed_events)
+   if(5 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events)
    {
-      printf("incorrect number of installed events: %d\n\r", usbd->event.core.data.num_installed_events);
+      printf("incorrect number of installed events: %d\n\r", ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events);
       REPORT_ERROR();
    }
 
@@ -327,7 +327,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    remove_result = USBD_EVENT_Remove_All_Events(usbd);
 
-   if((0 != usbd->event.core.data.num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
+   if((0 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
    {
       printf("incorrect number of installed events\n\r");
       REPORT_ERROR();
@@ -355,7 +355,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
    event_params[0]->vendor.pvoid = (void*)(&event_params[0]);
    event_params[0]->vendor_data.pvoid = (void*)(&event_params[3]);
 
-   if(1 != usbd->event.core.data.num_installed_events)
+   if(1 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events)
    {
       printf("incorrect number of installed configs\n\r");
       REPORT_ERROR();
@@ -374,7 +374,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
    event_params[1]->vendor.pvoid = (void*)(&event_params[1]);
    event_params[1]->vendor_data.pvoid = (void*)(&event_params[4]);
 
-   if(2 != usbd->event.core.data.num_installed_events)
+   if(2 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events)
    {
       printf("incorrect number of installed configs\n\r");
       REPORT_ERROR();
@@ -400,7 +400,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
    event_params[2]->vendor.pvoid = (void*)(&event_params[2]);
    event_params[2]->vendor_data.pvoid = (void*)(&event_params[5]);
 
-   if(3 != usbd->event.core.data.num_installed_events)
+   if(3 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events)
    {
       printf("incorrect number of installed configs\n\r");
       REPORT_ERROR();
@@ -430,9 +430,9 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    remove_result = USBD_EVENT_Remove_Event(usbd, event_2);
 
-   if((2 != usbd->event.core.data.num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
+   if((2 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
    {
-      printf("incorrect number of installed events, %d\n\r", usbd->event.core.data.num_installed_events);
+      printf("incorrect number of installed events, %d\n\r", ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events);
       REPORT_ERROR();
    }
 
@@ -454,9 +454,9 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    remove_result = USBD_EVENT_Remove_Event(usbd, event_2);
 
-   if((2 != usbd->event.core.data.num_installed_events) || USBD_BOOL_IS_TRUE(remove_result))
+   if((2 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events) || USBD_BOOL_IS_TRUE(remove_result))
    {
-      printf("incorrect number of installed events, %d\n\r", usbd->event.core.data.num_installed_events);
+      printf("incorrect number of installed events, %d\n\r", ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events);
       REPORT_ERROR();
    }
 
@@ -478,9 +478,9 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    remove_result = USBD_EVENT_Remove_Event(usbd, event_1);
 
-   if((1 != usbd->event.core.data.num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
+   if((1 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
    {
-      printf("incorrect number of installed events, %d\n\r", usbd->event.core.data.num_installed_events);
+      printf("incorrect number of installed events, %d\n\r", ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events);
       REPORT_ERROR();
    }
 
@@ -494,7 +494,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    remove_result = USBD_EVENT_Remove_Event(usbd, event_3);
 
-   if((0 != usbd->event.core.data.num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
+   if((0 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
    {
       printf("incorrect number of installed events\n\r");
       REPORT_ERROR();
@@ -502,7 +502,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    remove_result = USBD_EVENT_Remove_Event(usbd, event_3);
 
-   if((0 != usbd->event.core.data.num_installed_events) || USBD_BOOL_IS_TRUE(remove_result))
+   if((0 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events) || USBD_BOOL_IS_TRUE(remove_result))
    {
       printf("incorrect number of installed events\n\r");
       REPORT_ERROR();
@@ -512,7 +512,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
    event_params[1] = USBD_EVENT_Install(usbd, event_2, USBD_EVENT_REASON_ALL);
    event_params[2] = USBD_EVENT_Install(usbd, event_3, USBD_EVENT_REASON_ALL);
 
-   if(3 != usbd->event.core.data.num_installed_events)
+   if(3 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events)
    {
       printf("incorrect number of installed configs\n\r");
       REPORT_ERROR();
@@ -559,7 +559,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    remove_result = USBD_EVENT_Remove_All_Events(usbd);
 
-   if((0 != usbd->event.core.data.num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
+   if((0 != ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events) || USBD_BOOL_IS_FALSE(remove_result))
    {
       printf("incorrect number of installed events\n\r");
       REPORT_ERROR();

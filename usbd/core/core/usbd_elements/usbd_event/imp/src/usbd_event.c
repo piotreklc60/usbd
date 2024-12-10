@@ -177,7 +177,8 @@ USBD_EVENT_Event_Header_XT *USBD_EVENT_Install(
 
    if((USBD_CHECK_PTR(USBD_Params_XT, usbd)) && (USBD_CHECK_HANDLER(USBD_EVENT_Event_HT, event)))
    {
-      result = USBD_EVENT_only_once_check_and_install(&(usbd->event.core.data), event, USBD_MAX_NUM_EVENTS, mask);
+      result = USBD_EVENT_only_once_check_and_install(
+         (USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data), event, USBD_MAX_NUM_EVENTS, mask);
    }
    else
    {
@@ -201,7 +202,7 @@ USBD_Bool_DT USBD_EVENT_Remove_Event(
 
    if((USBD_CHECK_PTR(USBD_Params_XT, usbd)) && (USBD_CHECK_HANDLER(USBD_EVENT_Event_HT, event)))
    {
-      result = USBD_EVENT_find_and_remove(&(usbd->event.core.data), event);
+      result = USBD_EVENT_find_and_remove((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data), event);
    }
    else
    {
@@ -224,7 +225,7 @@ USBD_Bool_DT USBD_EVENT_Remove_All_Events(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
-      usbd->event.core.data.num_installed_events = 0;
+      ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events = 0;
       result = USBD_TRUE;
    }
    else
@@ -246,7 +247,7 @@ size_t USBD_EVENT_Get_Num_Installed_Events(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
-      result = usbd->event.core.data.num_installed_events;
+      result = ((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events;
    }
 
    USBD_EXIT_FUNC(USBD_DBG_EVENT_STATE);
@@ -269,7 +270,8 @@ USBD_EVENT_Event_Header_XT *USBDC_EVENT_Install(
 
    if((USBD_CHECK_PTR(USBDC_Params_XT, usbdc)) && (USBD_CHECK_HANDLER(USBD_EVENT_Event_HT, event)))
    {
-      result = USBD_EVENT_only_once_check_and_install(&(usbdc->event.core.data), event, USBDC_MAX_NUM_EVENTS, mask);
+      result = USBD_EVENT_only_once_check_and_install(
+         (USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data), event, USBDC_MAX_NUM_EVENTS, mask);
    }
    else
    {
@@ -293,7 +295,7 @@ USBD_Bool_DT USBDC_EVENT_Remove_Event(
 
    if((USBD_CHECK_PTR(USBDC_Params_XT, usbdc)) && (USBD_CHECK_HANDLER(USBD_EVENT_Event_HT, event)))
    {
-      result = USBD_EVENT_find_and_remove(&(usbdc->event.core.data), event);
+      result = USBD_EVENT_find_and_remove((USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data), event);
    }
    else
    {
@@ -316,7 +318,7 @@ USBD_Bool_DT USBDC_EVENT_Remove_All_Events(
 
    if(USBD_CHECK_PTR(USBDC_Params_XT, usbdc))
    {
-      usbdc->event.core.data.num_installed_events = 0;
+      ((USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data))->num_installed_events = 0;
       result = USBD_TRUE;
    }
    else
@@ -338,7 +340,7 @@ size_t USBDC_EVENT_Get_Num_Installed_Events(
 
    if(USBD_CHECK_PTR(USBDC_Params_XT, usbdc))
    {
-      result = usbdc->event.core.data.num_installed_events;
+      result = ((USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data))->num_installed_events;
    }
 
    USBD_EXIT_FUNC(USBD_DBG_EVENT_STATE);
@@ -401,12 +403,12 @@ void USBD_EVENT_Process_Cold_Event(
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
       /* processes device events */
-      if(usbd->event.core.data.num_installed_events > 0)
+      if(((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events > 0)
       {
          USBD_EVENT_process_events(
             usbd,
             USBD_MAKE_INVALID_PTR(USBDC_Params_XT),
-            &(usbd->event.core.data),
+            (USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data),
             reason);
       }
 
@@ -421,12 +423,12 @@ void USBD_EVENT_Process_Cold_Event(
 
          if(USBD_CHECK_PTR(USBDC_Params_XT, usbdc))
          {
-            if(usbdc->event.core.data.num_installed_events > 0)
+            if(((USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data))->num_installed_events > 0)
             {
                USBD_EVENT_process_events(
                   usbd,
                   usbdc,
-                  &(usbdc->event.core.data),
+                  (USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data),
                   reason);
             }
          }
@@ -447,12 +449,12 @@ void USBD_EVENT_Process_Warm_Event(
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
       /* processes device events */
-      if(usbd->event.core.data.num_installed_events > 0)
+      if(((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events > 0)
       {
          USBD_EVENT_process_events(
             usbd,
             USBD_MAKE_INVALID_PTR(USBDC_Params_XT),
-            &(usbd->event.core.data),
+            (USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data),
             reason);
       }
 
@@ -463,12 +465,12 @@ void USBD_EVENT_Process_Warm_Event(
 
          if(USBD_CHECK_PTR(USBDC_Params_XT, usbdc))
          {
-            if(usbdc->event.core.data.num_installed_events > 0)
+            if(((USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data))->num_installed_events > 0)
             {
                USBD_EVENT_process_events(
                   usbd,
                   usbdc,
-                  &(usbdc->event.core.data),
+                  (USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data),
                   reason);
             }
          }
