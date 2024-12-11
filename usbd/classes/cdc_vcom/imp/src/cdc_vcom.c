@@ -23,17 +23,6 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-/*!
- *  \brief    USB Device Communication Device Class - Virtual COM Port library
- *  \details   This module defines main API which is part of USBD software layer
- *  \author   Piotr Wojtowicz
- *  \version   1.3.0.0
- *  \date     2012
- *  \pre      First initialize the system.
- *  \warning   Improper use can crash your application
- *  \copyright GNU Public License.
- */
-
 #ifndef CDC_VCOM_C_
 #define CDC_VCOM_C_
 #endif

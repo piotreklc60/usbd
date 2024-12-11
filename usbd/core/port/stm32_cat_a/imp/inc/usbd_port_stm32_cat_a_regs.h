@@ -23,17 +23,6 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-/*!
- *  \brief    USB Device port for STM32_CAT_A
- *  \details   This module defines hardware-specific part of USBD library
- *  \author   Piotr Wojtowicz
- *  \version   1.3.0.0
- *  \date     2012
- *  \pre      First initialize the system.
- *  \warning   Improper use can crash your application
- *  \copyright GNU Public License.
- */
-
 #ifndef USBD_PORT_STM32_CAT_A_REGS_H_
 #define USBD_PORT_STM32_CAT_A_REGS_H_
 
