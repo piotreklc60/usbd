@@ -29,7 +29,7 @@
 #include <string.h>
 #include "cfg.h"
 
-#define BUFF_DEFAULT_FEATURES_STATE                      BUFF_FEATURE_ENABLED
+#define BUFF_DEFAULT_FEATURES_STATE                      BUFF_FEATURE_DISABLED
 /* for iotp_buff */
 #define BUFF_USE_VENDOR_BUFFERS                          BUFF_FEATURE_ENABLED
 /* for iocmd */
@@ -61,6 +61,7 @@
 #define BUFF_RING_TO_RING_COPY_ENABLED                   BUFF_FEATURE_ENABLED
 #define BUFF_RING_REMOVE_ENABLED                         BUFF_FEATURE_ENABLED
 #define BUFF_RING_CLEAR_ENABLED                          BUFF_FEATURE_ENABLED
+#define BUFF_RING_IS_EMPTY_ENABLED                       BUFF_FEATURE_ENABLED
 
 #define BUFF_SAVE_PROGRAM_MEMORY                         BUFF_FEATURE_ENABLED
 

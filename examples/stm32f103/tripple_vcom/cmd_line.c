@@ -107,6 +107,7 @@ static void usbd_dump(IOCMD_Arg_DT *arg)
 
 static void dump_ring(const IOCMD_Print_Exe_Params_XT *arg_out, Buff_Ring_XT *buff)
 {
+#if(BUFF_RING_USE_EXTENSIONS)
    IOCMD_Oprintf(arg_out, "%-32s: %p\n\r", "extension", buff->extension);
    if(NULL != buff->extension)
    {
@@ -119,6 +120,8 @@ static void dump_ring(const IOCMD_Print_Exe_Params_XT *arg_out, Buff_Ring_XT *bu
       IOCMD_Oprintf(arg_out, "   %-29s: %p\n\r", "on_overwrite",        buff->extension->on_overwrite);
       IOCMD_Oprintf(arg_out, "   %-29s: %p\n\r", "on_remove",           buff->extension->on_remove);
    }
+#endif
+#if(BUFF_RING_USE_PROTECTED_EXTENSIONS)
    IOCMD_Oprintf(arg_out, "%-32s: %p\n\r", "protected_extension", buff->protected_extension);
    if(NULL != buff->protected_extension)
    {
@@ -131,6 +134,7 @@ static void dump_ring(const IOCMD_Print_Exe_Params_XT *arg_out, Buff_Ring_XT *bu
       IOCMD_Oprintf(arg_out, "   %-29s: %p\n\r", "on_overwrite",        buff->protected_extension->on_overwrite);
       IOCMD_Oprintf(arg_out, "   %-29s: %p\n\r", "on_remove",           buff->protected_extension->on_remove);
    }
+#endif
    IOCMD_Oprintf(arg_out, "%-32s: %p\n\r", "memory", buff->memory);
 #if(BUFF_RING_DATA_CHECK_IN_CHECK_OUT_ENABLED)
    IOCMD_Oprintf(arg_out, "%-32s: %d\n\r", "original_size", buff->original_size);

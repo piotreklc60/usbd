@@ -324,6 +324,7 @@ typedef union
 #define USBDEP_SET_TX_BUF_ADDR(_ep_number, _addr)     USBD_STM32_EPMEM[_ep_number].sb.tx_addr = ((_addr) & 0xFFFE)
 
 
+#ifdef USBD_USE_IOCMD
 #define USBDEP_REG_MODIFY(_ep_reg_num, _ep_reg, _temp, _before, _after, ex_or_mask, and_mask, or_mask) \
    (_temp)   = _ep_reg;\
    (_before) = (_temp);\
@@ -334,6 +335,17 @@ typedef union
    (_after)  = _ep_reg;\
    port_stm32_cat_a_print_ep_reg_state("-> ", (_before), __LINE__, (_ep_reg_num));\
    port_stm32_cat_a_print_ep_reg_state("<- ", (_after), __LINE__, (_ep_reg_num))
+
+#else
+#define USBDEP_REG_MODIFY(_ep_reg_num, _ep_reg, _temp, _before, _after, ex_or_mask, and_mask, or_mask) \
+   (_temp)   = _ep_reg;\
+   (_temp)  ^= (ex_or_mask);\
+   (_temp)  &= (and_mask);\
+   (_temp)  |= (or_mask);\
+   _ep_reg   = (_temp);
+
+#endif
+
 
 #ifndef RCC_APB1Periph_USB
 #define RCC_APB1Periph_USB            ((uint32_t)0x00800000)

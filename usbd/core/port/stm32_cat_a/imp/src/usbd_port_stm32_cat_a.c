@@ -804,6 +804,7 @@ static void port_stm32_cat_a_check_out_on_delay(void)
    port_stm32_cat_a_dev_prams.out_on_delay = keep_out_on_delay_flag;
 } /* port_stm32_cat_a_check_out_on_delay */
 
+#ifdef USBD_USE_IOCMD
 static void port_stm32_cat_a_print_ep_reg_state(const char *desc, uint32_t reg, uint16_t line, uint8_t ep_reg_num)
 {
 #ifndef USBD_USE_IOCMD
@@ -837,6 +838,9 @@ static void port_stm32_cat_a_print_ep_reg_state(const char *desc, uint32_t reg, 
 #undef IOCMD__LINE__LOCAL
 #define IOCMD__LINE__LOCAL      IOCMD__LINE__
 } /* port_stm32_cat_a_print_ep_reg_state */
+#else
+#define port_stm32_cat_a_print_ep_reg_state(desc, reg, line, ep_reg_num)
+#endif
 
 void USBD_Port_STM32_CAT_A_Print_HW_Dump(const char *desc, uint16_t line)
 {
@@ -1299,8 +1303,10 @@ static void port_stm32_cat_a_load_data_to_buffer (
 static inline void port_stm32_cat_a_force_valid_in_stat(port_stm32_cat_a_io_ep_XT *ep)
 {
    volatile uint32_t temp;
+#ifdef USBD_USE_IOCMD
    volatile uint32_t temp_before;
    volatile uint32_t temp_after;
+#endif
 
    /* allow for sending already prepared buffer */
    while(USBDEP_STM32_CAT_A__TX_NAK == (
@@ -1329,8 +1335,10 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
    USBD_IO_Inout_Data_Size_DT  part;
    USBD_IO_Inout_Data_Size_DT  result = 0;
    volatile uint32_t temp;
+#ifdef USBD_USE_IOCMD
    volatile uint32_t temp_before;
    volatile uint32_t temp_after;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
@@ -1459,8 +1467,10 @@ static void port_stm32_cat_a_process_in(uint8_t ep_num)
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
    void *tp_params;
    volatile uint32_t temp;
+#ifdef USBD_USE_IOCMD
    volatile uint32_t temp_before;
    volatile uint32_t temp_after;
+#endif
    USBD_IO_Inout_Data_Size_DT size;
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
@@ -1649,8 +1659,10 @@ static void port_stm32_cat_a_load_data_from_buffer (
 void port_stm32_cat_a_release_out_buffer(port_stm32_cat_a_io_ep_XT *ep)
 {
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
@@ -1687,8 +1699,10 @@ void port_stm32_cat_a_release_out_buffer(port_stm32_cat_a_io_ep_XT *ep)
 void port_stm32_cat_a_read_out_packet_params(port_stm32_cat_a_io_ep_XT *ep)
 {
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
@@ -1796,8 +1810,10 @@ static void port_stm32_cat_a_process_out(uint8_t ep_num)
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
    void *tp_params;
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
 #if(USBD_PORT_STM32_CAT_A_DMA_TYPE == PORT_STM32_CAT_A_DMA_HALF_DMA)
    USBD_IO_Inout_Data_Size_DT size;
 #endif
@@ -2333,8 +2349,10 @@ static void port_stm32_cat_a_io_abort(USBD_Params_XT *usbd, uint8_t ep_num, USB_
 {
    port_stm32_cat_a_io_ep_XT *ep;
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
 
    USBD_UNUSED_PARAM(usbd);
 
@@ -2397,8 +2415,10 @@ static void port_stm32_cat_a_io_halt(
    port_stm32_cat_a_io_ep_XT *ep;
    volatile uint32_t *ep_reg;
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
    uint16_t mps;
    uint8_t ep_type;
    uint8_t num;
@@ -2541,8 +2561,10 @@ static void port_stm32_cat_a_io_halt(
 static void port_stm32_cat_a_disable_ep_ctrl_int_in(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
 
    if(0 != USBD_STM32_CAT_A_REG_GET_2BIT(ep_reg[0], USBDEP_STM32_CAT_A_BIT__STAT_RX))
    {
@@ -2567,8 +2589,10 @@ static void port_stm32_cat_a_disable_ep_ctrl_int_in(uint8_t ep_reg_num, volatile
 static void port_stm32_cat_a_disable_ep_ctrl_int_out(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
 
    if(0 != USBD_STM32_CAT_A_REG_GET_2BIT(ep_reg[0], USBDEP_STM32_CAT_A_BIT__STAT_TX))
    {
@@ -2600,8 +2624,10 @@ static void port_stm32_cat_a_disable_ep_isochronous(uint8_t ep_reg_num, volatile
 static void port_stm32_cat_a_disable_ep_bulk_in(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
 
    if((1 == port_stm32_cat_a_dev_prams.bulk_eps_num_bufs)
       && (0 != USBD_STM32_CAT_A_REG_GET_2BIT(ep_reg[0], USBDEP_STM32_CAT_A_BIT__STAT_RX)))
@@ -2627,8 +2653,10 @@ static void port_stm32_cat_a_disable_ep_bulk_in(uint8_t ep_reg_num, volatile uin
 static void port_stm32_cat_a_disable_ep_bulk_out(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
 
    if((1 == port_stm32_cat_a_dev_prams.bulk_eps_num_bufs)
       && (0 != USBD_STM32_CAT_A_REG_GET_2BIT(ep_reg[0], USBDEP_STM32_CAT_A_BIT__STAT_TX)))
@@ -3041,8 +3069,10 @@ static void port_stm32_cat_a_req_process_incomming_setup(uint8_t ep_num, uint8_t
    uint32_t *data;
    USBD_REQUEST_Req_DT req;
    uint32_t temp;
+#ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#endif
    uint32_t waiting_setup = 0;
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_REQ);

@@ -118,6 +118,7 @@ void USBD_DEV_Init_Structure(
    USBD_EXIT_FUNC(USBD_DBG_DEV_INIT);
 } /* USBD_DEV_Init_Structure */
 
+#ifdef USBD_USE_IOCMD
 static void USBD_DEV_state_change(USBD_Params_XT *usbd, uint8_t new_state, uint16_t line)
 {
    uint8_t old_state = usbd->dev.core.data.state;
@@ -163,6 +164,9 @@ static void USBD_DEV_state_change(USBD_Params_XT *usbd, uint8_t new_state, uint1
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_STATE);
 } /* USBD_DEV_state_change */
+#else
+#define USBD_DEV_state_change(usbd, new_state, line)        usbd->dev.core.data.state = new_state
+#endif
 
 static USBD_DEV_Installation_Result_XT USBD_DEV_install_internal_string(
       USBD_Params_XT *usbd,
