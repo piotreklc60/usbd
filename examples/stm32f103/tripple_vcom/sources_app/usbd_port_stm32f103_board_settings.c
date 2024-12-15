@@ -58,6 +58,7 @@ void USBD_Port_STM32_CAT_A_Configure_Vbus_Detection_Irq(USBD_Bool_DT configure)
 
    if(USBD_BOOL_IS_TRUE(configure))
    {
+      USBD_VBUS_PORT_CLK_ENABLE();
       /* initialize GPIO line */
       gpio_data.Pin   = USBD_VBUS_PIN;
       gpio_data.Mode  = USBD_VBUS_MODE;
@@ -141,6 +142,7 @@ void USBD_Port_STM32_CAT_A_Configure_Pull_Up(USBD_Bool_DT configure)
 
    if(USBD_BOOL_IS_TRUE(configure))
    {
+      USBD_DP_PULL_UP_PORT_CLK_ENABLE();
       gpio_data.Pin   = USBD_DP_PULL_UP_PIN;
       gpio_data.Mode  = USBD_DP_PULL_UP_MODE;
       gpio_data.Pull  = USBD_DP_PULL_UP_PULL;

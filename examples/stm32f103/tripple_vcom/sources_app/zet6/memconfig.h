@@ -26,9 +26,6 @@
 #ifndef MEMCONFIG_H_
 #define MEMCONFIG_H_
 
-#include "stm32f10x_map.h"
-
-
 #define INTERNAL_RAM_START    SRAM_BASE
 #define INTERNAL_RAM_SIZE     (64 * 1024)
 #define INTERNAL_FLASH_START  0x08002000

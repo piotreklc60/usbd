@@ -6,7 +6,6 @@
             "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
-		    "toolchainFile": "${sourceDir}/stm32cubemx_generated_stm32f103rbt6/cmake/gcc-arm-none-eabi.cmake",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
@@ -14,8 +13,19 @@
         {
             "name": "rbt6",
             "inherits": "default",
+            "toolchainFile": "${sourceDir}/stm32cubemx_generated_stm32f103rbt6/cmake/gcc-arm-none-eabi.cmake",
             "cacheVariables": {
                 "VARIANT": "rbt6",
+                "VENDOR_ID":  "???",
+                "PRODUCT_ID": "???"
+            }
+        },
+        {
+            "name": "zet6",
+            "inherits": "default",
+            "toolchainFile": "${sourceDir}/stm32cubemx_generated_stm32f103zet6/cmake/gcc-arm-none-eabi.cmake",
+            "cacheVariables": {
+                "VARIANT": "zet6",
                 "VENDOR_ID":  "???",
                 "PRODUCT_ID": "???"
             }
