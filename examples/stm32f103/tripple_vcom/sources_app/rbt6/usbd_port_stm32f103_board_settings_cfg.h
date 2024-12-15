@@ -23,8 +23,8 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-#ifndef USBD_PORT_STM32F103_BOARD_SETTINGS_CFG_H_
-#define USBD_PORT_STM32F103_BOARD_SETTINGS_CFG_H_
+#ifndef USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
+#define USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
 
 #include <stdint.h>
 
@@ -32,27 +32,26 @@
 #include "usbd.h"
 
 
-#define USBD_PORT_STM32F103_DETECT_VBUS_CHANGE  USBD_FEATURE_PRESENT
-#define USBD_PORT_STM32F103_USE_PULL_UP         USBD_FEATURE_PRESENT
+#define USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE  USBD_FEATURE_PRESENT
+#define USBD_PORT_STM32_CAT_A_USE_PULL_UP         USBD_FEATURE_PRESENT
 
 
 #define USBD_DP_PULL_UP_PORT                    GPIOC
-#define USBD_DP_PULL_UP_PIN                     GPIO_Pin_5
-#define USBD_DP_PULL_UP_MODE                    GPIO_Mode_Out_PP
+#define USBD_DP_PULL_UP_PIN                     GPIO_PIN_8
+#define USBD_DP_PULL_UP_MODE                    GPIO_MODE_OUTPUT_PP
+#define USBD_DP_PULL_UP_PULL                    GPIO_PULLUP
 #define USBD_DP_PULL_UP_ACTIVE_STATE            0
 
 
 
 #define USBD_VBUS_PORT                          GPIOC
-#define USBD_VBUS_PIN                           GPIO_Pin_4
-#define USBD_VBUS_MODE                          GPIO_Mode_IN_FLOATING
+#define USBD_VBUS_PIN                           GPIO_PIN_9
+#define USBD_VBUS_MODE                          GPIO_MODE_IT_RISING_FALLING
+#define USBD_VBUS_PULL                          GPIO_PULLUP
 #define USBD_VBUS_ACTIVE_STATE                  1
 // EXTI: VBUS
-#define USBD_VBUS_GPIO_PortSource               GPIO_PortSourceGPIOC
-#define USBD_VBUS_GPIO_PinSource                GPIO_PinSource4
-#define USBD_VBUS_EXTI_Line                     EXTI_Line4
-#define USBD_VBUS_EXTI_IRQChannel               EXTI4_IRQChannel
-#define USBD_Port_STM32F103_Vbus_IrqHandler     EXTI4_IRQHandler
+#define USBD_VBUS_EXTI_IRQChannel               EXTI9_5_IRQn
+#define USBD_Port_STM32_CAT_A_Vbus_IrqHandler   EXTI9_5_IRQHandler
 
 /* USB clock source */
 #ifndef RCC_USBCLKSource_PLLCLK_1Div5
@@ -63,8 +62,8 @@
 #endif
 
 
-#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_Div1
-//#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_1Div5
+//#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_Div1
+#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_1Div5
 
 
 #endif

@@ -23,26 +23,19 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-#ifndef GPIO_H_
-#define GPIO_H_
+#ifndef MEMCONFIG_H_
+#define MEMCONFIG_H_
 
-#include "stm32f10x_lib.h"
+#define INTERNAL_RAM_START    SRAM_BASE
+#define INTERNAL_RAM_SIZE     (20 * 1024)
+#define INTERNAL_FLASH_START  0x08002000
+#define INTERNAL_FLASH_SIZE   ((128 - 8) * 1024)
 
+#define IOCMD_LOG_MAIN_BUF_SIZE                 3000
 
-#define PIN_HIGH(pin, port)   (port)->BSRR = (pin)
-#define PIN_LOW(pin, port)    (port)->BRR = (pin)
+#define HEAP_SIZE             (6 * 1024)
 
+#define STACK_SIZE            (1024)
 
+#endif
 
-#define LED_OFF()             PIN_HIGH(LED1_PIN, LED1_PORT)
-#define LED_ON()              PIN_LOW(LED1_PIN, LED1_PORT)
-
-
-
-#define LED1_PORT             GPIOA
-#define LED1_PIN              GPIO_Pin_8
-#define LED1_PIN_MODE         GPIO_Mode_Out_PP
-
-
-
-#endif /* GPIO_H_ */

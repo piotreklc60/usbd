@@ -172,7 +172,7 @@ void main_usbd_init(void)
    USBD_DEV_Config_Desc_Check_Result_XT check_result;
    USB_Device_Desc_DT dev;
 
-   IOCMD_ENTER_FUNC(MAIN_APP);
+   USBD_ENTER_FUNC(MAIN_APP);
 
    USBD_Init(&usbd);
    USBDC_Init(&usbdc);
@@ -183,7 +183,7 @@ void main_usbd_init(void)
 
    if(USBD_DEV_CONFIG_DESC_OK != check_result.result)
    {
-      IOCMD_ERROR_6(MAIN_APP,"configuration check error:: result: %d, index: %d, if_num: %d, if_alt: %d, ep_num: %d, ep_dir: %s",
+      USBD_ERROR_6(MAIN_APP,"configuration check error:: result: %d, index: %d, if_num: %d, if_alt: %d, ep_num: %d, ep_dir: %s",
          check_result.result, check_result.index,
          check_result.if_num, check_result.if_alt,
          check_result.ep_num, USB_EP_DIRECTION_OUT == check_result.ep_dir ? "OUT" : "IN");
@@ -223,49 +223,49 @@ void main_usbd_init(void)
 
    if(USBD_DEV_INSTALLATION_OK != install_result.result)
    {
-      IOCMD_ERROR_1(MAIN_APP, "configuration install error - result: %d", install_result.result);
+      USBD_ERROR_1(MAIN_APP, "configuration install error - result: %d", install_result.result);
    }
    else
    {
-      IOCMD_DEBUG_LO_1(MAIN_APP, "configuration install ok - index: %d", install_result.index);
+      USBD_DEBUG_LO_1(MAIN_APP, "configuration install ok - index: %d", install_result.index);
    }
 
    install_result = USBD_DEV_Install_Manufacturer_String(&usbd, (const uint8_t*)manuf_string, sizeof(manuf_string));
 
    if(USBD_DEV_INSTALLATION_OK != install_result.result)
    {
-      IOCMD_ERROR_1(MAIN_APP, "string install error - result: %d", install_result.result);
+      USBD_ERROR_1(MAIN_APP, "string install error - result: %d", install_result.result);
    }
    else
    {
-      IOCMD_DEBUG_LO_1(MAIN_APP, "string install ok - index: %d", install_result.index);
+      USBD_DEBUG_LO_1(MAIN_APP, "string install ok - index: %d", install_result.index);
    }
 
    install_result = USBD_DEV_Install_Product_String(&usbd, (const uint8_t*)product_string, sizeof(product_string));
 
    if(USBD_DEV_INSTALLATION_OK != install_result.result)
    {
-      IOCMD_ERROR_1(MAIN_APP, "string install error - result: %d", install_result.result);
+      USBD_ERROR_1(MAIN_APP, "string install error - result: %d", install_result.result);
    }
    else
    {
-      IOCMD_DEBUG_LO_1(MAIN_APP, "string install ok - index: %d", install_result.index);
+      USBD_DEBUG_LO_1(MAIN_APP, "string install ok - index: %d", install_result.index);
    }
 
    install_result = USBD_DEV_Install_Serial_Number_String(&usbd, (const uint8_t*)serial_string, sizeof(serial_string));
 
    if(USBD_DEV_INSTALLATION_OK != install_result.result)
    {
-      IOCMD_ERROR_1(MAIN_APP, "string install error - result: %d", install_result.result);
+      USBD_ERROR_1(MAIN_APP, "string install error - result: %d", install_result.result);
    }
    else
    {
-      IOCMD_DEBUG_LO_1(MAIN_APP, "string install ok - index: %d", install_result.index);
+      USBD_DEBUG_LO_1(MAIN_APP, "string install ok - index: %d", install_result.index);
    }
 
    if(USBD_BOOL_IS_FALSE(USBD_DEV_Get_Dev_Desc(&usbd, &dev)))
    {
-      IOCMD_ERROR(MAIN_APP, "get device desc error!");
+      USBD_ERROR(MAIN_APP, "get device desc error!");
    }
 
    dev.bcdUSB           = 0x0110;
@@ -278,11 +278,11 @@ void main_usbd_init(void)
 
    if(USBD_BOOL_IS_FALSE(USBD_DEV_Set_Dev_Desc(&usbd, &dev)))
    {
-      IOCMD_ERROR(MAIN_APP, "set device desc error!");
+      USBD_ERROR(MAIN_APP, "set device desc error!");
    }
 
    USBD_DEV_Activate(&usbd, USBD_PORT_STM32_CAT_A);
 
-   IOCMD_EXIT_FUNC(MAIN_APP);
+   USBD_EXIT_FUNC(MAIN_APP);
 }
 

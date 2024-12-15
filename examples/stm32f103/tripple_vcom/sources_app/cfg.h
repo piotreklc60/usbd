@@ -27,8 +27,18 @@
 #define CFG_H_
 
 #include "std_libs.h"
-#include "gpio.h"
+#include "main.h"
 #include "os.h"
+
+#define PIN_HIGH(pin, port)   (port)->BSRR = (pin)
+#define PIN_LOW(pin, port)    (port)->BRR = (pin)
+
+
+
+#define LED_OFF()             PIN_HIGH(LED1_Pin, LED1_GPIO_Port)
+#define LED_ON()              PIN_LOW(LED1_Pin, LED1_GPIO_Port)
+
+
 
 #define Num_Elems(tab)    (sizeof(tab) / sizeof(tab[0]))
 #define MAX(a,b)          (((a) > (b)) ? (a) : (b))
@@ -60,13 +70,13 @@ do { \
 
 #define USBD_DECLARE_INVOKE_PARAMS(_invoke_params)       OS_Invoke_XT _invoke_params;
 
-extern bool_t USBD_Port_STM32F103_OS_Is_Usbd_Context(OS_Invoke_XT *invoke_params, OS_Context_Id current_context_unique_id);
-extern bool_t USBD_Port_STM32F103_OS_Irq_Lock (struct OS_Invoke_eXtendedTag *invoke_params);
-extern void USBD_Port_STM32F103_OS_Irq_Unlock (struct OS_Invoke_eXtendedTag *invoke_params);
+extern bool_t USBD_Port_STM32_CAT_A_OS_Is_Usbd_Context(OS_Invoke_XT *invoke_params, OS_Context_Id current_context_unique_id);
+extern bool_t USBD_Port_STM32_CAT_A_OS_Irq_Lock (struct OS_Invoke_eXtendedTag *invoke_params);
+extern void USBD_Port_STM32_CAT_A_OS_Irq_Unlock (struct OS_Invoke_eXtendedTag *invoke_params);
 
 #define USBD_INIT_INVOKE_PARAMS(_invoke_params)          OS_Invoke_Init(&(_invoke_params)); \
-                                                         OS_Set_Destination_Id_Vendor_Checker(&(_invoke_params), USBD_Port_STM32F103_OS_Is_Usbd_Context); \
-                                                         OS_Set_Destination_Irq_Lock_Unlock(&(_invoke_params), USBD_Port_STM32F103_OS_Irq_Lock, USBD_Port_STM32F103_OS_Irq_Unlock)
+                                                         OS_Set_Destination_Id_Vendor_Checker(&(_invoke_params), USBD_Port_STM32_CAT_A_OS_Is_Usbd_Context); \
+                                                         OS_Set_Destination_Irq_Lock_Unlock(&(_invoke_params), USBD_Port_STM32_CAT_A_OS_Irq_Lock, USBD_Port_STM32_CAT_A_OS_Irq_Unlock)
 
 
 #define USBD_MARK_INVOKE_DESTINATION(_invoke_params)     OS_Mark_Invoke_Params(&(_invoke_params))

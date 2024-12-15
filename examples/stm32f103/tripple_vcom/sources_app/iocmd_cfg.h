@@ -58,7 +58,7 @@
 #define IOCMD_MAX_LOG__DATA_2_LENGTH            1024
 // moved to memconfig.h
 //#define IOCMD_LOG_MAIN_BUF_SIZE                 40000
-#define IOCMD_LOG_QUIET_BUF_SIZE                500
+#define IOCMD_LOG_QUIET_BUF_SIZE                0
 
 #define IOCMD_LOGS_TREE_OS_CRITICAL_ID          IOCMD_OS_SWITCH
 

@@ -23,15 +23,13 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-#include <stdint.h>
-#include <string.h>
+#include "std_libs.h"
+#include "main.h"
 
 #include "os.h"
-#include "stm32f10x_lib.h"
 #include "gpio.h"
 #include "stm32_usart_init.h"
 #include "iocmd.h"
-#include "cpu_mem_defs.h"
 
 
 #include "usbd.h"
@@ -61,8 +59,8 @@ void Vcom_0_On_Write(Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff
    if(0 != Buff_Ring_Read(buf, &data, sizeof(data), BUFF_TRUE))
    {
       extension->on_write = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
-      USART_SendData(USART1, (u16)data);
-      USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+      USART1->DR = (uint32_t)data;
+      USART1->CR1 |= UART_FLAG_TXE;
    }
 }
 
@@ -72,11 +70,13 @@ void Vcom_0_On_Write(Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff
 void USART1_IRQHandler(void)
 {
    Buff_Ring_XT *buf;
+   uint32_t status_register = USART1->SR;
    uint8_t data;
+   USBD_Bool_DT disable_tx = USBD_TRUE;
 
-   if(0 != (USART1->SR & USART_FLAG_RXNE))
+   if(0 != (status_register & UART_FLAG_RXNE))
    {
-      data = (uint8_t)USART_ReceiveData(USART1);
+      data = (uint8_t)(USART1->DR);
 
 //      Cmd_Parse_Bytes(usart_get_exe(), &data, 1);
 
@@ -88,7 +88,7 @@ void USART1_IRQHandler(void)
 
  //     Cmd_Parse_Byte(usart_get_exe(), data);
    }
-   else if(USART_GetITStatus(USART1, USART_IT_TXE))
+   else if(0 != (status_register & UART_FLAG_TXE))
    {
       buf = CDC_Vcom_Get_Out_Buf(VCOM_UART);
 
@@ -100,26 +100,36 @@ void USART1_IRQHandler(void)
             buf->extension->on_write = Vcom_0_On_Write;
 
             EXIT_CRITICAL();
-
-            USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
          }
          else
          {
             EXIT_CRITICAL();
 
-            USART_SendData(USART1, (u16)data);
+            USART1->DR = (uint32_t)data;
+
+            disable_tx = USBD_FALSE;
          }
-         USART_ClearITPendingBit(USART1, USART_IT_TXE);
       }
+
+      if(USBD_BOOL_IS_TRUE(disable_tx))
+      {
+         USART1->CR1 &= ~UART_FLAG_TXE;
+      }
+   }
+
+   /* some safety mechanism */
+   if((0 == status_register) && (0 != (USART1->CR1 & UART_FLAG_TXE)))
+   {
+      USART1->CR1 &= ~UART_FLAG_TXE;
    }
 }
 
 // -----------------------------------------------------------------------------
 //  TASK_LED
 // -----------------------------------------------------------------------------
-void TASK_LED(void *pvParameters)
+void Task_Led(void const * argument)
 {
-   IOCMD_NOTICE(MAIN_TASK_LED, "led thread entered!");
+   USBD_NOTICE(MAIN_TASK_LED, "led thread entered!");
 
    while(1)
    {
@@ -130,7 +140,7 @@ void TASK_LED(void *pvParameters)
       LED_OFF();
       OS_Sleep_Ms(500);
    }
-} /* TASK_LED */
+} /* Task_Led */
 
 // -----------------------------------------------------------------------------
 //  Task_Logger_Commander
@@ -148,10 +158,12 @@ void Task_Logger_Commander(void *pvParameters)
 
    while(1)
    {
+#ifdef IOCMD_USE_LOG
       if(CDC_VCOM_Get_Dtr(VCOM_CMD))
       {
          proc_logs(logs_exe);
       }
+#endif
       if(!Buff_Ring_Is_Empty(out_buf, BUFF_TRUE))
       {
          size = Buff_Ring_Read(out_buf, data, sizeof(data), BUFF_TRUE);
@@ -168,15 +180,21 @@ int main(void)
 {
    Buff_Ring_XT *out_buf;
    const IOCMD_Print_Exe_Params_XT *exe;
-   // initialize clocks, interrupts and other things
-   system_initialize();
 
+   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+   HAL_Init();
+
+   /* Configure the system clock */
+   SystemClock_Config();
+
+#ifdef IOCMD_USE_LOG
    IOCMD_Logs_Init();
+#endif
 
-   led_init();
-   LED_OFF();
+   /* Initialize all configured peripherals */
+   MX_GPIO_Init();
 
-   configure_usart(IOCMD_EXE_USART_NUM, 115200, USART_StopBits_1, USART_Parity_No, 1, 0);
+   configure_usart(IOCMD_EXE_USART_NUM, 115200, UART_STOPBITS_1, UART_PARITY_NONE, 1, 0);
 
    main_usbd_init();
 
@@ -193,18 +211,12 @@ int main(void)
 
    OS_Init();
 
-   IOCMD_NOTICE(MAIN_TASK_USART, "Init USBD");
-
-   // configure HCLK clock as SysTick clock source
-   SysTick_CLKSourceConfig( SysTick_CLKSource_HCLK );
-
-
    // create FreeRTOS tasks
    if(OS_MAX_NUM_CONTEXTS == OS_Create_Thread(
-      TASK_LED,
+      Task_Led,
       NULL,
       "led1",
-      configMINIMAL_STACK_SIZE * 4,
+      configMINIMAL_STACK_SIZE * 2,
       tskIDLE_PRIORITY + 2))
    {
       // application should never get here, unless there is a memory allocation problem
@@ -226,91 +238,13 @@ int main(void)
    // start the sheduler
    OS_Start();
 
+   /* We should never get here as control is now taken by the scheduler */
 
-   while(1)
+   /* Infinite loop */
+   while (1)
    {
-      ;
    }
-
 } /* main */
-
-
-
-void led_init(void) {
-   GPIO_InitTypeDef gpio_led;
-
-   gpio_led.GPIO_Pin = LED1_PIN;
-   gpio_led.GPIO_Speed = GPIO_Speed_50MHz;
-   gpio_led.GPIO_Mode = LED1_PIN_MODE;
-   GPIO_Init(LED1_PORT, &gpio_led);
-} /* led_init */
-
-
-
-void system_initialize(void) {
-   ErrorStatus HSEStartUpStatus;
-   uint32_t i;
-
-   /* RCC system reset(for debug purpose) */
-   RCC_DeInit();
-
-   /* Enable HSE */
-   RCC_HSEConfig(RCC_HSE_ON);
-
-   //default HSEStartUp_TimeOut is too short for out 4MHz oscillator to start (~80ms)
-   for (i = 0; i < 0xFFFF; i++){
-      asm("nop");
-   }
-
-   /* Wait till HSE is ready */
-   HSEStartUpStatus = RCC_WaitForHSEStartUp();
-
-   if(HSEStartUpStatus == SUCCESS)   {
-      /* Enable Prefetch Buffer */
-      FLASH_PrefetchBufferCmd(FLASH_PrefetchBuffer_Enable);
-
-      /* Flash 2 wait state */
-      FLASH_SetLatency(FLASH_Latency_2);
-
-      /* HCLK = SYSCLK */
-      RCC_HCLKConfig(RCC_SYSCLK_Div1);
-
-      /* PCLK2 = HCLK */
-      RCC_PCLK2Config(RCC_HCLK_Div4);
-
-      /* PCLK1 = HCLK/2 */
-      RCC_PCLK1Config(RCC_HCLK_Div2);   // SPI2: max div = 4 /4MHz HSE
-
-      /* PLLCLK = 8MHz * 6 = 48 MHz */
-      RCC_PLLConfig(RCC_PLLSource_HSE_Div2, RCC_PLLMul_12);
-
-      /* Enable PLL */
-      RCC_PLLCmd(ENABLE);
-
-      /* Wait till PLL is ready */
-      while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET) {
-      }
-
-      /* Select PLL as system clock source */
-      RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
-
-      /* Wait till PLL is used as system clock source */
-      while(RCC_GetSYSCLKSource() != 0x08) {
-      }
-   }
-
-#ifdef  VECT_TAB_RAM
-   /* Set the Vector Table base location at 0x20000000 */
-   NVIC_SetVectorTable(NVIC_VectTab_RAM, 0x0);
-#else  /* VECT_TAB_FLASH  */
-   /* Set the Vector Table base location at 0x08000000 */
-   //NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
-   NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
-
-#endif
-
-   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO, ENABLE);
-} /* system_initialize */
 
 /*! \file main.c
    \brief Main application's entry point

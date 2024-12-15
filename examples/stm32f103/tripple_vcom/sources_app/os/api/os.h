@@ -26,7 +26,7 @@
 #ifndef OS_H_
 #define OS_H_
 
-#include <stdint.h>
+#include "std_libs.h"
 #include "os_cfg.h"
 
 /**
@@ -186,12 +186,7 @@ const char *OS_Get_Context_Name(OS_Context_Type_DT context_type, OS_Context_Id c
 /**
  * @brief Gets current system time. It is time from startup, unit is 1[ms].
  */
-#if( portTICK_TYPE_IS_ATOMIC == 0 )
 OS_Time_DT OS_Get_Time(void);
-#else
-extern volatile TickType_t xTickCount;
-#define OS_Get_Time()   ((OS_Time_DT)xTickCount)
-#endif
 
 /**
  * @brief function to postpone current task for time mentioned in miliseconds parameter.

@@ -244,7 +244,6 @@ const char *OS_Get_Context_Name(OS_Context_Type_DT context_type, OS_Context_Id c
    return result;
 } /* OS_Get_Context_Name */
 
-#if( portTICK_TYPE_IS_ATOMIC == 0 )
 OS_Time_DT OS_Get_Time(void)
 {
    OS_Time_DT result = 0;
@@ -259,12 +258,11 @@ OS_Time_DT OS_Get_Time(void)
    }
    else
    {
-      result = xTaskGetTickCountFromISR();
+      result = xTaskGetTickCount(); // actually, here should be xTaskGetTickCountFromISR but it was crashing..
    }
 
    return result;
 } /* OS_Get_Time */
-#endif
 
 void OS_Sleep_Ms(uint32_t miliseconds)
 {

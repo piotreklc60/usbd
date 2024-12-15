@@ -33,6 +33,7 @@
 #include "iocmd_exe_vcom.h"
 #include "usbd_port_stm32_cat_a.h"
 
+#ifdef IOCMD_USE_LOG
 static uint8_t main_working_buf[IOCMD_WORKING_BUF_RECOMMENDED_SIZE];
 
 void iocmd_log_immediately(void)
@@ -44,6 +45,7 @@ void proc_logs(const IOCMD_Print_Exe_Params_XT *exe)
 {
    IOCMD_Proc_Buffered_Logs(false, exe, main_working_buf, sizeof(main_working_buf));
 }
+#endif
 
 static void set_exe_vcom(IOCMD_Arg_DT *arg);
 static void set_exe_uart(IOCMD_Arg_DT *arg);
@@ -80,7 +82,11 @@ static IOCMD_Line_Collector_Params_XT line_collector =
    .cmds_tree = cmds_tree,
    .cmds_tree_num_elems = Num_Elems(cmds_tree),
    .line_pos = 0,
+#ifdef IOCMD_USE_LOG
    .parse_also_lib_cmds = IOCMD_TRUE
+#else
+   .parse_also_lib_cmds = IOCMD_FALSE
+#endif
 };
 
 extern void main_set_logs_exe(const IOCMD_Print_Exe_Params_XT *exe);
@@ -171,13 +177,17 @@ static void buff_dump(IOCMD_Arg_DT *arg)
 
 }
 
+#ifdef IOCMD_USE_LOG
 extern void iocmd_log_immediately(void);
+#endif
 
 static void usbd_imm(IOCMD_Arg_DT *arg)
 {
    IOCMD_UNUSED_PARAM(arg);
 
+#ifdef IOCMD_USE_LOG
    iocmd_log_immediately();
+#endif
 }
 
 static void usbd_ring(IOCMD_Arg_DT *arg)

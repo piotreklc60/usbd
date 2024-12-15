@@ -26,33 +26,31 @@
 #ifndef STM32_USART_INIT_H_
 #define STM32_USART_INIT_H_
 
-#include <stdint.h>
-
-#include <string.h>
+#include "std_libs.h"
 #include "iocmd.h"
 
 
 #define USART1_TX_PORT           GPIOA
-#define USART1_TX_PIN            GPIO_Pin_9
+#define USART1_TX_PIN            GPIO_PIN_9
 
 #define USART1_RX_PORT           GPIOA
-#define USART1_RX_PIN            GPIO_Pin_10
+#define USART1_RX_PIN            GPIO_PIN_10
 
 
 
 #define USART2_TX_PORT           GPIOA
-#define USART2_TX_PIN            GPIO_Pin_2
+#define USART2_TX_PIN            GPIO_PIN_2
 
 #define USART2_RX_PORT           GPIOA
-#define USART2_RX_PIN            GPIO_Pin_3
+#define USART2_RX_PIN            GPIO_PIN_3
 
 
 
 #define USART3_TX_PORT           GPIOB
-#define USART3_TX_PIN            GPIO_Pin_10
+#define USART3_TX_PIN            GPIO_PIN_10
 
 #define USART3_RX_PORT           GPIOB
-#define USART3_RX_PIN            GPIO_Pin_11
+#define USART3_RX_PIN            GPIO_PIN_11
 
 
 
