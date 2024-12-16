@@ -37,8 +37,8 @@
 #define STM32_CAT_A_USB_LP_CAN1_RX0_IRQ_ID     36
 #define STM32_CAT_A_USBWAKEUP_IRQ_ID           58
 
-#define STM32_CAT_A_IS_EXTI_PENDING(bit_num)    (0 != (EXTI->PR & (1 << (bit_num))))
-#define STM32_CAT_A_CLEAR_EXTI_PENDING(bit_num) EXTI->PR = (1 << (bit_num))
+#define STM32_CAT_A_IS_EXTI_PENDING(exti_pin)      (0 != (EXTI->PR & (exti_pin)))
+#define STM32_CAT_A_CLEAR_EXTI_PENDING(exti_pin)   EXTI->PR = (exti_pin)
 
 extern USBD_Atomic_Bool_DT port_stm32_cat_a_irq_active;
 USBD_Atomic_Bool_DT port_stm32f103_irq_enabled;
@@ -258,11 +258,11 @@ void USBD_Port_STM32_CAT_A_Clear_Exti_Line_18_Irq_Status(void)
 {
    USBD_ENTER_FUNC(USBD_DBG_PORT_IRQ);
 
-   if(STM32_CAT_A_IS_EXTI_PENDING(18))
+   if(STM32_CAT_A_IS_EXTI_PENDING(1 << 18))
    {
       USBD_DEBUG_MID(USBD_DBG_PORT_IRQ, "EXTI_Line18 cleared");
 
-      STM32_CAT_A_CLEAR_EXTI_PENDING(18);
+      STM32_CAT_A_CLEAR_EXTI_PENDING(1 << 18);
    }
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);

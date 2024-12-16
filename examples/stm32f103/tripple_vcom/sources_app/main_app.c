@@ -153,17 +153,19 @@ void Task_Logger_Commander(void *pvParameters)
 {
    const IOCMD_Print_Exe_Params_XT *exe = vcom_get_exe();
    Buff_Ring_XT *out_buf;
+   Buff_Ring_XT *in_buf;
    Buff_Size_DT size;
    uint8_t data[64];
 
    OS_Sleep_Ms(1);
 
    out_buf = CDC_Vcom_Get_Out_Buf(VCOM_CMD);
+   in_buf  = CDC_Vcom_Get_In_Buf(VCOM_CMD);
 
    while(1)
    {
 #ifdef IOCMD_USE_LOG
-      if(CDC_VCOM_Get_Dtr(VCOM_CMD))
+      if(CDC_VCOM_Get_Dtr(VCOM_CMD) && (BUFF_RING_GET_FREE_SIZE(in_buf) > (in_buf->size / 2)))
       {
          IOCMD_Proc_Buffered_Logs(false, logs_exe, main_working_buf, sizeof(main_working_buf));
       }

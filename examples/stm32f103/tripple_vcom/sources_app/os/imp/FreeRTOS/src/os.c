@@ -93,7 +93,6 @@ static const char* const os_irq_name[] =
    "USBWakeUp"
 };
 static OS_Context_Id os_num_installed_threads;
-static uint32_t      os_critical_global_key_isr;
 static uint_fast16_t os_critical_global_cntr_isr;
 
 TaskHandle_t xTaskGetCurrentTaskHandle( void );
@@ -102,7 +101,6 @@ void OS_Init (void)
 {
    os_thread_name[0] = "IDLE";
    os_num_installed_threads    = 1;
-   os_critical_global_key_isr  = 0;
    os_critical_global_cntr_isr = 0;
 } /* OS_Init */
 
@@ -250,49 +248,23 @@ const char *OS_Get_Context_Name(OS_Context_Type_DT context_type, OS_Context_Id c
 
 void OS_Enter_Critical_Section(void)
 {
-   uint32_t current_interrupt;
-   uint32_t key;
-
-   /* Obtain the number of the currently executing interrupt. */
-   __asm volatile( "mrs %0, ipsr" : "=r"( current_interrupt ) );
-
-   if(0 == current_interrupt)
-   {
-      portENTER_CRITICAL();
-   }
-   else
-   {
-      key = taskENTER_CRITICAL_FROM_ISR();
-
-      if(0 == os_critical_global_cntr_isr)
-      {
-         os_critical_global_key_isr = key;
-      }
-      ++os_critical_global_cntr_isr;
-   }
+   __asm volatile( "cpsid i" ::: "memory" );
+   __asm volatile( "dsb" );
+   __asm volatile( "isb" );
+   ++os_critical_global_cntr_isr;
 }
 
 void OS_Exit_Critical_Section(void)
 {
-   uint32_t current_interrupt;
-
-   /* Obtain the number of the currently executing interrupt. */
-   __asm volatile( "mrs %0, ipsr" : "=r"( current_interrupt ) );
-
-   if(0 == current_interrupt)
+   if(os_critical_global_cntr_isr > 0)
    {
-      portEXIT_CRITICAL();
+      --os_critical_global_cntr_isr;
    }
-   else
+   if(0 == os_critical_global_cntr_isr)
    {
-      if(os_critical_global_cntr_isr > 0)
-      {
-         --os_critical_global_cntr_isr;
-      }
-      if(0 == os_critical_global_cntr_isr)
-      {
-         taskEXIT_CRITICAL_FROM_ISR(os_critical_global_key_isr);
-      }
+      __asm volatile( "cpsie i" ::: "memory" );
+      __asm volatile( "dsb" );
+      __asm volatile( "isb" );
    }
 }
 
