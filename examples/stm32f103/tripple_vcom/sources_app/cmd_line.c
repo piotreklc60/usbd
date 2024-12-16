@@ -23,8 +23,7 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-#include <stdint.h>
-#include <string.h>
+#include "std_libs.h"
 #include "cmd_line.h"
 #include "iocmd.h"
 #include "usbd.h"
@@ -33,25 +32,10 @@
 #include "iocmd_exe_vcom.h"
 #include "usbd_port_stm32_cat_a.h"
 
-#ifdef IOCMD_USE_LOG
-static uint8_t main_working_buf[IOCMD_WORKING_BUF_RECOMMENDED_SIZE];
-
-void iocmd_log_immediately(void)
-{
-   IOCMD_Install_Immediate_Logs_Processor(usart_get_exe(), main_working_buf, sizeof(main_working_buf));
-}
-
-void proc_logs(const IOCMD_Print_Exe_Params_XT *exe)
-{
-   IOCMD_Proc_Buffered_Logs(false, exe, main_working_buf, sizeof(main_working_buf));
-}
-#endif
-
 static void set_exe_vcom(IOCMD_Arg_DT *arg);
 static void set_exe_uart(IOCMD_Arg_DT *arg);
 static void usbd_dump(IOCMD_Arg_DT *arg);
 static void buff_dump(IOCMD_Arg_DT *arg);
-static void usbd_imm(IOCMD_Arg_DT *arg);
 static void usbd_ring(IOCMD_Arg_DT *arg);
 static void usbd_dsr(IOCMD_Arg_DT *arg);
 static void usbd_dcd(IOCMD_Arg_DT *arg);
@@ -64,7 +48,6 @@ static const IOCMD_Command_Tree_XT vcom_cmds_tab[] =
    IOCMD_GROUP_END(),
    IOCMD_ELEM(       "dump"                  , usbd_dump             , "USBD HW dump"),
    IOCMD_ELEM(       "buff"                  , buff_dump             , "buffers dump"),
-   IOCMD_ELEM(       "immediately"           , usbd_imm              , "from now logs will be immediately printed out"),
    IOCMD_ELEM(       "ring"                  , usbd_ring             , "Toggles RING signal for vcom 0"),
    IOCMD_ELEM(       "dsr"                   , usbd_dsr              , "Toggles DSR signal for vcom 0"),
    IOCMD_ELEM(       "dcd"                   , usbd_dcd              , "Toggles DCD signal for vcom 0")
@@ -175,19 +158,6 @@ static void buff_dump(IOCMD_Arg_DT *arg)
    IOCMD_Oprintf(arg->arg_out, "USART1->CR3:  0X%04X\n\r", USART1->CR3);
    IOCMD_Oprintf(arg->arg_out, "USART1->GTPR: 0X%04X\n\r", USART1->GTPR);
 
-}
-
-#ifdef IOCMD_USE_LOG
-extern void iocmd_log_immediately(void);
-#endif
-
-static void usbd_imm(IOCMD_Arg_DT *arg)
-{
-   IOCMD_UNUSED_PARAM(arg);
-
-#ifdef IOCMD_USE_LOG
-   iocmd_log_immediately();
-#endif
 }
 
 static void usbd_ring(IOCMD_Arg_DT *arg)

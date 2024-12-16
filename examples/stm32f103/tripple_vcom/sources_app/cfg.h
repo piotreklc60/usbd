@@ -44,28 +44,6 @@
 #define MAX(a,b)          (((a) > (b)) ? (a) : (b))
 #define MIN(a,b)          (((a) < (b)) ? (a) : (b))
 
-extern int critical_global_cntr;
-
-#define ENTER_CRITICAL() \
-do { \
-   __asm volatile ("   CPSID   I"); \
-   critical_global_cntr++; \
-} while(0)
-
-#define EXIT_CRITICAL() \
-do { \
-   if(critical_global_cntr > 0) \
-   { \
-     critical_global_cntr--; \
-   } \
-   if(0 == critical_global_cntr) \
-   { \
-     __asm volatile ("   CPSIE   I"); \
-   } \
-} while(0)
-
-
-#if 1
 
 
 #define USBD_DECLARE_INVOKE_PARAMS(_invoke_params)       OS_Invoke_XT _invoke_params;
@@ -87,26 +65,6 @@ extern void USBD_Port_STM32_CAT_A_OS_Irq_Unlock (struct OS_Invoke_eXtendedTag *i
 
 #define USBD_INVOKE(_invoke_params, _action)             OS_INVOKE(&(_invoke_params), _action)
 
-
-#else
-
-
-#define USBD_DECLARE_INVOKE_PARAMS(_invoke_params)       struct { OS_Context_Id invoke_context_id; }_invoke_params;
-
-
-#define USBD_INIT_INVOKE_PARAMS(_invoke_params)          (_invoke_params).invoke_context_id = OS_MAX_NUM_CONTEXTS
-
-
-#define USBD_MARK_INVOKE_DESTINATION(_invoke_params)     (_invoke_params).invoke_context_id = OS_Get_Current_Context_Unique_Id();
-
-
-#define USBD_IS_INVOKE_NEEDED(_invoke_params)            ((_invoke_params).invoke_context_id != OS_Get_Current_Context_Unique_Id())
-
-
-#define USBD_TRY_INVOKE(_invoke_params, _action)         ((!USBD_IS_INVOKE_NEEDED(_invoke_params)) && _action)
-
-
-#endif
 
 
 #endif

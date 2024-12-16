@@ -25,6 +25,10 @@
 
 #include "iocmd_exe_usart.h"
 
+#define EXCEPTIONS_DEBUG      0
+
+#if(EXCEPTIONS_DEBUG)
+
 void print_scb_regs(const IOCMD_Print_Exe_Params_XT *exe)
 {
    char temp[11];
@@ -53,26 +57,24 @@ void print_scb_regs(const IOCMD_Print_Exe_Params_XT *exe)
    exe->print_string(exe->dev, temp);
    exe->print_endl_repeat(exe->dev, 1);
 }
+#endif
 
 void NMI_Handler(void)
 {
-   // LED_ON();
-//   ENTER_CRITICAL();
-
+#if(EXCEPTIONS_DEBUG)
    const IOCMD_Print_Exe_Params_XT *exe = usart_get_exe();
    exe->print_endl_repeat(exe->dev, 1);
    exe->print_string(exe->dev, __FUNCTION__);
    exe->print_endl_repeat(exe->dev, 1);
    print_scb_regs(exe);
-//   EXIT_CRITICAL();
+#endif
 
-//   while(1);
+   while(1);
 }
 
 void HardFault_Handler(void)
 {
-   ENTER_CRITICAL();
-
+#if(EXCEPTIONS_DEBUG)
    const IOCMD_Print_Exe_Params_XT *exe = usart_get_exe();
    exe->print_endl_repeat(exe->dev, 1);
    exe->print_string(exe->dev, __FUNCTION__);
@@ -86,63 +88,59 @@ void HardFault_Handler(void)
    }
    exe->print_endl_repeat(exe->dev, 1);
    print_scb_regs(exe);
-   EXIT_CRITICAL();
+#endif
 
    while(1);
 }
 
 void MemManage_Handler(void)
 {
-   ENTER_CRITICAL();
-
+#if(EXCEPTIONS_DEBUG)
    const IOCMD_Print_Exe_Params_XT *exe = usart_get_exe();
    exe->print_endl_repeat(exe->dev, 1);
    exe->print_string(exe->dev, __FUNCTION__);
    exe->print_endl_repeat(exe->dev, 1);
    print_scb_regs(exe);
-   EXIT_CRITICAL();
+#endif
 
    while(1);
 }
 
 void BusFault_Handler(void)
 {
-   ENTER_CRITICAL();
-
+#if(EXCEPTIONS_DEBUG)
    const IOCMD_Print_Exe_Params_XT *exe = usart_get_exe();
    exe->print_endl_repeat(exe->dev, 1);
    exe->print_string(exe->dev, __FUNCTION__);
    exe->print_endl_repeat(exe->dev, 1);
    print_scb_regs(exe);
-   EXIT_CRITICAL();
+#endif
 
    while(1);
 }
 
 void UsageFault_Handler(void)
 {
-   ENTER_CRITICAL();
-
+#if(EXCEPTIONS_DEBUG)
    const IOCMD_Print_Exe_Params_XT *exe = usart_get_exe();
    exe->print_endl_repeat(exe->dev, 1);
    exe->print_string(exe->dev, __FUNCTION__);
    exe->print_endl_repeat(exe->dev, 1);
    print_scb_regs(exe);
-   EXIT_CRITICAL();
+#endif
 
    while(1);
 }
 
 void DebugMon_Handler(void)
 {
-   ENTER_CRITICAL();
-
+#if(EXCEPTIONS_DEBUG)
    const IOCMD_Print_Exe_Params_XT *exe = usart_get_exe();
    exe->print_endl_repeat(exe->dev, 1);
    exe->print_string(exe->dev, __FUNCTION__);
    exe->print_endl_repeat(exe->dev, 1);
    print_scb_regs(exe);
-   EXIT_CRITICAL();
+#endif
 
    while(1);
 }

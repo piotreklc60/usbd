@@ -30,7 +30,7 @@
 
 #define USBD_USE_IOCMD
 
-//#define USBD_USE_INVALIDATION_ON_INIT               USBD_FEATURE_NOT_PRESENT
+#define USBD_USE_INVALIDATION_ON_INIT              USBD_FEATURE_NOT_PRESENT
 
 #define USBD_MAX_NUM_CONFIGURATIONS                5
 #define USBD_MAX_NUM_INTERFACES                    6
@@ -39,5 +39,9 @@
 #define USBD_MAX_NUM_EVENTS                        4
 #define USBDC_MAX_NUM_EVENTS                       5
 #define USBD_IOTP_BUFF_USE
+
+
+#define USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE   USBD_FEATURE_PRESENT
+#define USBD_PORT_STM32_CAT_A_USE_PULL_UP          USBD_FEATURE_PRESENT
 
 #endif

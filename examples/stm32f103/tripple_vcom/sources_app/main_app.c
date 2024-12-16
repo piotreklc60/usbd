@@ -40,7 +40,11 @@
 #include "cmd_line.h"
 
 
-int critical_global_cntr = 0;
+
+#ifdef IOCMD_USE_LOG
+static uint8_t main_working_buf[IOCMD_WORKING_BUF_RECOMMENDED_SIZE];
+#endif
+
 
 
 void system_initialize(void);
@@ -94,16 +98,16 @@ void USART1_IRQHandler(void)
 
       if(BUFF_CHECK_PTR(Buff_Ring_XT, buf))
       {
-         ENTER_CRITICAL();
+         OS_Enter_Critical_Section();
          if(0 == Buff_Ring_Read(buf, &data, sizeof(data), BUFF_FALSE))
          {
             buf->extension->on_write = Vcom_0_On_Write;
 
-            EXIT_CRITICAL();
+            OS_Exit_Critical_Section();
          }
          else
          {
-            EXIT_CRITICAL();
+            OS_Exit_Critical_Section();
 
             USART1->DR = (uint32_t)data;
 
@@ -133,10 +137,10 @@ void Task_Led(void const * argument)
 
    while(1)
    {
-      IOCMD_NOTICE(MAIN_TASK_LED, "led ON!");
+      USBD_NOTICE(MAIN_TASK_LED, "led ON!");
       LED_ON();
       OS_Sleep_Ms(500);
-      IOCMD_NOTICE(MAIN_TASK_LED, "led FF!");
+      USBD_NOTICE(MAIN_TASK_LED, "led FF!");
       LED_OFF();
       OS_Sleep_Ms(500);
    }
@@ -161,7 +165,7 @@ void Task_Logger_Commander(void *pvParameters)
 #ifdef IOCMD_USE_LOG
       if(CDC_VCOM_Get_Dtr(VCOM_CMD))
       {
-         proc_logs(logs_exe);
+         IOCMD_Proc_Buffered_Logs(false, logs_exe, main_working_buf, sizeof(main_working_buf));
       }
 #endif
       if(!Buff_Ring_Is_Empty(out_buf, BUFF_TRUE))

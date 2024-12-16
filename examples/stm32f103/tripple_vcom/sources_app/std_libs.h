@@ -30,16 +30,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#define atomic_t int32_t
-
 #define bool   bool_t
-
-//typedef uint64_t ptrdiff_t;
 
 #define bool_t uint_fast8_t
 #define false 0
 #define true 1
-// #define size_t int
 
 
 #endif

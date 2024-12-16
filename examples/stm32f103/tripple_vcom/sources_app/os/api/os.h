@@ -99,13 +99,13 @@ typedef uint32_t OS_Time_DT;
  * Functions
  */
 
-/** @defgroup Init Operating System Abstraction Layer - Initialization
- *  @brief Initialization of OSA Engine, Threads creation / control and start.
+/** @defgroup Init and Threads Operating System Abstraction Layer - startup and threads management
+ *  @brief Initialization of OS Engine, Threads creation / control and start.
  *  @{
  */
 
 /**
- * @brief Initializes OSA engine
+ * @brief Initializes OS engine
  */
 void OS_Init (void);
 
@@ -176,6 +176,26 @@ OS_Context_Id OS_Get_Current_Context_Id(void);
 const char *OS_Get_Context_Name(OS_Context_Type_DT context_type, OS_Context_Id context_id);
 
 /** @} */ // end of Init
+
+
+/** @defgroup Critical Section Operating System Abstraction Layer - Critical sections management
+ *  @brief Getting, calculating time, delays, etc.
+ *  @{
+ */
+
+/**
+ * @brief Gets current system time. It is time from startup, unit is 1[ms].
+ */
+void OS_Enter_Critical_Section(void);
+
+/**
+ * @brief function to postpone current task for time mentioned in miliseconds parameter.
+ *
+ * @param miliseconds amount of time for which task shall sleep.
+ */
+void OS_Exit_Critical_Section(void);
+
+/** @} */ // end of Critical Section
 
 
 /** @defgroup Time Operating System Abstraction Layer - Time management

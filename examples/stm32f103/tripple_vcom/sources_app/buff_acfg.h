@@ -26,7 +26,7 @@
 #ifndef RING_BUF_CFG_H_
 #define RING_BUF_CFG_H_
 
-#include <string.h>
+#include "std_libs.h"
 #include "cfg.h"
 
 #define BUFF_DEFAULT_FEATURES_STATE                      BUFF_FEATURE_DISABLED
@@ -65,12 +65,12 @@
 
 #define BUFF_SAVE_PROGRAM_MEMORY                         BUFF_FEATURE_ENABLED
 
-#define BUFF_LIKELY(expresion)                    __builtin_expect ((expresion), 1)
-#define BUFF_UNLIKELY(expresion)                  __builtin_expect ((expresion), 0)
+#define BUFF_LIKELY(expresion)                           __builtin_expect ((expresion), 1)
+#define BUFF_UNLIKELY(expresion)                         __builtin_expect ((expresion), 0)
 
 
-#define BUFF_PROTECTION_LOCK(buf)      ENTER_CRITICAL()
-#define BUFF_PROTECTION_UNLOCK(buf)    EXIT_CRITICAL()
+#define BUFF_PROTECTION_LOCK(buf)                        OS_Enter_Critical_Section()
+#define BUFF_PROTECTION_UNLOCK(buf)                      OS_Exit_Critical_Section()
 
 
 #endif

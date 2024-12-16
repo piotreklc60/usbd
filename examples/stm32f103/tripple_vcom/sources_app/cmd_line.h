@@ -28,10 +28,6 @@
 
 #include "iocmd.h"
 
-#ifdef IOCMD_USE_LOG
-void proc_logs(const IOCMD_Print_Exe_Params_XT *exe);
-#endif
-
 void Cmd_Parse_Bytes(const IOCMD_Print_Exe_Params_XT *exe, uint8_t *recv_bytes, size_t num_recv_bytes);
 
 const char *Cmd_Parser_Get_Current_Line(void);
