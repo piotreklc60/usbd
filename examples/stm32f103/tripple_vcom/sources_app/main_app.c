@@ -165,7 +165,7 @@ void Task_Logger_Commander(void *pvParameters)
    while(1)
    {
 #ifdef IOCMD_USE_LOG
-      if(CDC_VCOM_Get_Dtr(VCOM_CMD) && (BUFF_RING_GET_FREE_SIZE(in_buf) > (in_buf->size / 2)))
+      if(CDC_VCOM_Get_Dtr(VCOM_CMD) && ((VCOM_CMD)->data.comm_physical_params.baudrate > 9600))
       {
          IOCMD_Proc_Buffered_Logs(false, logs_exe, main_working_buf, sizeof(main_working_buf));
       }

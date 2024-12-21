@@ -45,6 +45,17 @@ static const IOCMD_Print_Exe_Params_XT exe_vcom =
    .refresh_line        = vcom_refresh_line,
 };
 
+static void wait_until_ready(Buff_Ring_XT* buff, Buff_Size_DT size)
+{
+   if(OS_CONTEXT_TYPE_TASK == OS_Get_Current_Context_Type())
+   {
+      while(BUFF_RING_GET_FREE_SIZE(buff) < size)
+      {
+         OS_Sleep_Ms(1);
+      }
+   }
+}
+
 static int vcom_print_text(void *dev, const char *string)
 {
    Buff_Ring_XT* buff = (Buff_Ring_XT*)dev;
@@ -53,6 +64,7 @@ static int vcom_print_text(void *dev, const char *string)
    if(NULL != string)
    {
       result = strlen(string);
+      wait_until_ready(buff, (Buff_Size_DT)result);
       Buff_Ring_Write(buff, string, (Buff_Size_DT)result, BUFF_TRUE, BUFF_TRUE);
    }
 
@@ -70,6 +82,7 @@ static int vcom_print_text_repeat(void *dev, const char *string, int num_repeats
       len = strlen(string);
       while(0 != num_repeats)
       {
+         wait_until_ready(buff, len);
          Buff_Ring_Write(buff, string, len, BUFF_TRUE, BUFF_TRUE);
 
          num_repeats--;
@@ -92,6 +105,7 @@ static int vcom_print_text_len(void *dev, const char *string, int str_len)
       {
          result = MIN(result, str_len);
       }
+      wait_until_ready(buff, (Buff_Size_DT)result);
       Buff_Ring_Write(buff, string, (Buff_Size_DT)result, BUFF_TRUE, BUFF_TRUE);
    }
 
@@ -105,6 +119,7 @@ static void vcom_print_endline_repeat(void *dev, int num_repeats)
 
    while(0 != num_repeats)
    {
+      wait_until_ready(buff, sizeof(endl) - 1);
       Buff_Ring_Write(buff, endl, sizeof(endl) - 1, BUFF_TRUE, BUFF_TRUE);
       num_repeats--;
    }
@@ -115,6 +130,7 @@ static void vcom_print_cariage_return(void *dev)
    Buff_Ring_XT* buff = (Buff_Ring_XT*)dev;
    const char cariage_ret[] = "\r";
 
+   wait_until_ready(buff, sizeof(cariage_ret) - 1);
    Buff_Ring_Write(buff, cariage_ret, sizeof(cariage_ret) - 1, BUFF_TRUE, BUFF_TRUE);
 }
 
