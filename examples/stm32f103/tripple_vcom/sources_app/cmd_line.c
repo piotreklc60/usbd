@@ -36,9 +36,11 @@ static void set_exe_vcom(IOCMD_Arg_DT *arg);
 static void set_exe_uart(IOCMD_Arg_DT *arg);
 static void usbd_dump(IOCMD_Arg_DT *arg);
 static void buff_dump(IOCMD_Arg_DT *arg);
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
 static void usbd_ring(IOCMD_Arg_DT *arg);
 static void usbd_dsr(IOCMD_Arg_DT *arg);
 static void usbd_dcd(IOCMD_Arg_DT *arg);
+#endif
 
 static const IOCMD_Command_Tree_XT vcom_cmds_tab[] =
 {
@@ -48,9 +50,11 @@ static const IOCMD_Command_Tree_XT vcom_cmds_tab[] =
    IOCMD_GROUP_END(),
    IOCMD_ELEM(       "dump"                  , usbd_dump             , "USBD HW dump"),
    IOCMD_ELEM(       "buff"                  , buff_dump             , "buffers dump"),
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
    IOCMD_ELEM(       "ring"                  , usbd_ring             , "Toggles RING signal for vcom 0"),
    IOCMD_ELEM(       "dsr"                   , usbd_dsr              , "Toggles DSR signal for vcom 0"),
-   IOCMD_ELEM(       "dcd"                   , usbd_dcd              , "Toggles DCD signal for vcom 0")
+   IOCMD_ELEM(       "dcd"                   , usbd_dcd              , "Toggles DCD signal for vcom 0"),
+#endif
 };
 
 static const IOCMD_Command_Tree_List_XT cmds_tree[] =
@@ -160,6 +164,8 @@ static void buff_dump(IOCMD_Arg_DT *arg)
 
 }
 
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
+
 static void usbd_ring(IOCMD_Arg_DT *arg)
 {
    static USBD_Bool_DT ring = USBD_FALSE;
@@ -192,6 +198,8 @@ static void usbd_dcd(IOCMD_Arg_DT *arg)
 
    CDC_VCOM_Set_Dcd(&vcom_0, dcd);
 }
+
+#endif
 
 void Cmd_Parse_Bytes(const IOCMD_Print_Exe_Params_XT *exe, uint8_t *recv_bytes, size_t num_recv_bytes)
 {

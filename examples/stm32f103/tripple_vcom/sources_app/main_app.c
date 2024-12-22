@@ -85,7 +85,7 @@ void USART1_IRQHandler(void)
 //      Cmd_Parse_Bytes(usart_get_exe(), &data, 1);
 
       /* transmit data received from UART to VCOM only if DTR line is set (VCOM is open) */
-      if(CDC_VCOM_Get_Dtr(VCOM_UART))
+      if(CDC_VCOM_Get_Dtr(VCOM_UART) && ((VCOM_UART)->data.comm_physical_params.baudrate > 9600))
       {
          Buff_Ring_Write(CDC_Vcom_Get_In_Buf(VCOM_UART), &data, sizeof(data), BUFF_FALSE, BUFF_TRUE);
       }

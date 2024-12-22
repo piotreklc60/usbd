@@ -65,18 +65,21 @@ static const char* const cdc_vcom_set_line_coding_parity[] =
 };
 #endif
 
-static void CDC_VCOM_send_notif_done(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+typedef void (*CDC_VCOM_check_params_execute) (CDC_VCOM_Params_XT *cdc_vcom, USBD_IOTP_EVENT_Params_XT *tp_in);
+
+static void CDC_VCOM_check_params_and_execute(
+   USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size, CDC_VCOM_check_params_execute execute)
 {
    USBD_Vendor_Data_XT *tp_vendor_data;
-   USBD_Params_XT *usbd;
    USBDC_Interface_Header_XT *if_params;
-   USBD_IOTP_EVENT_Params_XT *tp_in;
    CDC_VCOM_Params_XT *cdc_vcom;
+   USBD_Params_XT *usbd;
+   USBD_IOTP_EVENT_Params_XT *tp_in;
 
    USBD_UNUSED_PARAM(dir);
    USBD_UNUSED_PARAM(size);
 
-   USBD_ENTER_FUNC(CDC_VCOM_EVENT);
+   USBD_ENTER_FUNC(CDC_VCOM_REQ);
 
    if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp))
    {
@@ -94,14 +97,86 @@ static void CDC_VCOM_send_notif_done(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direc
 
             if(USBD_CHECK_PTR(CDC_VCOM_Params_XT, cdc_vcom))
             {
-               cdc_vcom->data.serial_state_notification.send_ongoing = USBD_FALSE;
+               execute(cdc_vcom, tp_in);
+            }
+            else
+            {
+               USBD_WARN_2(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p)", "cdc_vcom", cdc_vcom);
             }
          }
+         else
+         {
+            USBD_WARN_4(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p) or %s (%p)", "if_params", if_params, "tp_in", tp_in);
+         }
+      }
+      else
+      {
+         USBD_WARN_4(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p) or %s (%p)", "tp_vendor_data", tp_vendor_data, "usbd", usbd);
       }
    }
+   else
+   {
+      USBD_WARN_2(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p)", "tp", tp);
+   }
+} /* CDC_VCOM_check_params_and_execute */
 
-   USBD_EXIT_FUNC(CDC_VCOM_EVENT);
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
+
+static void CDC_VCOM_send_notif_done_action(CDC_VCOM_Params_XT *cdc_vcom, USBD_IOTP_EVENT_Params_XT *tp_in)
+{
+   USBD_ENTER_FUNC(CDC_VCOM_REQ);
+
+   USBD_UNUSED_PARAM(tp_in);
+
+   cdc_vcom->data.serial_state_notification.send_ongoing = USBD_FALSE;
+
+   USBD_EXIT_FUNC(CDC_VCOM_REQ);
+} /* CDC_VCOM_send_notif_done_action */
+
+static void CDC_VCOM_send_notif_done(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+{
+   CDC_VCOM_check_params_and_execute(tp, dir, size, CDC_VCOM_send_notif_done_action);
 } /* CDC_VCOM_send_notif_done */
+
+#endif
+
+void CDC_VCOM_on_ready_params_change_action(CDC_VCOM_Params_XT *cdc_vcom, USBD_IOTP_EVENT_Params_XT *tp_in)
+{
+   USBD_ENTER_FUNC(CDC_VCOM_REQ);
+
+   (void)USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+
+   USBD_DEBUG_MID_4(CDC_VCOM_ONOFF, "%s.LINE_CODING.%-9s:  %d - %s",
+      cdc_vcom->data.name, "baudrate", cdc_vcom->data.comm_physical_params.baudrate, "");
+   USBD_DEBUG_MID_4(CDC_VCOM_ONOFF, "%s.LINE_CODING.%-9s:  %d - %s",
+      cdc_vcom->data.name,
+      "stop_bits",
+      cdc_vcom->data.comm_physical_params.stop_bits,
+      cdc_vcom->data.comm_physical_params.stop_bits < Num_Elems(cdc_vcom_set_line_coding_stop_bits) ?
+         cdc_vcom_set_line_coding_stop_bits[cdc_vcom->data.comm_physical_params.stop_bits] : "Unknown");
+   USBD_DEBUG_MID_4(CDC_VCOM_ONOFF, "%s.LINE_CODING.%-9s:  %d - %s",
+      cdc_vcom->data.name,
+      "partity",
+      cdc_vcom->data.comm_physical_params.partity,
+      cdc_vcom->data.comm_physical_params.partity < Num_Elems(cdc_vcom_set_line_coding_parity) ?
+         cdc_vcom_set_line_coding_parity[cdc_vcom->data.comm_physical_params.partity] : "Unknown");
+   USBD_DEBUG_MID_4(CDC_VCOM_ONOFF, "%s.LINE_CODING.%-9s:  %d - %s",
+      cdc_vcom->data.name, "data_bits", cdc_vcom->data.comm_physical_params.data_bits, "");
+
+   if(USBD_CHECK_HANDLER(CDC_VCOM_On_Params_Change_HT, cdc_vcom->handlers.change_params))
+   {
+      USBD_DEBUG_HI(CDC_VCOM_ONOFF, "call LINE_CODING change_params");
+
+      USBD_CALL_HANDLER(CDC_VCOM_On_Params_Change_HT, cdc_vcom->handlers.change_params) (cdc_vcom);
+   }
+
+   USBD_EXIT_FUNC(CDC_VCOM_REQ);
+} /* CDC_VCOM_on_ready_params_change_action */
+
+static void CDC_VCOM_on_ready_params_change(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+{
+   CDC_VCOM_check_params_and_execute(tp, dir, size, CDC_VCOM_on_ready_params_change_action);
+} /* CDC_VCOM_on_ready_params_change */
 
 static void CDC_VCOM_on_ready_send_status(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
@@ -141,90 +216,6 @@ static void CDC_VCOM_on_ready_send_status(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_
    USBD_EXIT_FUNC(CDC_VCOM_REQ);
 } /* cdc_vcom_on_ready_send_status */
 
-static void CDC_VCOM_on_ready_params_change(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
-{
-   USBD_Vendor_Data_XT *tp_vendor_data;
-   USBDC_Interface_Header_XT *if_params;
-   CDC_VCOM_Params_XT *cdc_vcom;
-   USBD_Params_XT *usbd;
-   USBD_IOTP_EVENT_Params_XT *tp_in;
-
-   USBD_UNUSED_PARAM(dir);
-   USBD_UNUSED_PARAM(size);
-
-   USBD_ENTER_FUNC(CDC_VCOM_REQ);
-
-   USBD_DEBUG_HI(CDC_VCOM_REQ, "LINE_CODING on_ready");
-
-   if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp))
-   {
-      tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
-      usbd = USBD_IOTP_EVENT_Get_USBD(tp);
-
-      if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data) && USBD_CHECK_PTR(void, usbd))
-      {
-         if_params   = (USBDC_Interface_Header_XT*)(tp_vendor_data->pvoid);
-         tp_in       = (USBD_IOTP_EVENT_Params_XT*)USBD_IO_UP_Get_IN_TP_Params(usbd, 0);
-
-         if(USBD_CHECK_PTR(USBDC_Interface_Header_XT, if_params) && USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp_in))
-         {
-            cdc_vcom = (CDC_VCOM_Params_XT*)(if_params->vendor.pvoid);
-
-            if(USBD_CHECK_PTR(CDC_VCOM_Params_XT, cdc_vcom))
-            {
-               (void)USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
-
-               USBD_DEBUG_MID_4(CDC_VCOM_ONOFF, "%s.LINE_CODING.%-9s:  %d - %s",
-                  cdc_vcom->data.name, "baudrate", cdc_vcom->data.comm_physical_params.baudrate, "");
-               USBD_DEBUG_MID_4(CDC_VCOM_ONOFF, "%s.LINE_CODING.%-9s:  %d - %s",
-                  cdc_vcom->data.name,
-                  "stop_bits",
-                  cdc_vcom->data.comm_physical_params.stop_bits,
-                  cdc_vcom->data.comm_physical_params.stop_bits < Num_Elems(cdc_vcom_set_line_coding_stop_bits) ?
-                     cdc_vcom_set_line_coding_stop_bits[cdc_vcom->data.comm_physical_params.stop_bits] : "Unknown");
-               USBD_DEBUG_MID_4(CDC_VCOM_ONOFF, "%s.LINE_CODING.%-9s:  %d - %s",
-                  cdc_vcom->data.name,
-                  "partity",
-                  cdc_vcom->data.comm_physical_params.partity,
-                  cdc_vcom->data.comm_physical_params.partity < Num_Elems(cdc_vcom_set_line_coding_parity) ?
-                     cdc_vcom_set_line_coding_parity[cdc_vcom->data.comm_physical_params.partity] : "Unknown");
-               USBD_DEBUG_MID_4(CDC_VCOM_ONOFF, "%s.LINE_CODING.%-9s:  %d - %s",
-                  cdc_vcom->data.name, "data_bits", cdc_vcom->data.comm_physical_params.data_bits, "");
-
-               if(USBD_CHECK_HANDLER(CDC_VCOM_On_Params_Change_HT, cdc_vcom->handlers.change_params))
-               {
-                  USBD_DEBUG_HI(CDC_VCOM_ONOFF, "call LINE_CODING change_params");
-
-                  USBD_CALL_HANDLER(CDC_VCOM_On_Params_Change_HT, cdc_vcom->handlers.change_params) (cdc_vcom);
-               }
-            }
-            else
-            {
-               USBD_WARN_2(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p)", "cdc_vcom", cdc_vcom);
-            }
-         }
-         else
-         {
-            USBD_WARN_4(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p) or %s (%p)", "if_params", if_params, "tp_in", tp_in);
-         }
-      }
-      else
-      {
-         USBD_WARN_4(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p) or %s (%p)", "tp_vendor_data", tp_vendor_data, "usbd", usbd);
-      }
-   }
-   else
-   {
-      USBD_WARN_2(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p)", "tp", tp);
-   }
-
-
-//   IOCMD_Set_All_Entrances(IOCMD_ENTRANCE_DISABLED);
-//   IOCMD_Set_All_Logs(IOCMD_LOG_LEVEL_EMERG, IOCMD_LOG_LEVEL_EMERG);
-
-   USBD_EXIT_FUNC(CDC_VCOM_REQ);
-} /* CDC_VCOM_on_ready_params_change */
-
 static USBD_Bool_DT CDC_VCOM_on_request(
    USBDC_Params_XT *usbdc,
    uint8_t ep_num,
@@ -239,10 +230,12 @@ static USBD_Bool_DT CDC_VCOM_on_request(
    uint16_t *ptr16;
    USBD_IO_Inout_Data_Size_DT size;
    uint16_t request;
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
    USBD_Bool_DT previous_dtr;
    USBD_Bool_DT previous_rts;
    USBD_Bool_DT dtr;
    USBD_Bool_DT rts;
+#endif
    USBD_Bool_DT result = USBD_FALSE;
 
    USBD_ENTER_FUNC(CDC_VCOM_REQ);
@@ -410,6 +403,7 @@ static USBD_Bool_DT CDC_VCOM_on_request(
 
          case CDC_SET_CONTROL_LINE_STATE_INTERFACE:
             USBD_DEBUG_HI_1(CDC_VCOM_REQ, "set %s", "LINE_STATE");
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
             previous_dtr = cdc_vcom->data.comm_physical_params.dtr;
             previous_rts = cdc_vcom->data.comm_physical_params.rts;
 
@@ -443,6 +437,7 @@ static USBD_Bool_DT CDC_VCOM_on_request(
                   USBD_CALL_HANDLER(CDC_VCOM_On_RTS_Change_HT, cdc_vcom->handlers.change_rts) (cdc_vcom);
                }
             }
+#endif
 
             (void)USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
             break;
@@ -513,6 +508,7 @@ static void CDC_VCOM_on_event(
       {
          USBD_DEBUG_HI(CDC_VCOM_EVENT, "USBD_EVENT_REASON_RESUMED");
       }
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
       else if(USBD_EVENT_REASON_SOF_RECEIVED == reason)
       {
          if(USBD_ATOMIC_BOOL_IS_TRUE(cdc_vcom->data.serial_state_notification.was_changed)
@@ -545,6 +541,7 @@ static void CDC_VCOM_on_event(
             }
          }
       }
+#endif
    }
 
    USBD_EXIT_FUNC(CDC_VCOM_EVENT);
@@ -658,10 +655,12 @@ void CDC_VCOM_Install_In_Config(USBDC_Params_XT *usbdc, CDC_VCOM_Params_XT *cdc_
                            notif_if_params->vendor.pvoid = cdc_vcom;
                            data_if_params->vendor.pvoid  = cdc_vcom;
                            cdc_vcom->data.usbdc = usbdc;
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
                            cdc_vcom->data.serial_state_notification.req.bmRequestType = 0xA1;
                            cdc_vcom->data.serial_state_notification.req.bRequest = 0x20;
                            cdc_vcom->data.serial_state_notification.req.wIndex = notif_if_num;
                            cdc_vcom->data.serial_state_notification.req.wLength = 2;
+#endif
 
                            USBD_DEBUG_HI_8(CDC_VCOM_INIT, "install %s cdc_vcom for NIF: %d/EP: %d; DIF: %d/ EP_IN: %d, EP_OUT: %d, BUFF_IN: %p, BUFF_OUT: %p",
                               cdc_vcom->data.name,
@@ -711,6 +710,8 @@ void CDC_VCOM_Set_Change_Params_Event(CDC_VCOM_Params_XT *cdc_vcom, CDC_VCOM_On_
 
    USBD_EXIT_FUNC(CDC_VCOM_INIT);
 } /* CDC_VCOM_Set_Change_Params_Event */
+
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
 
 void CDC_VCOM_Set_Change_Dtr_Event(CDC_VCOM_Params_XT *cdc_vcom, CDC_VCOM_On_DTR_Change_HT on_dtr_change)
 {
@@ -806,6 +807,8 @@ void CDC_VCOM_Set_Dcd(CDC_VCOM_Params_XT *cdc_vcom, USBD_Bool_DT state)
 
    USBD_EXIT_FUNC(CDC_VCOM_ONOFF);
 } /* CDC_VCOM_Set_Dcd */
+
+#endif
 
 Buff_Ring_XT *CDC_Vcom_Get_In_Buf(CDC_VCOM_Params_XT *cdc_vcom)
 {

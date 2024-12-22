@@ -52,6 +52,14 @@
 
 #define CDC_VCOM_FUNCTIONAL_DESCRPTORS_SIZE     19
 
+/* VCOM supports only data transfer, without DTR, RTS, etc. */
+#define CDC_VCOM_MODE_DATA_ONLY                 0
+/* VCOM supports data transfer and control signals, line DTR, RTC, etc. */
+#define CDC_VCOM_MODE_DATA_AND_SIGNALS          1
+
+#ifndef CDC_VCOM_MODE
+#define CDC_VCOM_MODE                           CDC_VCOM_MODE_DATA_ONLY
+#endif
 
 /**
  * Following debug groups are used by CDC_VCOM library and must be configured correctly:
@@ -196,8 +204,10 @@ typedef struct CDC_VCOM_Physical_Params_DataTag
    uint8_t stop_bits;
    uint8_t partity;
    uint8_t data_bits;
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
    USBD_Bool_DT dtr;
    USBD_Bool_DT rts;
+#endif
 }CDC_VCOM_Physical_Params_DT;
 
 typedef struct CDC_VCOM_Params_eXtendedTag
@@ -205,8 +215,10 @@ typedef struct CDC_VCOM_Params_eXtendedTag
    struct
    {
       void (*change_params) (struct CDC_VCOM_Params_eXtendedTag *vcom);
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
       void (*change_dtr) (struct CDC_VCOM_Params_eXtendedTag *vcom);
       void (*change_rts) (struct CDC_VCOM_Params_eXtendedTag *vcom);
+#endif
    }handlers;
    struct
    {
@@ -214,6 +226,7 @@ typedef struct CDC_VCOM_Params_eXtendedTag
       uint16_t abstract_state;
       uint16_t country_setting;
       uint16_t duration_of_break;
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
       struct
       {
          USBD_REQUEST_Req_DT req;
@@ -224,6 +237,7 @@ typedef struct CDC_VCOM_Params_eXtendedTag
          USBD_Atomic_Bool_DT was_changed;
          USBD_Bool_DT send_ongoing;
       }serial_state_notification;
+#endif
       CDC_VCOM_Physical_Params_DT comm_physical_params;
       struct
       {
@@ -258,6 +272,8 @@ const CDC_VCOM_Physical_Params_DT *CDC_VCOM_Get_Com_Physical_Params(CDC_VCOM_Par
 
 void CDC_VCOM_Set_Change_Params_Event(CDC_VCOM_Params_XT *cdc_vcom, CDC_VCOM_On_Params_Change_HT on_params_change);
 
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
+
 void CDC_VCOM_Set_Change_Dtr_Event(CDC_VCOM_Params_XT *cdc_vcom, CDC_VCOM_On_DTR_Change_HT on_dtr_change);
 
 void CDC_VCOM_Set_Change_Rts_Event(CDC_VCOM_Params_XT *cdc_vcom, CDC_VCOM_On_RTS_Change_HT on_rts_change);
@@ -271,6 +287,24 @@ void CDC_VCOM_Set_Ring(CDC_VCOM_Params_XT *cdc_vcom, USBD_Bool_DT state);
 void CDC_VCOM_Set_Dsr(CDC_VCOM_Params_XT *cdc_vcom, USBD_Bool_DT state);
 
 void CDC_VCOM_Set_Dcd(CDC_VCOM_Params_XT *cdc_vcom, USBD_Bool_DT state);
+
+#else
+
+#define CDC_VCOM_Set_Change_Dtr_Event(cdc_vcom, on_dtr_change)
+
+#define CDC_VCOM_Set_Change_Rts_Event(cdc_vcom, on_rts_change)
+
+#define CDC_VCOM_Get_Dtr(cdc_vcom)     USBD_TRUE
+
+#define CDC_VCOM_Get_Rts(cdc_vcom)     USBD_TRUE
+
+#define CDC_VCOM_Set_Ring(cdc_vcom, state)
+
+#define CDC_VCOM_Set_Dsr(cdc_vcom, state)
+
+#define CDC_VCOM_Set_Dcd(cdc_vcom, state)
+
+#endif
 
 Buff_Ring_XT *CDC_Vcom_Get_In_Buf(CDC_VCOM_Params_XT *cdc_vcom);
 
