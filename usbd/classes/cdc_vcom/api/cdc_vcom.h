@@ -58,7 +58,7 @@
 #define CDC_VCOM_MODE_DATA_AND_SIGNALS          1
 
 #ifndef CDC_VCOM_MODE
-#define CDC_VCOM_MODE                           CDC_VCOM_MODE_DATA_ONLY
+#define CDC_VCOM_MODE                           CDC_VCOM_MODE_DATA_AND_SIGNALS
 #endif
 
 /**
