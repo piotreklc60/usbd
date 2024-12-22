@@ -2332,8 +2332,8 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_get_ep_in_buffered_size(US
 
 static void port_stm32_cat_a_io_stall(USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir)
 {
-#ifndef USBD_USE_IOCMD
    USBD_UNUSED_PARAM(usbd);
+#ifndef USBD_USE_IOCMD
    USBD_UNUSED_PARAM(ep_num);
    USBD_UNUSED_PARAM(dir);
 #endif

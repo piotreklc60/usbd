@@ -47,8 +47,9 @@ static uint8_t main_working_buf[IOCMD_WORKING_BUF_RECOMMENDED_SIZE];
 
 
 
-void system_initialize(void);
-void led_init(void);
+void SystemClock_Config(void);
+
+
 
 const IOCMD_Print_Exe_Params_XT *logs_exe = NULL;
 void main_set_logs_exe(const IOCMD_Print_Exe_Params_XT *exe)
@@ -60,6 +61,10 @@ void main_set_logs_exe(const IOCMD_Print_Exe_Params_XT *exe)
 void Vcom_0_On_Write(Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, Buff_Bool_DT rewind_occured)
 {
    uint8_t data;
+
+   USBD_UNUSED_PARAM(size);
+   USBD_UNUSED_PARAM(rewind_occured);
+
    if(0 != Buff_Ring_Read(buf, &data, sizeof(data), BUFF_TRUE))
    {
       extension->on_write = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
@@ -131,8 +136,10 @@ void USART1_IRQHandler(void)
 // -----------------------------------------------------------------------------
 //  TASK_LED
 // -----------------------------------------------------------------------------
-void Task_Led(void const * argument)
+void Task_Led(void * argument)
 {
+   USBD_UNUSED_PARAM(argument);
+
    USBD_NOTICE(MAIN_TASK_LED, "led thread entered!");
 
    while(1)
@@ -153,14 +160,14 @@ void Task_Logger_Commander(void *pvParameters)
 {
    const IOCMD_Print_Exe_Params_XT *exe = vcom_get_exe();
    Buff_Ring_XT *out_buf;
-   Buff_Ring_XT *in_buf;
    Buff_Size_DT size;
    uint8_t data[64];
+
+   USBD_UNUSED_PARAM(pvParameters);
 
    OS_Sleep_Ms(1);
 
    out_buf = CDC_Vcom_Get_Out_Buf(VCOM_CMD);
-   in_buf  = CDC_Vcom_Get_In_Buf(VCOM_CMD);
 
    while(1)
    {
