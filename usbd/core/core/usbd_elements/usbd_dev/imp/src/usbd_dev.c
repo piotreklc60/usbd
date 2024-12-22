@@ -2288,6 +2288,10 @@ USBD_Bool_DT USBD_DEV_Configured(
          }
          else
          {
+            if(USBD_CHECK_HANDLER(USBD_DEV_Set_Configuration_Respond_HT, respond))
+            {
+               USBD_CALL_HANDLER(USBD_DEV_Set_Configuration_Respond_HT, respond)(usbd);
+            }
             USBD_NOTICE_1(USBD_DBG_DEV_ONOFF, "DEV %sconfigured", "un");
             result = USBD_TRUE;
          }
