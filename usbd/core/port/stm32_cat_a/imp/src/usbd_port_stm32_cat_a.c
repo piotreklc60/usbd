@@ -2564,6 +2564,8 @@ static void port_stm32_cat_a_disable_ep_ctrl_int_in(uint8_t ep_reg_num, volatile
 #ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#else
+   USBD_UNUSED_PARAM(ep_reg_num);
 #endif
 
    if(0 != USBD_STM32_CAT_A_REG_GET_2BIT(ep_reg[0], USBDEP_STM32_CAT_A_BIT__STAT_RX))
@@ -2592,6 +2594,8 @@ static void port_stm32_cat_a_disable_ep_ctrl_int_out(uint8_t ep_reg_num, volatil
 #ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#else
+   USBD_UNUSED_PARAM(ep_reg_num);
 #endif
 
    if(0 != USBD_STM32_CAT_A_REG_GET_2BIT(ep_reg[0], USBDEP_STM32_CAT_A_BIT__STAT_TX))
@@ -2616,6 +2620,9 @@ static void port_stm32_cat_a_disable_ep_ctrl_int_out(uint8_t ep_reg_num, volatil
 
 static void port_stm32_cat_a_disable_ep_isochronous(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(ep_reg_num);
+#endif
    port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
    ep_reg[0] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX | USBDEP_STM32_CAT_A__ADDR;
    port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
@@ -2627,6 +2634,8 @@ static void port_stm32_cat_a_disable_ep_bulk_in(uint8_t ep_reg_num, volatile uin
 #ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#else
+   USBD_UNUSED_PARAM(ep_reg_num);
 #endif
 
    if((1 == port_stm32_cat_a_dev_prams.bulk_eps_num_bufs)
@@ -2656,6 +2665,8 @@ static void port_stm32_cat_a_disable_ep_bulk_out(uint8_t ep_reg_num, volatile ui
 #ifdef USBD_USE_IOCMD
    uint32_t temp_before;
    uint32_t temp_after;
+#else
+   USBD_UNUSED_PARAM(ep_reg_num);
 #endif
 
    if((1 == port_stm32_cat_a_dev_prams.bulk_eps_num_bufs)

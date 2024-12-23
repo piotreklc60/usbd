@@ -98,10 +98,3 @@ add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_PROJECT_NAME}.bin
 )
-
-# -----------------------------------------------------------------------------------------------------------------------------
-# ------------------------------------- add extra target for programming using DFU --------------------------------------------
-# -----------------------------------------------------------------------------------------------------------------------------
-add_custom_target(dfu
-    sudo dfu-util --device ,0483:0007 -a 0 -R -D ${CMAKE_PROJECT_NAME}.bin
-)
