@@ -467,7 +467,9 @@ static void CDC_VCOM_on_event(
 {
    CDC_VCOM_Params_XT *cdc_vcom;
    Buff_Ring_XT *buff;
+#if(CDC_VCOM_MODE_DATA_AND_SIGNALS != CDC_VCOM_MODE)
    USBD_IO_Inout_Data_Size_DT size_left = 0;
+#endif
 
    USBD_ENTER_FUNC(CDC_VCOM_EVENT);
 
