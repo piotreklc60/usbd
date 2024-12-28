@@ -10,5 +10,8 @@
 
 *.ld
 *.S
+*.gcda
+*.gcno
+*.lst
 crt0_STM32x.c
 stm32f10x_conf.h
