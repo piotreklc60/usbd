@@ -44,6 +44,7 @@ set(USBD_CORE_USBD_EVENT_PATH ${USBD_CORE_USBD_ELEMENTS_PATH}/usbd_event)
 set(USBD_CORE_USBDC_PATH ${USBD_CORE_USBD_ELEMENTS_PATH}/usbdc)
 
 set(CDC_VCOM_PATH ${USBD_PATH}/classes/cdc_vcom)
+set(DFU_PATH ${USBD_PATH}/classes/dfu)
 
 set(USBD_PORT_PATH ${USBD_PATH}/core/port)
 set(USBD_PORT_TEST_PATH ${USBD_PORT_PATH}/test)
@@ -78,7 +79,7 @@ target_sources(usbd_lib INTERFACE
     ${USBD_CORE_USBD_PATH}/imp/src/usbd.c
 )
 
-if(USBD_DO_NOT_USE_CDP)
+if(DEFINED USBD_DO_NOT_USE_CDP AND USBD_DO_NOT_USE_CDP MATCHES ON)
 target_compile_definitions(usbd_lib INTERFACE
     USB_CDP_H_
 )
@@ -88,7 +89,7 @@ target_sources(usbd_lib INTERFACE
 )
 endif()
 
-if(USBD_DO_NOT_USE_USBDC)
+if(DEFINED USBD_DO_NOT_USE_USBDC AND USBD_DO_NOT_USE_USBDC MATCHES ON)
 target_compile_definitions(usbd_lib INTERFACE
     USBDC_H_
 )
@@ -98,7 +99,7 @@ target_sources(usbd_lib INTERFACE
 )
 endif()
 
-if(USBD_DO_NOT_USE_DEV)
+if(DEFINED USBD_DO_NOT_USE_DEV AND USBD_DO_NOT_USE_DEV MATCHES ON)
 target_compile_definitions(usbd_lib INTERFACE
     USBD_DEV_TYPES_H_
     USBD_DEV_H_
@@ -109,7 +110,7 @@ target_sources(usbd_lib INTERFACE
 )
 endif()
 
-if(USBD_DO_NOT_USE_EVENT)
+if(DEFINED USBD_DO_NOT_USE_EVENT AND USBD_DO_NOT_USE_EVENT MATCHES ON)
 target_compile_definitions(usbd_lib INTERFACE
     USBD_EVENT_TYPES_H_
     USBD_EVENT_H_
@@ -120,7 +121,7 @@ target_sources(usbd_lib INTERFACE
 )
 endif()
 
-if(USBD_DO_NOT_USE_IO)
+if(DEFINED USBD_DO_NOT_USE_IO AND USBD_DO_NOT_USE_IO MATCHES ON)
 target_compile_definitions(usbd_lib INTERFACE
     USBD_IO_TYPES_H_
     USBD_IO_H_
@@ -131,7 +132,7 @@ target_sources(usbd_lib INTERFACE
 )
 endif()
 
-if(USBD_DO_NOT_USE_IOTP_EVENT)
+if(DEFINED USBD_DO_NOT_USE_IOTP_EVENT AND USBD_DO_NOT_USE_IOTP_EVENT MATCHES ON)
 target_compile_definitions(usbd_lib INTERFACE
     USBD_IOTP_EVENT_TYPES_H_
     USBD_IOTP_EVENT_H_
@@ -142,7 +143,7 @@ target_sources(usbd_lib INTERFACE
 )
 endif()
 
-if(USBD_DO_NOT_USE_IOTP_BUFF)
+if(DEFINED USBD_DO_NOT_USE_IOTP_BUFF AND USBD_DO_NOT_USE_IOTP_BUFF MATCHES ON)
 target_compile_definitions(usbd_lib INTERFACE
     USBD_IOTP_BUFF_TYPES_H_
     USBD_IOTP_BUFF_H_
@@ -153,7 +154,7 @@ target_sources(usbd_lib INTERFACE
 )
 endif()
 
-if(USBD_DO_NOT_USE_REQUEST)
+if(DEFINED USBD_DO_NOT_USE_REQUEST AND USBD_DO_NOT_USE_REQUEST MATCHES ON)
 target_compile_definitions(usbd_lib INTERFACE
     USBD_REQUEST_TYPES_H_
     USBD_REQUEST_H_
@@ -169,7 +170,7 @@ endif()
 # ------------------------------------- can be added by defining USBD_USE_<module name> ---------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------------
 
-if(USBD_USE_CDC_VCOM)
+if(DEFINED USBD_USE_CDC_VCOM AND USBD_USE_CDC_VCOM MATCHES ON)
 target_sources(usbd_lib INTERFACE
     ${CDC_VCOM_PATH}/imp/src/cdc_vcom.c
 )
@@ -179,12 +180,22 @@ target_include_directories(usbd_lib INTERFACE
 )
 endif()
 
+if(DEFINED USBD_USE_DFU AND USBD_USE_DFU MATCHES ON)
+target_sources(usbd_lib INTERFACE
+    ${DFU_PATH}/imp/src/dfu.c
+)
+target_include_directories(usbd_lib INTERFACE
+    ${DFU_PATH}/api/
+    ${DFU_PATH}/imp/inc/
+)
+endif()
+
 # -----------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------- USBD PORT source files - by default NOTHING ADDED, ------------------------------------
 # ------------------------------------- can be added by defining USBD_USE_<module name> ---------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------------
 
-if(USBD_USE_PORT_TEST)
+if(DEFINED USBD_USE_PORT_TEST AND USBD_USE_PORT_TEST MATCHES ON)
 target_sources(usbd_lib INTERFACE
     ${USBD_PORT_TEST_PATH}/imp/src/port_test.c
 )
@@ -194,7 +205,7 @@ target_include_directories(usbd_lib INTERFACE
 )
 endif()
 
-if(USBD_USE_PORT_STM32_CATEGORY_A)
+if(DEFINED USBD_USE_PORT_STM32_CATEGORY_A AND USBD_USE_PORT_STM32_CATEGORY_A MATCHES ON)
 target_sources(usbd_lib INTERFACE
     ${USBD_PORT_STM32_CATEGORY_A_PATH}/imp/src/usbd_port_stm32_cat_a.c
 )
