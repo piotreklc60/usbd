@@ -20,7 +20,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     iocmd_exe_vcom.c
     cmd_line.c
     exceptions.c
-    usbd_port_stm32f103_board_settings.c
+    usbd_port_stm32_cat_a_board_settings.c
 
     #os library
     ${OS_IMP_PATH}/src/os.c

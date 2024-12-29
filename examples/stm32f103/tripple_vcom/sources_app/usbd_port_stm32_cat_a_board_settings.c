@@ -23,7 +23,7 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-#include "usbd_port_stm32f103_board_settings_cfg.h"
+#include "usbd_port_stm32_cat_a_board_settings_cfg.h"
 #include "usbd_port_stm32_cat_a_board_settings.h"
 #include "stm32f1xx_hal.h"
 
