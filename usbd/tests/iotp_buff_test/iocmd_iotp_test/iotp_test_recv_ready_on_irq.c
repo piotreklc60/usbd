@@ -55,19 +55,6 @@ typedef struct
    USBD_Bool_DT                  test_failed;
 }test_params_T;
 
-/*
-static USBD_IOTP_BUFF_Params_XT *test_tp;
-static USB_EP_Direction_ET test_dir;
-static USBD_Bool_DT test_in_progress;
-static USBD_Bool_DT test_is_tp_in;
-//static uint8_t test_ep_num;
-static uint8_t ep_num_bufs;
-static uint8_t *test_data;
-static USBD_IO_Inout_Data_Size_DT test_size;
-static USBD_IO_Inout_Data_Size_DT test_size_result;
-static uint8_t test_data_result[TEST_MAX_DATA_SIZE];
-*/
-
 static test_params_T test_params[2 * (USBD_MAX_NUM_ENDPOINTS + 1)];
 
 static uint8_t working_buf[IOCMD_WORKING_BUF_RECOMMENDED_SIZE];
@@ -92,30 +79,13 @@ static void test_ready(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET 
    uint8_t ep_num = USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP((USBD_IOTP_BUFF_Params_XT*)tp_params);
    uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
    test_params_T *test = &test_params[ep_index];
-
-   const USB_Endpoint_Desc_DT *ep_desc;
    USBD_IO_Inout_Data_Size_DT size_res;
-   USBD_Bool_DT is_control = USBD_FALSE;
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
    USBD_DEBUG_HI_2(MAIN_APP_TEST, "%s; size = %d", __FUNCTION__, size);
 
    test->in_progress = USBD_FALSE;
-
-   ep_desc = USBD_DEV_Get_EP_Desc(USBD_IOTP_BUFF_Get_USBD(tp_params), ep_num, test->dir);
-
-   if(USBD_CHECK_PTR(const USB_Endpoint_Desc_DT, ep_desc))
-   {
-      if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-      {
-         is_control = USBD_TRUE;
-      }
-   }
-   else
-   {
-      is_control = USBD_TRUE;
-   }
 
    /* transfer is finished */
    if(size < 0)
@@ -345,21 +315,6 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
             if(0 == test->size)
             {
                num_expected_transactions_passed = 1;
-               if(num_expected_transactions_passed != port_test_get_num_transactions_passed(ep_num, test->dir))
-               {
-                  USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-                       test->size,
-                       ep_num,
-                       (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-                       test->ep_num_bufs);
-                  USBD_WARN_2(MAIN_APP_TEST_ERROR, "num transactions passed invalid! expected num: %d, current num: %d",
-                       num_expected_transactions_passed, port_test_get_num_transactions_passed(ep_num, test->dir));
-                  REPORT_ERROR();
-               }
-            }
-            else if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-            {
-               num_expected_transactions_passed = (test->size / mps) + 1;
                if(num_expected_transactions_passed != port_test_get_num_transactions_passed(ep_num, test->dir))
                {
                   USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",

@@ -41,8 +41,6 @@ typedef struct port_test_io_ep_eXtended_Tag
          USBD_IO_Inout_Data_Size_DT   *size_done;
          USBD_IO_Inout_Data_Size_DT    size;
          uint32_t                      num_transactions_passed;
-         USBD_Bool_DT                  zero_packet_needed;
-         USBD_Bool_DT                  zero_packet_received;
          USBD_Bool_DT                  set;
       }user_data;
       struct
@@ -533,10 +531,8 @@ static void port_test_print_internal_out_state(const char *desc, uint8_t ep_num)
          (NULL != ep->out.user_data.size_done) ? *(ep->out.user_data.size_done) : 0,
          ep->out.user_data.size,
          ep->out.user_data.num_transactions_passed);
-      USBD_DEBUG_LO_3(USBD_DBG_PORT_IO,
-         "   user_data:: zero_packet_needed: %s; zero_packet_received: %s; set: %s",
-         ep->out.user_data.zero_packet_needed ? "true" : "false",
-         ep->out.user_data.zero_packet_received ? "true" : "false",
+      USBD_DEBUG_LO_1(USBD_DBG_PORT_IO,
+         "   user_data:: set: %s",
          ep->out.user_data.set ? "true" : "false");
       USBD_DEBUG_LO_3(USBD_DBG_PORT_IO, "   buf:: data: %p; size: %d; packet_size: %d",
          ep->out.buf.data,
@@ -599,10 +595,8 @@ static void port_test_print_internal_in_state(const char *desc, uint8_t ep_num)
          (NULL != ep->out.user_data.size_done) ? *(ep->out.user_data.size_done) : 0,
          ep->out.user_data.size,
          ep->out.user_data.num_transactions_passed);
-      USBD_DEBUG_LO_3(USBD_DBG_PORT_IO,
-         "   user_data:: zero_packet_needed: %s; zero_packet_received: %s; set: %s",
-         ep->out.user_data.zero_packet_needed ? "true" : "false",
-         ep->out.user_data.zero_packet_received ? "true" : "false",
+      USBD_DEBUG_LO_1(USBD_DBG_PORT_IO,
+         "   user_data:: set: %s",
          ep->out.user_data.set ? "true" : "false");
       USBD_DEBUG_LO_3(USBD_DBG_PORT_IO, "   buf:: data: %p; size: %d; packet_size: %d",
          ep->out.buf.data,
@@ -822,18 +816,8 @@ USBD_Bool_DT port_test_simulate_out_packet(uint8_t ep_num)
       /* increment counter of processed transactions */
       (ep->out.user_data.num_transactions_passed)++;
 
-      if(0 == ep->out.buf.size)
-      {
-         ep->out.user_data.zero_packet_received = USBD_TRUE;
-      }
-
       /* give result information which tells if next packet shall be simulated */
       if(ep->out.user_data.size > 0)
-      {
-         result = USBD_TRUE;
-      }
-      else if(USBD_BOOL_IS_TRUE(ep->out.user_data.zero_packet_needed)
-         && USBD_BOOL_IS_FALSE(ep->out.user_data.zero_packet_received))
       {
          result = USBD_TRUE;
       }
@@ -1657,16 +1641,6 @@ void port_test_set_data(
          ep->out.user_data.size_done               = size_done;
          ep->out.user_data.num_transactions_passed = 0;
          ep->out.user_data.set                     = USBD_TRUE;
-         ep->out.user_data.zero_packet_received    = USBD_FALSE;
-
-         if((0 == (ep->out.user_data.size % ep->out.mps)) && (USB_EP_DESC_TRANSFER_TYPE_CONTROL == ep->out.ep_type))
-         {
-            ep->out.user_data.zero_packet_needed   = USBD_TRUE;
-         }
-         else
-         {
-            ep->out.user_data.zero_packet_needed   = USBD_FALSE;
-         }
       }
       else
       {
@@ -2036,12 +2010,11 @@ USBD_Bool_DT port_test_process_out(uint8_t ep_num)
                USBD_DEBUG_LO_1(USBD_DBG_PORT_IO, "%d bytes processed by DMA", done_size);
 
                /*
-                * this condition is for test only - normally for not-control transfer,
+                * this condition is for test only - normally,
                 * when received size is smaller than programmed DMA size
                 * and received size is equal to multiplication of MPS
                 * then DMA transaction is still in progress - DMA doesn't know that HOST will not send any more data */
-               if((USB_EP_DESC_TRANSFER_TYPE_CONTROL != ep->out.ep_type)
-                  && (ep->out.dma.size > 0)
+               if((ep->out.dma.size > 0)
                   && (0 == (done_size % ep->out.mps))
                   && (0 != done_size))
                {

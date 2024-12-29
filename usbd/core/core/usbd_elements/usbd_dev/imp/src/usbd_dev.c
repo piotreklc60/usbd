@@ -72,6 +72,7 @@
 #define USBD_DEV_SERIAL_NUMBER_STRING_MANUAL_POSITION       3
 
 static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_DEV_Set_Configuration_Respond_HT respond);
+static void USBD_DEV_unconfigure(USBD_Params_XT *usbd);
 static void USBD_DEV_calculate_num_endpoints_in_active_config(USBD_Params_XT *usbd);
 
 static const uint8_t USBD_DEV_language_string_descriptor[] = {
@@ -1744,6 +1745,13 @@ USBD_Bool_DT USBD_DEV_Deactivate(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
+#ifdef USBD_EVENT_PRESENT
+      /**
+      * check if any configuration is currently active. In this situation
+      * previously used configuration must be turned off at first
+      */
+      USBD_DEV_unconfigure(usbd);
+#endif
       port = USBD_DEV_GET_PORT_PTR(usbd);
       if(USBD_CHECK_PTR(USBD_DEV_Port_Handler_XT, port))
       {
@@ -1903,6 +1911,11 @@ void USBD_DEV_Attached(
       else
       {
 #ifdef USBD_EVENT_PRESENT
+         /**
+         * check if any configuration is currently active. In this situation
+         * previously used configuration must be turned off at first
+         */
+         USBD_DEV_unconfigure(usbd);
          USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_DETACHED);
 #endif
          USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_FALSE);
@@ -1936,6 +1949,11 @@ void USBD_DEV_Powered(
       else
       {
 #ifdef USBD_EVENT_PRESENT
+         /**
+         * check if any configuration is currently active. In this situation
+         * previously used configuration must be turned off at first
+         */
+         USBD_DEV_unconfigure(usbd);
          USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_UNPOWERED);
 #endif
          USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_TRUE);
@@ -1968,6 +1986,13 @@ void USBD_DEV_Reset(
       if(usbd->dev.core.data.dev_desc.bNumConfigurations > 0)
       {
 #ifdef USBD_EVENT_PRESENT
+         /**
+         * check if any configuration is currently active. In this situation
+         * previously used configuration must be turned off at first
+         */
+         USBD_DEV_unconfigure(usbd);
+
+         USBD_DEV_state_change(usbd, USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED, __LINE__);
          USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_RESET);
 #endif
 
@@ -2210,6 +2235,22 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
    return result;
 } /* USBD_DEV_configure */
 
+static void USBD_DEV_unconfigure(USBD_Params_XT *usbd)
+{
+#ifdef USBD_EVENT_PRESENT
+   if(USBD_DEV_CHECK_ACTIVE_CONFIG_PTR(usbd) && (0 != (usbd->dev.core.data.state & USBD_DEV_STATE_CONFIGURED)))
+   {
+      USBD_EVENT_Process_Warm_Event(usbd, USBD_EVENT_REASON_UNCONFIGURED);
+   }
+#endif
+
+   USBD_DEV_state_change(usbd, usbd->dev.core.data.state & ~USBD_DEV_STATE_CONFIGURED, __LINE__);
+
+   USBD_DEV_SET_ACTIVE_CONFIG_NUM(usbd, 0);
+   USBD_DEV_SET_ACTIVE_CONFIG_PTR(usbd, USBD_MAKE_INVALID_PTR(USBDC_Params_XT));
+   USBD_DEV_SET_ACTIVE_CONFIG_DESC_PTR(usbd, USBD_MAKE_INVALID_PTR(const uint8_t));
+} /* USBD_DEV_unconfigure */
+
 USBD_Bool_DT USBD_DEV_Configured(
       USBD_Params_XT *usbd,
       uint8_t config_num,
@@ -2230,15 +2271,7 @@ USBD_Bool_DT USBD_DEV_Configured(
          * check if any configuration is currently active. In this situation
          * previously used configuration must be turned off at first
          */
-         if(USBD_DEV_CHECK_ACTIVE_CONFIG_PTR(usbd))
-         {
-#ifdef USBD_EVENT_PRESENT
-            USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_UNCONFIGURED);
-#endif
-
-            USBD_DEV_state_change(usbd, usbd->dev.core.data.state & ~USBD_DEV_STATE_CONFIGURED, __LINE__);
-         }
-
+         USBD_DEV_unconfigure(usbd);
          USBD_DEV_reset_dev_and_disable_endpoints(usbd, 1, USBD_FALSE);
 
          /** check if config value is correct */

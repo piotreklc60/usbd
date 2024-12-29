@@ -71,9 +71,9 @@ struct USBD_EVENT_Event_Header_eXtended_Tag;
  * defines event's format
  * Event is a function called in specific situations. \see USBD_EVENT_Reason_ET
  *
- * @param usbd pointer to USBD_Params_XT structure - USBD params handler
- * @param usbdc pointer to USBDC_Params_XT structure - configuration handler
- * @param event_params pointer to USBD_EVENT_Event_Header_XT structure which describes called handler
+ * @param usbd pointer to USBD_Params_XT structure - USBD params handler. POINTER ALWAYS VALID
+ * @param usbdc pointer to USBDC_Params_XT structure - configuration handler. For USBD events INVALID, for USBDC events ALWAYS VALID POINTER
+ * @param event_params pointer to USBD_EVENT_Event_Header_XT structure which describes called handler. POINTER ALWAYS VALID
  * @param reason reason of calling handler - possible values are described by enum USBD_EVENT_Reason_ET
  */
 typedef void (*USBD_EVENT_Event_HT) (struct USBD_params_eXtended_Tag *usbd, struct USBDC_params_eXtended_Tag *usbdc, struct USBD_EVENT_Event_Header_eXtended_Tag *event_params, USBD_EVENT_Reason_ET reason);

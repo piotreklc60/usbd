@@ -804,84 +804,104 @@ void test_events_states(USBD_Params_XT *usbd)
    activate_and_test(usbd);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Attached", "false");
    USBD_DEV_Attached(usbd, USBD_FALSE);
    check_event_markers_cold(USBD_EVENT_REASON_DETACHED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Attached", "true");
    USBD_DEV_Attached(usbd, USBD_TRUE);
    check_event_markers_cold(USBD_EVENT_REASON_ATTACHED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Powered", "false");
    USBD_DEV_Powered(usbd, USBD_FALSE);
    check_event_markers_cold(USBD_EVENT_REASON_UNPOWERED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Powered", "true");
    USBD_DEV_Powered(usbd, USBD_TRUE);
    check_event_markers_cold(USBD_EVENT_REASON_POWERED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Reset", "");
    USBD_DEV_Reset(usbd);
    check_event_markers_cold(USBD_EVENT_REASON_RESET);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Configured", "2");
    USBD_DEV_Configured(usbd, 2, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
    check_event_markers_warm(USBD_EVENT_REASON_CONFIGURED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Configured", "0");
    USBD_DEV_Configured(usbd, 0, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
-   check_event_markers_cold(USBD_EVENT_REASON_UNCONFIGURED);
+   check_event_markers_warm(USBD_EVENT_REASON_UNCONFIGURED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Configured", "2");
    USBD_DEV_Configured(usbd, 2, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
    check_event_markers_warm(USBD_EVENT_REASON_CONFIGURED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_SOF_Received", "");
    USBD_DEV_SOF_Received(usbd);
    check_event_markers_warm(USBD_EVENT_REASON_SOF_RECEIVED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Suspended", "");
    USBD_DEV_Suspended(usbd);
    check_event_markers_warm(USBD_EVENT_REASON_SUSPENDED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_SOF_Received", "");
    USBD_DEV_SOF_Received(usbd);
    check_event_markers_warm(USBD_EVENT_REASON_SOF_RECEIVED);
 
 
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Reset", "");
    USBD_DEV_Reset(usbd);
    check_event_markers_cold(USBD_EVENT_REASON_RESET);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Configured", "2");
    USBD_DEV_Configured(usbd, 2, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
    check_event_markers_warm(USBD_EVENT_REASON_CONFIGURED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Configured", "0");
    USBD_DEV_Configured(usbd, 0, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
-   check_event_markers_cold(USBD_EVENT_REASON_UNCONFIGURED);
+   check_event_markers_warm(USBD_EVENT_REASON_UNCONFIGURED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Configured", "2");
    USBD_DEV_Configured(usbd, 2, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
    check_event_markers_warm(USBD_EVENT_REASON_CONFIGURED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_SOF_Received", "");
    USBD_DEV_SOF_Received(usbd);
    check_event_markers_warm(USBD_EVENT_REASON_SOF_RECEIVED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Suspended", "");
    USBD_DEV_Suspended(usbd);
    check_event_markers_warm(USBD_EVENT_REASON_SUSPENDED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Resumed", "");
    USBD_DEV_Resumed(usbd);
    check_event_markers_warm(USBD_EVENT_REASON_RESUMED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Suspended", "");
    USBD_DEV_Suspended(usbd);
    check_event_markers_warm(USBD_EVENT_REASON_SUSPENDED);
 
    clear_event_markers();
+   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_SOF_Received", "");
    USBD_DEV_SOF_Received(usbd);
    check_event_markers_warm(USBD_EVENT_REASON_SOF_RECEIVED);
 

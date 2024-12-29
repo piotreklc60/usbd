@@ -38,6 +38,16 @@
 #error "USBD_IOTP_BUFF_USE not defined! Please define USBD_IOTP_BUFF_USE in usbd_cfg.h"
 #endif
 
+/**
+ * Following debug groups are used by CDC_VCOM library and must be configured correctly:
+ * CDC_VCOM_INIT
+ * CDC_VCOM_STATE
+ * CDC_VCOM_ONOFF
+ * CDC_VCOM_EVENT
+ * CDC_VCOM_REQ
+ * CDC_VCOM_INVALID_PARAMS
+ */
+
 #ifndef CDC_VCOM_CCI_EP_BINTERVAL
 #define CDC_VCOM_CCI_EP_BINTERVAL               1
 #endif
@@ -60,16 +70,6 @@
 #ifndef CDC_VCOM_MODE
 #define CDC_VCOM_MODE                           CDC_VCOM_MODE_DATA_AND_SIGNALS
 #endif
-
-/**
- * Following debug groups are used by CDC_VCOM library and must be configured correctly:
- * CDC_VCOM_INIT
- * CDC_VCOM_STATE
- * CDC_VCOM_ONOFF
- * CDC_VCOM_EVENT
- * CDC_VCOM_REQ
- * CDC_VCOM_INVALID_PARAMS
- */
 
 
 #define CDC_VCOM_CCI_DESC(_notif_if_num, _notif_iInterface, _ep_notif, _ep_notif_mps, _data_if_num) \

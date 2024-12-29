@@ -119,7 +119,9 @@ void USBD_IOTP_EVENT_Set_Handlers(
       USBD_IOTP_EVENT_Callback_HT abort);
 
 /**
- * Installs "ready" handler in TP structure
+ * Installs "ready" handler in TP structure. Ready handler is called when all the data has been taken from user buffer
+ * and next data can be provided by the user. It doesn't mean IN HW buffer is empty.
+ * It means only data provided earlier by the user has been successfully copied to IN HW buffers.
  *
  * \param tp pointer to USBD_IOTP_EVENT_Params_XT structure - EVENT-type TP params container
  * \param ready handler to function called after successfully processed data packet
@@ -129,7 +131,10 @@ void USBD_IOTP_EVENT_Set_Ready_Handler(
       USBD_IOTP_EVENT_Callback_HT ready);
 
 /**
- * Installs "buf_empty" handler in TP structure
+ * Installs "buf_empty" handler in TP structure. Buf_empty handler is called when IN data has been successfully transferred to the HOST.
+ * There is nothing in IN HW buffers. It is usefull handler when after sending HW must be reconfigured, for example
+ * change device address or totally turn OFF USB Device on some request from the HOST (first we successfully responded, only after that
+ * we can do the action).
  *
  * \param tp pointer to USBD_IOTP_EVENT_Params_XT structure - EVENT-type TP params container
  * \param buf_empty handler to function called when IN buffer is empty and whole data has been successfully sent to HOST
@@ -223,8 +228,30 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send(
  * \return USBD_TRUE when send status requested successfully, USBD_FALSE otherwise
  */
 USBD_Bool_DT USBD_IOTP_EVENT_Send_Status(
-      USBD_IOTP_EVENT_Params_XT *tp,
+      USBD_IOTP_EVENT_Params_XT  *tp,
       USBD_IO_Inout_Data_Size_DT *size_left);
+
+
+/**
+ * Sends status packet over specified endpoint BUT using OUT-TP.
+ * It is useful function as a configmation after receiving some data from OUT callback.
+ *
+ * \param tp_out pointer to USBD_IOTP_EVENT_Params_XT structure - EVENT-type TP params container
+ * \param size_left pointer to returned size - size of data which is still waiting to be sent.
+ *      If 0 is returned then zero-length packet has been initialized to be send.
+ *      If not 0 is returned then zero-length packet has not been yet initialized to be send - it will be done in next irq.
+ *      Zero is returned here in same situation like call of 'ready' handler.
+ *      Unfortunately, 'ready' handler cannot be called from inside of @see USBD_IOTP_EVENT_Send_Status
+ *      to protect system against recursive calling of @see USBD_IOTP_EVENT_Send_Status.
+ *      This pointer can be USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT) - in this situation nothing will be returned.
+ * \return USBD_TRUE when send status requested successfully, USBD_FALSE otherwise
+ */
+USBD_Bool_DT USBD_IOTP_EVENT_Send_Status_For_Out_Tp(
+      USBD_IOTP_EVENT_Params_XT  *tp_out,
+      USBD_IO_Inout_Data_Size_DT *size_left,
+      USBD_IOTP_EVENT_Callback_HT buf_empty,
+      USBD_Vendor_Data_XT        *vendor_data);
+
 
 /**
  * Receives data over specified endpoint and allows for next reception

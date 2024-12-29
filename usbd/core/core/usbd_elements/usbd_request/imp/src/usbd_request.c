@@ -90,6 +90,11 @@ static USBD_Bool_DT USBD_REQUEST_process_other_standard_requests(
    USBD_REQUEST_Req_DT *req);
 static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
 
+static void USBD_REQUEST_fill_request(USBD_REQUEST_Req_DT *req)
+{
+   req->request = (((uint16_t)(req->bRequest) & 0xFF) * 256) | ((uint16_t)(req->bmRequestType) & 0xFF);
+} /* USBD_REQUEST_fill_request */
+
 void USBD_REQUEST_Install_Port_Callbacks(
       USBD_Params_XT *usbd,
       const USBD_REQUEST_Port_Callbacks_XT *callbacks)
@@ -199,6 +204,7 @@ static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_D
                req.wValue = ((uint16_t)(usbd->request.core.data.req_data.u8)) & 0x00FF;
                req.wIndex = 0;
                req.wLength = 0;
+               USBD_REQUEST_fill_request(&req);
                addr = usbd->request.core.data.req_data.u8;
 
                (void)USBD_REQUEST_CALL_PORT_SET_ADDRESS_HANDLER(usbd, USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp), &req);
@@ -1009,6 +1015,8 @@ void USBD_REQUEST_Process_Req(
 
    if((USBD_CHECK_PTR(USBD_Params_XT, usbd)) && (USBD_CHECK_PTR(USBD_REQUEST_Req_DT, req)))
    {
+      USBD_REQUEST_fill_request(req);
+
       USBD_DEBUG_HI_1(USBD_DBG_REQ_PROCESSING, "new SETUP on EP: %d:", ep_num);
       USBD_DEBUG_HI_5(USBD_DBG_REQ_PROCESSING,
          "bmRequestType: 0x%02X(%d) = 7_dir(%s) | 65_type(%s) | 40_recipient(%s)",

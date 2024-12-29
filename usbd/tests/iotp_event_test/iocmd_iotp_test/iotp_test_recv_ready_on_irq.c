@@ -91,29 +91,13 @@ static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
     uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
     test_params_T *test = &test_params[ep_index];
 
-    const USB_Endpoint_Desc_DT *ep_desc;
     USBD_IO_Inout_Data_Size_DT size_res;
-    USBD_Bool_DT is_control = USBD_FALSE;
 
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
     USBD_DEBUG_HI_2(MAIN_APP_TEST, "%s; size = %d", __FUNCTION__, size);
 
     test->in_progress = USBD_FALSE;
-
-    ep_desc = USBD_DEV_Get_EP_Desc(USBD_IOTP_EVENT_Get_USBD(tp_params), ep_num, test->dir);
-
-    if(USBD_CHECK_PTR(const USB_Endpoint_Desc_DT, ep_desc))
-    {
-        if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-        {
-            is_control = USBD_TRUE;
-        }
-    }
-    else
-    {
-        is_control = USBD_TRUE;
-    }
 
     /* first call when there ws no transfer started before */
     if(size >= 0)
@@ -155,71 +139,6 @@ static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
         USBD_WARN_2(MAIN_APP_TEST_ERROR, "endpoint is waiting on %s callback when size = %d!", __FUNCTION__, size);
         REPORT_ERROR();
     }
-#if 0
-    /*
-    else if(0 == test->size)
-    {
-        if(USBD_BOOL_IS_FALSE(USBD_IOTP_EVENT_Recv_And_Ready(test->tp, test->data_result, 0, &size_res)))
-        {
-            USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-                  test->size,
-                  ep_num,
-                  (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-                  test->ep_num_bufs);
-            USBD_WARN(MAIN_APP_TEST_ERROR, "USBD_IOTP_EVENT_Recv_And_Ready failed!");
-            REPORT_ERROR();
-        }
-        else
-        {
-            test->in_progress = USBD_IOTP_EVENT_Is_Transfer_Active(tp_params);
-        }
-    }
-    */
-    /* in case when read_and_ready/wait was called with size 0 -> down is not called on process_out */
-
-    if(0 == test->size)
-    {
-        if(USBD_BOOL_IS_FALSE(is_control))
-        {
-            if((0 != size) || USBD_BOOL_IS_TRUE(USBD_IO_UP_Is_EP_OUT_Waiting(USBD_IOTP_EVENT_Get_USBD(tp_params), ep_num)))
-            {
-                USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-                      test->size,
-                      ep_num,
-                      (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-                      test->ep_num_bufs);
-                USBD_WARN_2(MAIN_APP_TEST_ERROR, "endpoint is waiting on %s callback when size = %d!", __FUNCTION__, size);
-                REPORT_ERROR();
-            }
-        }
-        else
-        {
-            if((0 != size) || USBD_BOOL_IS_TRUE(USBD_IO_UP_Is_EP_OUT_Waiting(USBD_IOTP_EVENT_Get_USBD(tp_params), ep_num)))
-            {
-                USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-                      test->size,
-                      ep_num,
-                      (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-                      test->ep_num_bufs);
-                USBD_WARN_2(MAIN_APP_TEST_ERROR, "endpoint is waiting on %s callback when size = %d!", __FUNCTION__, size);
-                REPORT_ERROR();
-            }
-        }
-    }
-    else
-    {
-        if((0 == size) && USBD_BOOL_IS_TRUE(USBD_IO_UP_Is_EP_OUT_Waiting(USBD_IOTP_EVENT_Get_USBD(tp_params), ep_num)))
-        {
-            USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-                  test->size,
-                  ep_num,
-                  (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-                  test->ep_num_bufs);
-            USBD_WARN_2(MAIN_APP_TEST_ERROR, "endpoint is waiting on %s callback when size = %d!", __FUNCTION__, size);
-            REPORT_ERROR();
-        }
-    }
-#endif
 
     USBD_EXIT_FUNC(MAIN_APP_TEST);
 }
@@ -462,21 +381,6 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
                 if(0 == test->size)
                 {
                     num_expected_transactions_passed = 1;
-                    if(num_expected_transactions_passed != port_test_get_num_transactions_passed(ep_num, test->dir))
-                    {
-                        USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-                              test->size,
-                              ep_num,
-                              (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-                              test->ep_num_bufs);
-                        USBD_WARN_2(MAIN_APP_TEST_ERROR, "num transactions passed invalid! expected num: %d, current num: %d",
-                              num_expected_transactions_passed, port_test_get_num_transactions_passed(ep_num, test->dir));
-                        REPORT_ERROR();
-                    }
-                }
-                else if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-                {
-                    num_expected_transactions_passed = (test->size / mps) + 1;
                     if(num_expected_transactions_passed != port_test_get_num_transactions_passed(ep_num, test->dir))
                     {
                         USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",

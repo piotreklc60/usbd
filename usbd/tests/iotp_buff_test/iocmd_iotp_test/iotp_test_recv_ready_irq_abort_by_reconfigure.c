@@ -58,19 +58,6 @@ typedef struct
    uint8_t                         num_used_bufs;
 }test_params_T;
 
-/*
-static USBD_IOTP_BUFF_Params_XT *test_tp;
-static USB_EP_Direction_ET test_dir;
-static USBD_Bool_DT test_in_progress;
-static USBD_Bool_DT is_tp_in;
-//static uint8_t test_ep_num;
-static uint8_t ep_num_bufs;
-static uint8_t *test_data;
-static USBD_IO_Inout_Data_Size_DT test_size;
-static USBD_IO_Inout_Data_Size_DT test_size_result;
-static uint8_t test_data_result[TEST_MAX_DATA_SIZE];
-*/
-
 static test_params_T test_params[2 * (USBD_MAX_NUM_ENDPOINTS + 1)];
 
 static uint8_t working_buf[IOCMD_WORKING_BUF_RECOMMENDED_SIZE];
@@ -176,7 +163,6 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
    test->read_in_progress = USBD_TRUE;
 
-//   result = USBD_IOTP_BUFF_Recv_And_Ready(test->tp, test->data_result, test->size, &size_res);
    on_remove = test->tp->core.buff->extension->on_remove;
    test->tp->core.buff->extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
    Buff_Ring_Clear(test->tp->core.buff, true);
@@ -271,10 +257,6 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
             if(0 == test->size)
             {
                num_expected_packets = 1;
-            }
-            else if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-            {
-               num_expected_packets = (test->size / mps) + 1;
             }
             else
             {

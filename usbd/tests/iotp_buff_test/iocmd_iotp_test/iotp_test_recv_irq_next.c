@@ -104,28 +104,12 @@ static void test_ready(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET 
    uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
    test_params_T *test = &test_params[ep_index];
    USBD_Bool_DT result;
-   const USB_Endpoint_Desc_DT *ep_desc;
-   USBD_Bool_DT is_control = USBD_FALSE;
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
    test->in_progress = USBD_FALSE;
 
    USBD_DEBUG_HI_4(MAIN_APP_TEST, "%s; size = %d, transaction: %d/%d", __FUNCTION__, size, test->num_executed_transactions, test->num_transactions);
-
-   ep_desc = USBD_DEV_Get_EP_Desc(USBD_IOTP_BUFF_Get_USBD(tp_params), ep_num, test->dir);
-
-   if(USBD_CHECK_PTR(const USB_Endpoint_Desc_DT, ep_desc))
-   {
-      if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-      {
-         is_control = USBD_TRUE;
-      }
-   }
-   else
-   {
-      is_control = USBD_TRUE;
-   }
 
    if(test->num_executed_transactions < test->num_transactions)
    {
@@ -170,19 +154,6 @@ static void test_ready(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET 
             test->transactions[test->num_executed_transactions].size);
          REPORT_ERROR();
       }
-
-      /*
-       * if previous transaction was IOTP_TEST_RECV_AND_WAIT then this transaction finished previous one at the begining
-       * so test->num_executed_connected_transactions must be decreased for correct comparision
-       */
-  /*     if((test->num_executed_transactions > 0)
-         && (IOTP_TEST_RECV_AND_WAIT == test->transactions[test->num_executed_transactions - 1].recv_method))
-      {
-         test->num_executed_connected_transactions[test->num_executed_transactions] -= 1;
-         USBD_DEBUG_HI_2(MAIN_APP_TEST, "num transactions = %d decreased by one in line: %d!",
-               test->num_executed_connected_transactions[test->num_executed_transactions],
-               __LINE__);
-      }//*/
 
       test->num_executed_transactions++;
 
@@ -232,25 +203,9 @@ static void initialize_transaction(USBD_Params_XT *usbd, uint8_t ep_index, uint8
    volatile Buff_Ring_Extension_On_Remove on_remove;
    test_params_T *test = &test_params[ep_index];
    USBD_IO_Inout_Data_Size_DT size_res = 0;
-   const USB_Endpoint_Desc_DT *ep_desc;
-   USBD_Bool_DT is_control = USBD_FALSE;
    USBD_IO_Inout_Data_Size_DT size;
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-   ep_desc = USBD_DEV_Get_EP_Desc(usbd, ep_num, test->dir);
-
-   if(USBD_CHECK_PTR(const USB_Endpoint_Desc_DT, ep_desc))
-   {
-      if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-      {
-         is_control = USBD_TRUE;
-      }
-   }
-   else
-   {
-      is_control = USBD_TRUE;
-   }
 
    if(test->num_executed_transactions < test->num_transactions)
    {
@@ -441,30 +396,14 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
                }
                else
                {
-                  if((USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-                     && USBD_BOOL_IS_TRUE(test->transactions[cntr].recv_to_whole_buffer))
+                  num_expected_transactions_passed = (test->transactions[cntr].size / mps) + ((0 == (test->transactions[cntr].size % mps)) ? 0 : 1);
+                  if(num_expected_transactions_passed != test->num_executed_connected_transactions[cntr])
                   {
-                     num_expected_transactions_passed = (test->transactions[cntr].size / mps) + 1;
-                     if(num_expected_transactions_passed != test->num_executed_connected_transactions[cntr])
-                     {
-                        print_transactions_context(ep_index, ep_num);
-                        USBD_WARN_3(MAIN_APP_TEST_ERROR, "num transactions passed invalid for transaction: %d! expected num: %d, current num: %d",
-                              cntr,
-                              num_expected_transactions_passed, test->num_executed_connected_transactions[cntr]);
-                        REPORT_ERROR();
-                     }
-                  }
-                  else
-                  {
-                     num_expected_transactions_passed = (test->transactions[cntr].size / mps) + ((0 == (test->transactions[cntr].size % mps)) ? 0 : 1);
-                     if(num_expected_transactions_passed != test->num_executed_connected_transactions[cntr])
-                     {
-                        print_transactions_context(ep_index, ep_num);
-                        USBD_WARN_3(MAIN_APP_TEST_ERROR, "num transactions passed invalid for transaction: %d! expected num: %d, current num: %d",
-                              cntr,
-                              num_expected_transactions_passed, test->num_executed_connected_transactions[cntr]);
-                        REPORT_ERROR();
-                     }
+                     print_transactions_context(ep_index, ep_num);
+                     USBD_WARN_3(MAIN_APP_TEST_ERROR, "num transactions passed invalid for transaction: %d! expected num: %d, current num: %d",
+                           cntr,
+                           num_expected_transactions_passed, test->num_executed_connected_transactions[cntr]);
+                     REPORT_ERROR();
                   }
                }
             }
@@ -541,7 +480,6 @@ void iotp_test_recv_irq_next(
    size_t                        cntr;
    const USB_Endpoint_Desc_DT  *ep_desc;
    uint16_t                      mps               = 1;
-   USBD_Bool_DT                  is_control        = USBD_FALSE;
    USBD_Bool_DT                  is_test_allowed   = USBD_TRUE;
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
@@ -556,11 +494,6 @@ void iotp_test_recv_irq_next(
          mps += ep_desc->wMaxPacketSize.H;
          mps *= 256;
          mps += ep_desc->wMaxPacketSize.L;
-
-         if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-         {
-            is_control = USBD_TRUE;
-         }
       }
 
       for(cntr = 0; cntr < num_transactions; cntr++)
@@ -577,7 +510,7 @@ void iotp_test_recv_irq_next(
             transactions[cntr].size = 1;
          }
 
-         if(USBD_BOOL_IS_TRUE(transactions[cntr].recv_to_whole_buffer) && USBD_BOOL_IS_FALSE(is_control))
+         if(USBD_BOOL_IS_TRUE(transactions[cntr].recv_to_whole_buffer))
          {
             if(0 == (transactions[cntr].size % mps))
             {

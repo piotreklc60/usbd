@@ -293,7 +293,7 @@ static void check_result(USBD_Params_XT *usbd)
    {
       if(config <= USBD_DEV_Get_Num_Installed_Configs(usbd))
       {
-         if((0 == called_send) && (((0 != test_config) ? 4 : 0) == called_status) && (0 == called_stall) && (2 == called_abort) && (0 == called_set_ready) && (3 == called_set_port))
+         if((0 == called_send) && (4 == called_status) && (0 == called_stall) && (2 == called_abort) && (0 == called_set_ready) && (3 == called_set_port))
          {
             /* OK */
             if(config == test_config)

@@ -121,12 +121,12 @@ static void USBD_IOTP_BUFF_io_error(
    void *tp_params, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_IO_Inout_Data_Size_DT size);
 static void USBD_IOTP_BUFF_io_reinit(
    void *tp_params, void *tp_owner, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_Bool_DT active);
-#ifdef USBD_EVENT_PRESENT
-static void USBD_IOTP_BUFF_proc_event(USBD_IOTP_BUFF_Params_XT *tp, uint8_t req);
 static USBD_Bool_DT USBD_IOTP_BUFF_trigger_in(
    USBD_IOTP_BUFF_Params_XT *tp, Buff_Ring_Extensions_XT *extension, USBD_Params_XT *usbd, uint8_t ep_num, USBD_Bool_DT call_trigger);
 static USBD_Bool_DT USBD_IOTP_BUFF_trigger_out(
    USBD_IOTP_BUFF_Params_XT *tp, Buff_Ring_Extensions_XT *extension, USBD_Params_XT *usbd, uint8_t ep_num);
+#ifdef USBD_EVENT_PRESENT
+static void USBD_IOTP_BUFF_proc_event(USBD_IOTP_BUFF_Params_XT *tp, uint8_t req);
 static void USBD_IOTP_BUFF_event(
    USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_EVENT_Event_Header_XT *event_params, USBD_EVENT_Reason_ET reason);
 #endif
@@ -1745,7 +1745,7 @@ static void USBD_IOTP_BUFF_io_reinit(
    void *tp_params, void *tp_owner, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_Bool_DT active)
 {
    USBD_IOTP_BUFF_Params_XT     *tp;
-   const USB_Endpoint_Desc_DT  *ep_desc;
+   const USB_Endpoint_Desc_DT   *ep_desc;
    uint16_t                      mps = 1;
    uint8_t                       ep_type;
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_BUFF_USE_UP_LINK)
@@ -1874,25 +1874,6 @@ static void USBD_IOTP_BUFF_io_reinit(
 
 
 
-#ifdef USBD_EVENT_PRESENT
-static void USBD_IOTP_BUFF_proc_event(USBD_IOTP_BUFF_Params_XT *tp, uint8_t req)
-{
-   USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
-
-   USBD_ATOMIC_UINT8_SET(tp->invoke.req, USBD_IOTP_BUFF_INVOKE_REQ_NONE);
-
-   if(USBD_IOTP_BUFF_INVOKE_REQ_ABORT_NO_FLUSH_HW == req)
-   {
-      (void)USBD_IOTP_BUFF_proc_abort(tp, USBD_FALSE);
-   }
-   else if(USBD_IOTP_BUFF_INVOKE_REQ_ABORT_FLUSH_HW == req)
-   {
-      (void)USBD_IOTP_BUFF_proc_abort(tp, USBD_TRUE);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_IOTPBF_EVENT);
-} /* USBD_IOTP_proc_event */
-
 static USBD_Bool_DT USBD_IOTP_BUFF_trigger_in(
    USBD_IOTP_BUFF_Params_XT *tp, Buff_Ring_Extensions_XT *extension, USBD_Params_XT *usbd, uint8_t ep_num, USBD_Bool_DT call_trigger)
 {
@@ -1985,6 +1966,27 @@ static USBD_Bool_DT USBD_IOTP_BUFF_trigger_out(
    return USBD_TRUE;
 } /* USBD_IOTP_BUFF_trigger_out */
 
+
+
+#ifdef USBD_EVENT_PRESENT
+static void USBD_IOTP_BUFF_proc_event(USBD_IOTP_BUFF_Params_XT *tp, uint8_t req)
+{
+   USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
+
+   USBD_ATOMIC_UINT8_SET(tp->invoke.req, USBD_IOTP_BUFF_INVOKE_REQ_NONE);
+
+   if(USBD_IOTP_BUFF_INVOKE_REQ_ABORT_NO_FLUSH_HW == req)
+   {
+      (void)USBD_IOTP_BUFF_proc_abort(tp, USBD_FALSE);
+   }
+   else if(USBD_IOTP_BUFF_INVOKE_REQ_ABORT_FLUSH_HW == req)
+   {
+      (void)USBD_IOTP_BUFF_proc_abort(tp, USBD_TRUE);
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPBF_EVENT);
+} /* USBD_IOTP_proc_event */
+
 static void USBD_IOTP_BUFF_event(
    USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_EVENT_Event_Header_XT *event_params, USBD_EVENT_Reason_ET reason)
 {
@@ -1998,41 +2000,38 @@ static void USBD_IOTP_BUFF_event(
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
 
-   if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
+   for(ep_num = 0; ep_num < USBD_MAX_NUM_ENDPOINTS; ep_num++)
    {
-      for(ep_num = 0; ep_num < USBD_MAX_NUM_ENDPOINTS; ep_num++)
+      /* OUT TP */
+      if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_OUT_TP_Owner(usbd, ep_num), void, USBD_IOTP_BUFF_dummy_data))
       {
-         /* OUT TP */
-         if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_OUT_TP_Owner(usbd, ep_num), void, USBD_IOTP_BUFF_dummy_data))
+         tp = USBD_IO_UP_Get_OUT_TP_Params(usbd, ep_num);
+         req = USBD_ATOMIC_UINT8_GET(tp->invoke.req);
+
+         if(USBD_IOTP_BUFF_INVOKE_REQ_NONE != req)
          {
-            tp = USBD_IO_UP_Get_OUT_TP_Params(usbd, ep_num);
-            req = USBD_ATOMIC_UINT8_GET(tp->invoke.req);
-
-            if(USBD_IOTP_BUFF_INVOKE_REQ_NONE != req)
-            {
-               USBD_IOTP_BUFF_proc_event(tp, req);
-            }
-
-            if(!BUFF_RING_IS_FULL(tp->core.buff) && (USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_FALSE) > 0))
-            {
-               USBD_IOTP_BUFF_trigger_out(tp, tp->core.buff->extension, usbd, ep_num);
-            }
+            USBD_IOTP_BUFF_proc_event(tp, req);
          }
-         /* IN TP */
-         if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_IN_TP_Owner(usbd, ep_num), void, USBD_IOTP_BUFF_dummy_data))
+
+         if(!BUFF_RING_IS_FULL(tp->core.buff) && (USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_FALSE) > 0))
          {
-            tp = USBD_IO_UP_Get_IN_TP_Params(usbd, ep_num);
-            req = USBD_ATOMIC_UINT8_GET(tp->invoke.req);
+            USBD_IOTP_BUFF_trigger_out(tp, tp->core.buff->extension, usbd, ep_num);
+         }
+      }
+      /* IN TP */
+      if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_IN_TP_Owner(usbd, ep_num), void, USBD_IOTP_BUFF_dummy_data))
+      {
+         tp = USBD_IO_UP_Get_IN_TP_Params(usbd, ep_num);
+         req = USBD_ATOMIC_UINT8_GET(tp->invoke.req);
 
-            if(USBD_IOTP_BUFF_INVOKE_REQ_NONE != req)
-            {
-               USBD_IOTP_BUFF_proc_event(tp, req);
-            }
+         if(USBD_IOTP_BUFF_INVOKE_REQ_NONE != req)
+         {
+            USBD_IOTP_BUFF_proc_event(tp, req);
+         }
 
-            if(!BUFF_RING_IS_EMPTY(tp->core.buff) && (USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(usbd, ep_num) < 0))
-            {
-               USBD_IOTP_BUFF_trigger_in(tp, tp->core.buff->extension, usbd, ep_num, USBD_TRUE);
-            }
+         if(!BUFF_RING_IS_EMPTY(tp->core.buff) && (USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(usbd, ep_num) < 0))
+         {
+            USBD_IOTP_BUFF_trigger_in(tp, tp->core.buff->extension, usbd, ep_num, USBD_TRUE);
          }
       }
    }

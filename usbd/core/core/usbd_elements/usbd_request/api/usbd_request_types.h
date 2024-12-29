@@ -123,6 +123,12 @@ typedef enum USBD_REQUEST_Standard_Requests_Enum_Tag
  */
 typedef struct USBD_REQUEST_Req_Data_Tag
 {
+   /**
+    * composed from bmRequestType and bRequest by USBD_REQUEST_Process_Req using formula:
+    * request = (((uint16_t)bRequest & 0xFF) * 256) | ((uint16_t)bmRequestType & 0xFF);
+    */
+   uint16_t request;
+   /* below fields shall be set by the port before calling USBD_REQUEST_Process_Req */
    uint8_t  bmRequestType;
    uint8_t  bRequest;
    uint16_t wValue;
@@ -134,10 +140,10 @@ typedef struct USBD_REQUEST_Req_Data_Tag
  * \typedef USBD_REQUEST_Interface_HT
  * type of function called when USB request is received and has to be consumed by interface
  *
- * \param usbdc pointer to active configuration
+ * \param usbdc pointer to active configuration. POINTER ALWAYS VALID.
  * \param ep_num endpoint number
  * \param interface_num number of interface to which request is addressed
- * \param req pointer to request parameters
+ * \param req pointer to request parameters. POINTER ALWAYS VALID.
  * \param tp_in if request is processed on endpoint number 0 then points to IN TP params. For non-zero endpoints this pointer is invalid
  * \param tp_out if request is processed on endpoint number 0 then points to OUT TP params. For non-zero endpoints this pointer is invalid
  * \return USBD_TRUE if request consumed, USBD_FALSE otherwise
@@ -148,9 +154,9 @@ typedef USBD_Bool_DT (*USBD_REQUEST_Interface_HT) (struct USBDC_params_eXtended_
  * \typedef USBD_REQUEST_Vendor_HT
  * type of function called when USB request is received and has to be consumed in vendor specified way
  *
- * \param usbdc pointer to active configuration
+ * \param usbdc pointer to active configuration. POINTER ALWAYS VALID.
  * \param ep_num endpoint number
- * \param req pointer to request parameters
+ * \param req pointer to request parameters. POINTER ALWAYS VALID.
  * \param tp_in if request is processed on endpoint number 0 then points to IN TP params. For non-zero endpoints this pointer is invalid
  * \param tp_out if request is processed on endpoint number 0 then points to OUT TP params. For non-zero endpoints this pointer is invalid
  * \return USBD_TRUE if request consumed, USBD_FALSE otherwise
@@ -164,9 +170,9 @@ typedef USBD_Bool_DT (*USBD_REQUEST_Vendor_HT) (struct USBDC_params_eXtended_Tag
  * If port function returns USBD_TRUE then request
  * is accepted by hardware and processing can be continued by USBD/upper layer.
  *
- * \param usbd pointer to usb device
+ * \param usbd pointer to usb device. POINTER ALWAYS VALID.
  * \param ep_num endpoint number
- * \param req pointer to request parameters
+ * \param req pointer to request parameters. POINTER ALWAYS VALID.
  * \return USBD_TRUE is port accepted request and can be processed by USBD/upper layers. USBD_FALSE otherwise - USBD will reject request.
  */
 typedef USBD_Bool_DT (*USBD_REQUEST_Port_Callback_HT) (struct USBD_params_eXtended_Tag *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req);

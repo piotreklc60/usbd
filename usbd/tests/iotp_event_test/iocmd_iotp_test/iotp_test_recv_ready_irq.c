@@ -400,21 +400,6 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
                         REPORT_ERROR();
                     }
                 }
-                else if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-                {
-                    num_expected_transactions_passed = (test->size / mps) + 1;
-                    if(num_expected_transactions_passed != port_test_get_num_transactions_passed(ep_num, test->dir))
-                    {
-                        USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-                              test->size,
-                              ep_num,
-                              (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-                              test->ep_num_bufs);
-                        USBD_WARN_2(MAIN_APP_TEST_ERROR, "num transactions passed invalid! expected num: %d, current num: %d",
-                              num_expected_transactions_passed, port_test_get_num_transactions_passed(ep_num, test->dir));
-                        REPORT_ERROR();
-                    }
-                }
                 else
                 {
                     num_expected_transactions_passed = (test->size / mps) + ((0 == (test->size % mps)) ? 0 : 1);

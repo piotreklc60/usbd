@@ -3139,11 +3139,8 @@ static USBD_Bool_DT port_stm32_cat_a_req_set_address (USBD_Params_XT *usbd, uint
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_REQ);
 
-   if(USBD_CHECK_PTR(USBD_REQUEST_Req_DT, req))
-   {
-      /* set new device address */
-      USBD_STM32_REG->DADDR = USBD_STM32_CAT_A_DADDR_EF | ( ((uint32_t)(req->wValue)) & 0x7F);
-   }
+   /* set new device address */
+   USBD_STM32_REG->DADDR = USBD_STM32_CAT_A_DADDR_EF | ( ((uint32_t)(req->wValue)) & 0x7F);
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_REQ);
 
@@ -3172,7 +3169,7 @@ static USBD_Bool_DT port_stm32_cat_a_req_set_interface (USBD_Params_XT *usbd, ui
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_REQ);
 
-   if(USBD_CHECK_PTR(USBD_Params_XT, port_stm32_cat_a_usbd) && USBD_CHECK_PTR(USBD_REQUEST_Req_DT, req))
+   if(USBD_CHECK_PTR(USBD_Params_XT, port_stm32_cat_a_usbd))
    {
       if((uint8_t)(req->wIndex) < USBD_DEV_Get_Num_Interfaces_In_Active_Config(port_stm32_cat_a_usbd))
       {
