@@ -26,6 +26,9 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
+#include "std_libs.h"
+#include "stm32_helper.h"
+
 HAL_StatusTypeDef HAL_RCC_OscConfig(RCC_OscInitTypeDef  *RCC_OscInitStruct)
 {
    /*----------------------------- HSI Configuration --------------------------*/
