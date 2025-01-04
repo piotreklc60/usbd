@@ -88,7 +88,7 @@ typedef struct USBD_params_eXtended_Tag
 #ifdef USBD_IO_PRESENT
    USBD_IO_Params_XT io;
 #endif
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_MAX_NUM_EVENTS > 0))
    USBD_EVENT_Params_XT event;
 #endif
 #ifdef USBD_REQUEST_PRESENT

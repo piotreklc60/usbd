@@ -46,7 +46,7 @@ typedef struct USBDC_params_eXtended_Tag
 {
    void                      *usbd;
    const uint8_t             *config_desc;
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBDC_MAX_NUM_EVENTS > 0))
    USBDC_EVENT_Params_XT      event;
 #endif
 #ifdef USBD_REQUEST_PRESENT

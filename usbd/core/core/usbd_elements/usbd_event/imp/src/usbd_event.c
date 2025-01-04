@@ -47,6 +47,8 @@
 #endif
 #endif
 
+#if((USBDC_MAX_NUM_EVENTS > 0) || (USBD_MAX_NUM_EVENTS > 0))
+
 static USBD_EVENT_Event_Header_XT *USBD_EVENT_only_once_check_and_install(
    USBD_EVENT_Proc_Params_XT *params,
    USBD_EVENT_Event_HT event,
@@ -153,6 +155,7 @@ static USBD_Bool_DT USBD_EVENT_find_and_remove(USBD_EVENT_Proc_Params_XT *params
 
 
 
+#if(USBD_MAX_NUM_EVENTS > 0)
 USBD_EVENT_Event_Header_XT *USBD_EVENT_Install(
       USBD_Params_XT *usbd,
       USBD_EVENT_Event_HT event,
@@ -243,9 +246,11 @@ size_t USBD_EVENT_Get_Num_Installed_Events(
 
    return result;
 } /* USBD_EVENT_Get_Num_Installed_Events */
+#endif
 
 
 
+#if(USBDC_MAX_NUM_EVENTS > 0)
 USBD_EVENT_Event_Header_XT *USBDC_EVENT_Install(
       USBDC_Params_XT *usbdc,
       USBD_EVENT_Event_HT event,
@@ -336,6 +341,7 @@ size_t USBDC_EVENT_Get_Num_Installed_Events(
 
    return result;
 } /* USBDC_EVENT_Get_Num_Installed_Events */
+#endif
 
 
 
@@ -382,15 +388,20 @@ void USBD_EVENT_Process_Cold_Event(
       USBD_Params_XT *usbd,
       USBD_EVENT_Reason_ET reason)
 {
+#if(USBDC_MAX_NUM_EVENTS > 0)
    USBDC_Params_XT *usbdc;
+#if(USBD_MAX_NUM_CONFIGURATIONS > 1)
    USBD_DEV_Config_Header_XT *config_tab;
    uint8_t counter;
    uint8_t num_of_configs;
+#endif
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_EVENT_PROCESSING);
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
+#if(USBD_MAX_NUM_EVENTS > 0)
       /* processes device events */
       if(((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events > 0)
       {
@@ -400,7 +411,10 @@ void USBD_EVENT_Process_Cold_Event(
             (USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data),
             reason);
       }
+#endif
 
+#if(USBDC_MAX_NUM_EVENTS > 0)
+#if(USBD_MAX_NUM_CONFIGURATIONS > 1)
       num_of_configs = usbd->dev.core.data.dev_desc.bNumConfigurations;
 
       config_tab = USBD_DEV_GET_CONFIG_TAB_PTR(usbd);
@@ -422,21 +436,41 @@ void USBD_EVENT_Process_Cold_Event(
             }
          }
       }
+#else
+      usbdc = USBD_DEV_GET_CONFIG_TAB_PTR(usbd)[0].usbdc;
+
+      if(USBD_CHECK_PTR(USBDC_Params_XT, usbdc))
+      {
+         if(((USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data))->num_installed_events > 0)
+         {
+            USBD_EVENT_process_events(
+               usbd,
+               usbdc,
+               (USBD_EVENT_Proc_Params_XT*)(usbdc->event.core.data),
+               reason);
+         }
+      }
+#endif
+#endif
    }
 
    USBD_EXIT_FUNC(USBD_DBG_EVENT_PROCESSING);
 } /* USBD_EVENT_Process_Cold_Event */
 
+#if(USBD_MAX_NUM_CONFIGURATIONS > 1)
 void USBD_EVENT_Process_Warm_Event(
       USBD_Params_XT *usbd,
       USBD_EVENT_Reason_ET reason)
 {
+#if(USBDC_MAX_NUM_EVENTS > 0)
    USBDC_Params_XT *usbdc;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_EVENT_PROCESSING);
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
+#if(USBD_MAX_NUM_EVENTS > 0)
       /* processes device events */
       if(((USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data))->num_installed_events > 0)
       {
@@ -446,7 +480,9 @@ void USBD_EVENT_Process_Warm_Event(
             (USBD_EVENT_Proc_Params_XT*)(usbd->event.core.data),
             reason);
       }
+#endif
 
+#if(USBDC_MAX_NUM_EVENTS > 0)
       if(USBD_DEV_GET_ACTIVE_CONFIG_NUM(usbd) < usbd->dev.core.data.dev_desc.bNumConfigurations)
       {
          /* processes events for active configuration */
@@ -464,10 +500,14 @@ void USBD_EVENT_Process_Warm_Event(
             }
          }
       }
+#endif
    }
 
    USBD_EXIT_FUNC(USBD_DBG_EVENT_PROCESSING);
 } /* USBD_EVENT_Process_Warm_Event */
+#endif
+
+#endif /* ((USBDC_MAX_NUM_EVENTS > 0) || (USBD_MAX_NUM_EVENTS > 0)) */
 
 #ifdef USBD_EVENT_POST_IMP_INCLUDE
 #include "usbd_event_post_imp.h"

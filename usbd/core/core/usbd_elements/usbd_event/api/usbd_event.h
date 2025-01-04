@@ -30,6 +30,7 @@
  * @{
  */
 
+#if(USBD_MAX_NUM_EVENTS > 0)
 /**
  * Installs event in device's events list
  *
@@ -71,6 +72,7 @@ USBD_Bool_DT USBD_EVENT_Remove_All_Events(
  */
 size_t USBD_EVENT_Get_Num_Installed_Events(
       USBD_Params_XT *usbd);
+#endif
 
 /** @} */ /* USBD_EVENT */
 
@@ -80,6 +82,7 @@ size_t USBD_EVENT_Get_Num_Installed_Events(
  * @{
  */
 
+#if(USBDC_MAX_NUM_EVENTS > 0)
 /**
  * Installs event in configuration's events list
  *
@@ -121,6 +124,7 @@ USBD_Bool_DT USBDC_EVENT_Remove_All_Events(
  */
 size_t USBDC_EVENT_Get_Num_Installed_Events(
       USBDC_Params_XT *usbdc);
+#endif
 
 /** @} */ /* USBDC_EVENT */
 

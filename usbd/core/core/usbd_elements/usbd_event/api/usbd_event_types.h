@@ -114,6 +114,7 @@ typedef struct
    USBD_EVENT_Event_Header_XT event_tab[];
 } USBD_EVENT_Proc_Params_XT;
 
+#if(USBD_MAX_NUM_EVENTS > 0)
 /**
  * @struct USBD_EVENT_Params_XT
  * EVENT part of USBD
@@ -126,6 +127,7 @@ typedef struct USBD_EVENT_Params_eXtended_Tag
       USBD_EVENT_Event_Header_XT             event_tab[USBD_MAX_NUM_EVENTS];
    }core;
 }USBD_EVENT_Params_XT;
+#endif
 
 /** @} */ /* USBD_EVENT_TYPES */
 
@@ -135,6 +137,7 @@ typedef struct USBD_EVENT_Params_eXtended_Tag
  * @{
  */
 
+#if(USBDC_MAX_NUM_EVENTS > 0)
 /**
  * @struct USBDC_EVENT_Params_XT
  * EVENT part of USBDC
@@ -147,6 +150,7 @@ typedef struct USBDC_EVENT_Params_eXtended_Tag
       USBD_EVENT_Event_Header_XT             event_tab[USBDC_MAX_NUM_EVENTS];
    }core;
 }USBDC_EVENT_Params_XT;
+#endif
 
 /** @} */ /* USBDC_EVENT_TYPES */
 

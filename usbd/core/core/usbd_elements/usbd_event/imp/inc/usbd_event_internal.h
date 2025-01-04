@@ -41,9 +41,12 @@ void USBD_EVENT_Process_Cold_Event(
       USBD_Params_XT *usbd,
       USBD_EVENT_Reason_ET reason);
 
+#if(USBD_MAX_NUM_CONFIGURATIONS > 1)
 void USBD_EVENT_Process_Warm_Event(
       USBD_Params_XT *usbd,
       USBD_EVENT_Reason_ET reason);
-
+#else
+#define USBD_EVENT_Process_Warm_Event  USBD_EVENT_Process_Cold_Event
+#endif
 
 #endif

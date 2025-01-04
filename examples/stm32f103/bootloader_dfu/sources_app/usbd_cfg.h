@@ -34,7 +34,7 @@
 #define USBD_MAX_NUM_INTERFACES                    1
 #define USBD_MAX_NUM_ENDPOINTS                     1
 #define USBD_MAX_NUM_STRINGS                       8
-#define USBD_MAX_NUM_EVENTS                        1
+#define USBD_MAX_NUM_EVENTS                        0
 #define USBDC_MAX_NUM_EVENTS                       1
 
 
