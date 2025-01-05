@@ -368,11 +368,6 @@ uint16_t USB_CDP_Find_Next_Interface (
       uint16_t desc_size,
       uint16_t start_address);
 
-uint8_t USB_CDP_Find_Interface_Max_Alternate_Setting (
-      const uint8_t *desc,
-      uint16_t desc_size,
-      uint8_t  interface_number);
-
 uint16_t USB_CDP_Find_Endpoint (
       const uint8_t *desc,
       uint16_t desc_size,

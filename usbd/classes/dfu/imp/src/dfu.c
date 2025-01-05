@@ -421,7 +421,7 @@ static void DFU_upload(
 #endif
 #endif
 
-#if(USBD_FEATURE_PRESENT == DFU_DFU_MODE_SUPPORT)
+#if(USBD_FEATURE_PRESENT == DFU_APP_MODE_SUPPORT)
 static USBD_Bool_DT DFU_APP_on_request(
    USBDC_Params_XT *usbdc,
    uint8_t ep_num,
@@ -573,8 +573,14 @@ static USBD_Bool_DT DFU_DFU_on_request(
 static void DFU_on_event(
    USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_EVENT_Event_Header_XT *event_params, USBD_EVENT_Reason_ET reason)
 {
+#if(USBD_FEATURE_PRESENT == DFU_MULTIPLE_MEMORIES_SUPPORT)
    const USB_Interface_Desc_DT *if_desc;
+#endif
    DFU_Params_XT *dfu;
+
+#if(USBD_FEATURE_PRESENT != DFU_MULTIPLE_MEMORIES_SUPPORT)
+   USBD_UNUSED_PARAM(usbd);
+#endif
 
    USBD_ENTER_FUNC(DFU_EVENT);
 

@@ -578,6 +578,7 @@ USBD_Bool_DT USBD_DEV_Configured(
       uint8_t config_num,
       USBD_DEV_Set_Configuration_Respond_HT respond);
 
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
 /**
  * It doesn't chande Device state. This function is used to set alternative version
  * of interface.
@@ -593,6 +594,7 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(
       USBD_Params_XT *usbd,
       uint8_t interface_num,
       uint8_t alternative_setting);
+#endif
 
 /**
  * Sets device to suspended state.

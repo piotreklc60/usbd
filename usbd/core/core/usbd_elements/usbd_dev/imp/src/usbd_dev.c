@@ -1761,7 +1761,7 @@ USBD_Bool_DT USBD_DEV_Deactivate(
 
             if(USBD_BOOL_IS_TRUE(usbd->dev.core.data.active))
             {
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_DETACHED_SUPPORTED))
                USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_DETACHED);
 #endif
             }
@@ -1903,14 +1903,14 @@ void USBD_DEV_Attached(
       {
          USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_FALSE);
 
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_ATTACHED_SUPPORTED))
          USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_ATTACHED);
 #endif
          USBD_DEV_state_change(usbd, USBD_DEV_STATE_ATTACHED, __LINE__);
       }
       else
       {
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_DETACHED_SUPPORTED))
          /**
          * check if any configuration is currently active. In this situation
          * previously used configuration must be turned off at first
@@ -1941,14 +1941,14 @@ void USBD_DEV_Powered(
       {
          USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_TRUE);
 
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_POWERED_SUPPORTED))
          USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_POWERED);
 #endif
          USBD_DEV_state_change(usbd, USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED, __LINE__);
       }
       else
       {
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_UNPOWERED_SUPPORTED))
          /**
          * check if any configuration is currently active. In this situation
          * previously used configuration must be turned off at first
@@ -1985,7 +1985,7 @@ void USBD_DEV_Reset(
       /// TODO: check if dev->core.data.dev_desc.bNumConfigurations > 0 - if not, then deactivate and maybe call USBD_panic
       if(usbd->dev.core.data.dev_desc.bNumConfigurations > 0)
       {
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_RESET_SUPPORTED))
          /**
          * check if any configuration is currently active. In this situation
          * previously used configuration must be turned off at first
@@ -2115,7 +2115,7 @@ void USBD_DEV_Addressed(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_ADDRESSED_SUPPORTED))
       USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_ADDRESSED);
 #endif
 
@@ -2169,7 +2169,7 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
       {
          USBD_CALL_HANDLER(USBD_DEV_Set_Configuration_Respond_HT, respond)(usbd);
       }
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_CONFIGURED_SUPPORTED))
       USBD_EVENT_Process_Warm_Event(usbd, USBD_EVENT_REASON_CONFIGURED);
 #endif
 
@@ -2237,7 +2237,7 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
 
 static void USBD_DEV_unconfigure(USBD_Params_XT *usbd)
 {
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_UNCONFIGURED_SUPPORTED))
    if(USBD_DEV_CHECK_ACTIVE_CONFIG_PTR(usbd) && (0 != (usbd->dev.core.data.state & USBD_DEV_STATE_CONFIGURED)))
    {
       USBD_EVENT_Process_Warm_Event(usbd, USBD_EVENT_REASON_UNCONFIGURED);
@@ -2341,6 +2341,7 @@ USBD_Bool_DT USBD_DEV_Configured(
    return result;
 } /* USBD_DEV_Configured */
 
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
 USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, uint8_t interface_num, uint8_t alternative_setting)
 {
    USB_Interface_Desc_DT *if_desc;
@@ -2454,7 +2455,7 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
                   (USBD_DEV_GET_INTERFACE_TAB_PTR(usbd))[interface_num].desc = if_desc;
                }
 
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_INTERFACE_SET_SUPPORTED))
                USBD_EVENT_Process_Warm_Event(usbd, USBD_EVENT_REASON_INTERFACE_SET);
 #endif
 
@@ -2509,6 +2510,7 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
 
    return result;
 } /* USBD_DEV_Set_Interface */
+#endif
 
 void USBD_DEV_Suspended(
       USBD_Params_XT *usbd)
@@ -2517,7 +2519,7 @@ void USBD_DEV_Suspended(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_SUSPENDED_SUPPORTED))
       USBD_EVENT_Process_Warm_Event(usbd, USBD_EVENT_REASON_SUSPENDED);
 #endif
 
@@ -2534,7 +2536,7 @@ void USBD_DEV_Resumed(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_RESUMED_SUPPORTED))
       USBD_EVENT_Process_Warm_Event(usbd, USBD_EVENT_REASON_RESUMED);
 #endif
 
@@ -2551,7 +2553,7 @@ void USBD_DEV_SOF_Received(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
-#ifdef USBD_EVENT_PRESENT
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_SOF_RECEIVED_SUPPORTED))
       USBD_EVENT_Process_Warm_Event(usbd, USBD_EVENT_REASON_SOF_RECEIVED);
 #endif
 

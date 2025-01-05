@@ -152,7 +152,9 @@ typedef struct port_stm32_cat_a_dev_params_eXtended_Tag
 typedef struct port_stm32_cat_a_req_params_eXtended_Tag
 {
    USBD_Bool_DT set_configuration_ongoing;
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    uint8_t interface_set_ongoing;
+#endif
    uint8_t ep_setup_ongoing;
 }port_stm32_cat_a_req_params_XT;
 
@@ -276,20 +278,17 @@ static void port_stm32_cat_a_req_process_incomming_setup(uint8_t ep_num, uint8_t
 
 static USBD_Bool_DT port_stm32_cat_a_req_set_address       (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req);
 static USBD_Bool_DT port_stm32_cat_a_req_set_configuration (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req);
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
 static USBD_Bool_DT port_stm32_cat_a_req_set_interface     (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req);
-
-static const USBD_REQUEST_Port_Callbacks_XT port_stm32_cat_a_req_handlers = USBD_REQUEST_FILL_PORT_CALLBACKS(
-      USBD_MAKE_INVALID_HANDLER(USBD_REQUEST_Port_Callback_HT) /* get_status        */,
-      USBD_MAKE_INVALID_HANDLER(USBD_REQUEST_Port_Callback_HT) /* clear_feature     */,
-      USBD_MAKE_INVALID_HANDLER(USBD_REQUEST_Port_Callback_HT) /* set_feature       */,
-      port_stm32_cat_a_req_set_address                           /* set_address       */,
-      USBD_MAKE_INVALID_HANDLER(USBD_REQUEST_Port_Callback_HT) /* get_descriptor    */,
-      USBD_MAKE_INVALID_HANDLER(USBD_REQUEST_Port_Callback_HT) /* set_descriptor    */,
-      USBD_MAKE_INVALID_HANDLER(USBD_REQUEST_Port_Callback_HT) /* get_configuration */,
-      port_stm32_cat_a_req_set_configuration                     /* set_configuration */,
-      USBD_MAKE_INVALID_HANDLER(USBD_REQUEST_Port_Callback_HT) /* get_interface     */,
-      port_stm32_cat_a_req_set_interface                         /* set_interface     */,
-      USBD_MAKE_INVALID_HANDLER(USBD_REQUEST_Port_Callback_HT) /* synch_frame       */);
+#endif
+static const USBD_REQUEST_Port_Callbacks_XT port_stm32_cat_a_req_handlers =
+{
+   .set_address = port_stm32_cat_a_req_set_address,
+   .set_configuration = port_stm32_cat_a_req_set_configuration,
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
+   .set_interface = port_stm32_cat_a_req_set_interface,
+#endif
+};
 
 static port_stm32_cat_a_req_params_XT port_stm32_cat_a_req_params;
 
@@ -303,8 +302,9 @@ static void port_stm32_cat_a_dev_reset_internal_structures(void)
    uint8_t ep_num;
 
    port_stm32_cat_a_req_params.set_configuration_ongoing   = USBD_FALSE;
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    port_stm32_cat_a_req_params.interface_set_ongoing       = USBD_MAX_NUM_INTERFACES;
-
+#endif
    memset(port_stm32_cat_a_io_ep, 0, sizeof(port_stm32_cat_a_io_ep));
    memset(port_stm32_cat_a_dev_interface_shared_mem_start_point, 0, sizeof(port_stm32_cat_a_dev_interface_shared_mem_start_point));
    memset(&port_stm32_cat_a_dev_prams, 0, sizeof(port_stm32_cat_a_dev_prams));
@@ -2715,11 +2715,13 @@ static void port_stm32_cat_a_io_configure(
       mps  += ep_desc->wMaxPacketSize.L;
       ep_type = ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK;
 
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
       if(port_stm32_cat_a_req_params.interface_set_ongoing < USBD_MAX_NUM_INTERFACES)
       {
          port_stm32_cat_a_dev_interface_shared_mem_start_point[port_stm32_cat_a_req_params.interface_set_ongoing].current_offset =0;
          port_stm32_cat_a_req_params.interface_set_ongoing = USBD_MAX_NUM_INTERFACES;
       }
+#endif
 
       /* deconfigure EP at first */
       if((USB_EP_DIRECTION_OUT == dir) && (ep->out.hw.ep_reg_num < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS))
@@ -3127,7 +3129,9 @@ static void port_stm32_cat_a_req_process_incomming_setup(uint8_t ep_num, uint8_t
    port_stm32_cat_a_req_params.ep_setup_ongoing = 0xFF;
 
    port_stm32_cat_a_req_params.set_configuration_ongoing   = USBD_FALSE;
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    port_stm32_cat_a_req_params.interface_set_ongoing       = USBD_MAX_NUM_INTERFACES;
+#endif
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_REQ);
 } /* port_stm32_cat_a_req_process_incomming_setup */
@@ -3162,6 +3166,7 @@ static USBD_Bool_DT port_stm32_cat_a_req_set_configuration (USBD_Params_XT *usbd
    return USBD_TRUE;
 } /* port_stm32_cat_a_req_set_configuration */
 
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
 static USBD_Bool_DT port_stm32_cat_a_req_set_interface (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req)
 {
    USBD_UNUSED_PARAM(usbd);
@@ -3181,4 +3186,5 @@ static USBD_Bool_DT port_stm32_cat_a_req_set_interface (USBD_Params_XT *usbd, ui
 
    return USBD_TRUE;
 } /* port_stm32_cat_a_req_set_interface */
+#endif
 

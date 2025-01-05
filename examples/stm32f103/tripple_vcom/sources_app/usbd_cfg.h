@@ -34,6 +34,7 @@
 
 #define USBD_MAX_NUM_CONFIGURATIONS                5
 #define USBD_MAX_NUM_INTERFACES                    6
+#define USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS  0
 #define USBD_MAX_NUM_ENDPOINTS                     8
 #define USBD_MAX_NUM_STRINGS                       8
 #define USBD_MAX_NUM_EVENTS                        4

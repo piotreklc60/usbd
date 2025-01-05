@@ -189,28 +189,13 @@ typedef struct USBD_REQUEST_Port_Callbacks_eXtended_Tag
    USBD_REQUEST_Port_Callback_HT set_descriptor;
    USBD_REQUEST_Port_Callback_HT get_configuration;
    USBD_REQUEST_Port_Callback_HT set_configuration;
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    USBD_REQUEST_Port_Callback_HT get_interface;
    USBD_REQUEST_Port_Callback_HT set_interface;
+#endif
    USBD_REQUEST_Port_Callback_HT synch_frame;
 }USBD_REQUEST_Port_Callbacks_XT;
 
-
-#define USBD_REQUEST_FILL_PORT_CALLBACKS(\
-   _get_status, _clear_feature, _set_feature, _set_address, _get_descriptor,\
-   _set_descriptor, _get_configuration, _set_configuration, _get_interface, _set_interface, _synch_frame) \
-      { \
-         (_get_status),\
-         (_clear_feature),\
-         (_set_feature),\
-         (_set_address),\
-         (_get_descriptor),\
-         (_set_descriptor),\
-         (_get_configuration),\
-         (_set_configuration),\
-         (_get_interface),\
-         (_set_interface),\
-         (_synch_frame)\
-      }
 
 
 /**

@@ -73,7 +73,7 @@
 
 
 #ifndef DFU_W_TRANSFER_SIZE
-#define DFU_W_TRANSFER_SIZE                  512
+#define DFU_W_TRANSFER_SIZE                  2048
 #endif
 
 

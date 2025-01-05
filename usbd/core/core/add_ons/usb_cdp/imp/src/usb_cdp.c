@@ -118,41 +118,6 @@ uint16_t USB_CDP_Find_Next_Interface (
    return result;
 } /* USB_CDP_Find_Next_Interface */
 
-//#if((USBD_ALTERNATE_SETTING_SUPPORT == USBD_FEATURE_ON) || (!USBD_CDP_USED_JUST_BY_USBD_CORE))
-uint8_t USB_CDP_Find_Interface_Max_Alternate_Setting (
-      const uint8_t *desc,
-      uint16_t desc_size,
-      uint8_t interface_number)
-{
-   uint16_t pos;
-   uint8_t max_alt_setting = desc_size;
-
-   USB_ENTER_FUNC(USB_DBG_CDP);
-
-   if(USBD_CHECK_PTR(uint8_t, desc))
-   {
-      for(pos = desc[0]; pos < desc_size; pos += desc[pos])
-      {
-         if(USB_DESC_TYPE_INTERFACE == desc[pos + 1])
-         {
-            if((desc[pos + 2] == interface_number) && (desc[pos + 3] > max_alt_setting))
-            {
-               max_alt_setting = desc[pos + 3];
-            }
-         }
-         if(0 == desc[pos])
-         {
-            break;
-         }
-      }
-   }
-
-   USB_EXIT_FUNC(USB_DBG_CDP);
-
-   return max_alt_setting;
-} /* USB_CDP_Find_Interface_Max_Alternate_Setting */
-//#endif
-
 uint16_t USB_CDP_Find_Endpoint (
       const uint8_t *desc,
       uint16_t desc_size,

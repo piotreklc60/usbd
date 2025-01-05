@@ -886,10 +886,18 @@ static void USBD_REQUEST_get_interface(
       USBD_REQUEST_Req_DT *req,
       uint8_t destination)
 {
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    const USB_Interface_Desc_DT *desc;
    USBD_Bool_DT result = USBD_TRUE;
+#else
+   USBD_UNUSED_PARAM(usbdc);
+   USBD_UNUSED_PARAM(req);
+   USBD_UNUSED_PARAM(destination);
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_REQ_PROCESSING);
+
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
 
    if((USBD_BMREQUESTTYPE_INTERFACE == destination)
       && (USBD_DEV_STATE_CONFIGURED == (USBD_DEV_STATE_CONFIGURED & USBD_DEV_Get_State(usbd))))
@@ -920,6 +928,18 @@ static void USBD_REQUEST_get_interface(
       (void)USBD_REQUEST_process_other_standard_requests(usbd, usbdc, 0, req);
    }
 
+#else
+
+   usbd->request.core.data.req_data.u8 = 0;
+
+   USBD_IOTP_EVENT_Send(
+      USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
+      &(usbd->request.core.data.req_data.u8),
+      1,
+      USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+
+#endif
+
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
 } /* USBD_REQUEST_get_interface */
 
@@ -929,10 +949,17 @@ static void USBD_REQUEST_set_interface(
       USBD_REQUEST_Req_DT *req,
       uint8_t destination)
 {
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    USBD_DEV_Set_Interface_Result_ET set_result;
    USBD_Bool_DT result = USBD_TRUE;
+#else
+   USBD_UNUSED_PARAM(usbdc);
+   USBD_UNUSED_PARAM(destination);
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_REQ_PROCESSING);
+
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
 
    if((USBD_BMREQUESTTYPE_INTERFACE == destination)
       && (USBD_DEV_STATE_CONFIGURED == (USBD_DEV_STATE_CONFIGURED & USBD_DEV_Get_State(usbd))))
@@ -962,6 +989,21 @@ static void USBD_REQUEST_set_interface(
    {
       (void)USBD_REQUEST_process_other_standard_requests(usbd, usbdc, 0, req);
    }
+
+#else
+
+   if(0 == req->wValue)
+   {
+      USBD_IOTP_EVENT_Send_Status(
+         USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
+         USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+   }
+   else
+   {
+      USBD_IOTP_EVENT_Send_Stall(USBD_REQUEST_GET_EP0_IN_IOTP(usbd));
+   }
+
+#endif
 
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
 } /* USBD_REQUEST_set_interface */

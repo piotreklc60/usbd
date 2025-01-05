@@ -34,6 +34,40 @@
 #include "usbd_cfg.h"
 #endif
 
+
+
+#ifndef USBD_MAX_NUM_ENDPOINTS
+#define USBD_MAX_NUM_ENDPOINTS                        16
+#elif(USBD_MAX_NUM_ENDPOINTS > 16)
+#error "USBD_MAX_NUM_ENDPOINTS too big!!! max possible is 16 endpoints!"
+#endif
+
+#ifndef USBD_MAX_NUM_INTERFACES
+#define USBD_MAX_NUM_INTERFACES                       255
+#elif(USBD_MAX_NUM_INTERFACES > 255)
+#error "USBD_MAX_NUM_INTERFACES too big!!! max possible is 255 interfaces!"
+#endif
+
+#ifndef USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS
+#define USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS     255
+#elif(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 255)
+#error "USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS too big!!! max possible is 255 interfaces!"
+#endif
+
+#ifndef USBD_MAX_NUM_CONFIGURATIONS
+#define USBD_MAX_NUM_CONFIGURATIONS                   254
+#elif(USBD_MAX_NUM_CONFIGURATIONS > 254)
+#error "USBD_MAX_NUM_ENDPOINTS too big!!! max possible is 254 endpoints!"
+#endif
+
+#ifndef USBD_MAX_NUM_STRINGS
+#define USBD_MAX_NUM_STRINGS                          255
+#elif(USBD_MAX_NUM_STRINGS > 255)
+#error "USBD_MAX_NUM_STRINGS too big!!! max possible is 255 endpoints!"
+#endif
+
+
+
 #ifndef USBD_DBG_H_
 #include "usbd_dbg.h"
 #endif
@@ -164,16 +198,6 @@ typedef struct USBD_params_eXtended_Tag
 #error "USBD IOTP EVENT module required for USBD REQUEST module is missing!"
 #endif
 #endif
-
-
-#if(USBD_MAX_NUM_ENDPOINTS > 16)
-#error "USBD_MAX_NUM_ENDPOINTS too big!!! max possible is 16 endpoints!"
-#endif
-
-#if(USBD_MAX_NUM_INTERFACES >= 256)
-#error "USBD_MAX_NUM_INTERFACES too big!!! max possible is 255 interfaces!"
-#endif
-
 
 /**
  * Initializes whole USBD_params_XT structure
