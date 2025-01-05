@@ -72,8 +72,10 @@ static void USBD_IOTP_EVENT_io_evdata_out(
    USBD_IO_Inout_Data_Size_DT size,
    USBD_IO_OUT_Data_Method_Port_HT mem_cpy);
 static void USBD_IOTP_EVENT_io_abort(void *tp_params, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction);
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
 static void USBD_IOTP_EVENT_io_error(
    void *tp_params, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_IO_Inout_Data_Size_DT size);
+#endif
 static void USBD_IOTP_EVENT_io_reinit(
    void *tp_params, void *tp_owner, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_Bool_DT active);
 
@@ -82,7 +84,11 @@ static void USBD_IOTP_EVENT_io_reinit(
 static const USBD_IO_UP_Error_HT USBD_IOTP_EVENT_error_table[4] =
 {
    USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Error_HT),
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
    USBD_IOTP_EVENT_io_error,
+#else
+   USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Error_HT),
+#endif
    USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Error_HT),
    USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Error_HT)
 };
@@ -719,7 +725,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send_Status(
    USBD_IOTP_EVENT_Params_XT  *tp,
    USBD_IO_Inout_Data_Size_DT *size_left)
 {
-   return USBD_IOTP_EVENT_Send(tp, &tp, 0, size_left);
+   return USBD_IOTP_EVENT_Send(tp, tp, 0, size_left);
 } /* USBD_IOTP_EVENT_Send_Status */
 
 
@@ -1959,6 +1965,7 @@ static void USBD_IOTP_EVENT_io_abort(void *tp_params, USBD_IO_UP_DOWN_Transactio
  * In that situation transfer is not aborted like for CONTROL/BULK/INTERRUPT
  * but only upper layer is informed about this situation to decide there what shall be done.
  */
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
 static void USBD_IOTP_EVENT_io_error(
    void *tp_params, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_IO_Inout_Data_Size_DT size)
 {
@@ -1996,6 +2003,7 @@ static void USBD_IOTP_EVENT_io_error(
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 } /* USBD_IOTP_EVENT_io_error */
+#endif
 
 
 

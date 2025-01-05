@@ -30,6 +30,24 @@
  * @{
  */
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+#define USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT    USBD_FEATURE_PRESENT
+#else
+#define USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT    USBD_FEATURE_NOT_PRESENT
+#endif
+
+#ifndef USBD_IO_INTERRUPT_TRANSFER_SUPPORTED
+#define USBD_IO_INTERRUPT_TRANSFER_SUPPORTED          USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT
+#endif
+
+#ifndef USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED
+#define USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED        USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT
+#endif
+
+#ifndef USBD_IO_BULK_TRANSFER_SUPPORTED
+#define USBD_IO_BULK_TRANSFER_SUPPORTED               USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT
+#endif
+
 /**
  * Locks permanently tp_params. It means, that there will not be possible
  * to change tp_params for specified endpoint. It can be cleared on USBD_Init or in one of situations described below.
@@ -438,6 +456,8 @@ void USBD_IO_DOWN_Process_OUT_Error_CBI(
       USBD_Params_XT *usbd,
       uint8_t ep_num);
 
+
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
 /**
  * Processes DATA error for ISOCHRONOUS IN transfer. Has to be called by down layer (port)
  * to inform upper layer that previous packet has not been sent successfully.
@@ -471,7 +491,7 @@ void USBD_IO_DOWN_Process_OUT_Error_Iso(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
       USBD_IO_Inout_Data_Size_DT size);
-
+#endif
 
 /** @} */ /* USBD_IO */
 

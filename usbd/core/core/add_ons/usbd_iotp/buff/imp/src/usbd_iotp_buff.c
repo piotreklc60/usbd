@@ -117,8 +117,10 @@ static void USBD_IOTP_BUFF_clear_buff(
    USBD_IOTP_BUFF_Params_XT *tp, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_Bool_DT set_valid_handlers);
 static void USBD_IOTP_BUFF_io_abort(
    void *tp_params, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction);
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
 static void USBD_IOTP_BUFF_io_error(
    void *tp_params, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_IO_Inout_Data_Size_DT size);
+#endif
 static void USBD_IOTP_BUFF_io_reinit(
    void *tp_params, void *tp_owner, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_Bool_DT active);
 static USBD_Bool_DT USBD_IOTP_BUFF_trigger_in(
@@ -136,7 +138,11 @@ static void USBD_IOTP_BUFF_event(
 static const USBD_IO_UP_Error_HT USBD_IOTP_BUFF_error_table[4] =
 {
    USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Error_HT),
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
    USBD_IOTP_BUFF_io_error,
+#else
+   USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Error_HT),
+#endif
    USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Error_HT),
    USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Error_HT)
 };
@@ -1682,6 +1688,7 @@ static void USBD_IOTP_BUFF_io_abort(void *tp_params, USBD_IO_UP_DOWN_Transaction
  * In that situation transfer is not aborted like for CONTROL/BULK/INTERRUPT
  * but only upper layer is informed about this situation to decide there what shall be done.
  */
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
 static void USBD_IOTP_BUFF_io_error(void *tp_params, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_IO_Inout_Data_Size_DT size)
 {
 #if(USBD_FEATURE_PRESENT != USBD_IOTP_BUFF_USE_UP_LINK)
@@ -1738,6 +1745,7 @@ static void USBD_IOTP_BUFF_io_error(void *tp_params, USBD_IO_UP_DOWN_Transaction
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 } /* USBD_IOTP_BUFF_io_error */
+#endif
 
 
 

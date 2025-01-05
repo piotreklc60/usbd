@@ -322,8 +322,8 @@ typedef union
    (_temp)  |= (or_mask);\
    _ep_reg   = (_temp);\
    (_after)  = _ep_reg;\
-   port_stm32_cat_a_print_ep_reg_state("-> ", (_before), __LINE__, (_ep_reg_num));\
-   port_stm32_cat_a_print_ep_reg_state("<- ", (_after), __LINE__, (_ep_reg_num))
+   port_stm32_cat_a_io_print_ep_reg_state("-> ", (_before), __LINE__, (_ep_reg_num));\
+   port_stm32_cat_a_io_print_ep_reg_state("<- ", (_after), __LINE__, (_ep_reg_num))
 
 #else
 #define USBDEP_REG_MODIFY(_ep_reg_num, _ep_reg, _temp, _before, _after, ex_or_mask, and_mask, or_mask) \

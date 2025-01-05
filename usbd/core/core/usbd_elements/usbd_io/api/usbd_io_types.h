@@ -655,7 +655,9 @@ typedef struct USBD_IO_DOWN_Common_Handlers_eXtended_Tag
    USBD_IO_DOWN_Abort_HT                     abort;
    USBD_IO_DOWN_Stall_HT                     stall;
    USBD_IO_DOWN_Halt_Configure_HT            halt;
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
    USBD_IO_DOWN_Halt_Configure_HT            configure;
+#endif
 }USBD_IO_DOWN_Common_Handlers_XT;
 
 /**

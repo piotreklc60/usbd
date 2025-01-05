@@ -46,7 +46,9 @@ void USBD_IO_EP_Enable_And_Configure(
       uint8_t ep_num,
       USB_EP_Direction_ET dir)
 {
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
    const USBD_IO_DOWN_Common_Handlers_XT *down_handlers;
+#endif
    const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
    void *tp_params;
    void *tp_owner;
@@ -120,6 +122,7 @@ void USBD_IO_EP_Enable_And_Configure(
          USBD_IO_CORE_SET_IN_EP_ACTIVITY_MARKER(usbd, ep_num);
       }
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
       /**
        * call "DOWN_CONFIGURE" to enable hardware
        */
@@ -132,6 +135,7 @@ void USBD_IO_EP_Enable_And_Configure(
             USBD_IO_CALL_DOWN_CONFIGURE(usbd, down_handlers, ep_num, dir, USBD_TRUE);
          }
       }
+#endif
    }
    else
    {
@@ -148,7 +152,9 @@ void USBD_IO_EP_Disable(
       USBD_Bool_DT force_tp_remove,
       USBD_Bool_DT force_hw_disabling)
 {
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
    const USBD_IO_DOWN_Common_Handlers_XT *down_handlers;
+#endif
    const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
 
    USBD_ENTER_FUNC(USBD_DBG_IO_ONOFF);
@@ -166,6 +172,7 @@ void USBD_IO_EP_Disable(
 
          if(USBD_BOOL_IS_TRUE(usbd->dev.core.data.active) || USBD_BOOL_IS_TRUE(force_hw_disabling))
          {
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
             /**
              * call "DOWN_CONFIGURE" to disable hardware
              */
@@ -178,6 +185,7 @@ void USBD_IO_EP_Disable(
                   USBD_IO_CALL_DOWN_CONFIGURE(usbd, down_handlers, ep_num, USB_EP_DIRECTION_OUT, USBD_FALSE);
                }
             }
+#endif
 
             ep_handlers = USBD_IO_UP_OUT_GET_HANDLERS_PTR(usbd, ep_num);
 
@@ -232,6 +240,7 @@ void USBD_IO_EP_Disable(
 
          if(USBD_BOOL_IS_TRUE(usbd->dev.core.data.active))
          {
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
             /**
              * call "DOWN_CONFIGURE" to disable hardware
              */
@@ -244,6 +253,7 @@ void USBD_IO_EP_Disable(
                   USBD_IO_CALL_DOWN_CONFIGURE(usbd, down_handlers, ep_num, USB_EP_DIRECTION_IN, USBD_FALSE);
                }
             }
+#endif
 
             ep_handlers = USBD_IO_UP_IN_GET_HANDLERS_PTR(usbd, ep_num);
 
@@ -1410,6 +1420,7 @@ void USBD_IO_DOWN_Process_OUT_Error_CBI(
 } /* USBD_IO_DOWN_Process_OUT_Error_CBI */
 
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
 void USBD_IO_DOWN_Process_IN_Error_Iso(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
@@ -1501,6 +1512,7 @@ void USBD_IO_DOWN_Process_OUT_Error_Iso(
 
    USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
 } /* USBD_IO_DOWN_Process_OUT_Error_Iso */
+#endif
 
 #ifdef USBD_IO_POST_IMP_INCLUDE
 #include "usbd_io_post_imp.h"

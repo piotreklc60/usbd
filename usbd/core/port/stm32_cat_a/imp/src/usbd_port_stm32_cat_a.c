@@ -62,6 +62,52 @@
 
 #define USBD_PORT_STM32_CAT_A_DUMP_LIMIT_PRINTS               10
 
+/** ******************************************************************************************************************************
+ * USBD DEV part types
+ ********************************************************************************************************************************/
+
+typedef struct port_stm32_cat_a_dev_if_estimation_Data_Tag
+{
+   size_t max_buffer_reservation;
+   uint_fast8_t num_buffers;
+}port_stm32_cat_a_dev_if_estimation_DT;
+
+typedef struct port_stm32_cat_a_dev_ep_estimation_Data_Tag
+{
+   struct
+   {
+      uint8_t  in;
+      uint8_t  out;
+   }num_bufs;
+}port_stm32_cat_a_dev_ep_estimation_DT;
+
+typedef struct port_stm32_cat_a_dev_interface_shared_mem_start_point_Data_Tag
+{
+   uint16_t start_point;
+   uint16_t size;
+   uint16_t current_offset;
+}port_stm32_cat_a_dev_interface_shared_mem_start_point_DT;
+
+typedef struct port_stm32_cat_a_dev_params_eXtended_Tag
+{
+   uint16_t device_status;
+   uint8_t bulk_eps_num_bufs;
+   USBD_Bool_DT out_on_delay;
+}port_stm32_cat_a_dev_params_XT;
+
+typedef struct port_stm32_cat_a_req_params_eXtended_Tag
+{
+   USBD_Bool_DT set_configuration_ongoing;
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
+   uint8_t interface_set_ongoing;
+#endif
+   uint8_t ep_setup_ongoing;
+}port_stm32_cat_a_req_params_XT;
+
+/** ******************************************************************************************************************************
+ * USBD IO part types
+ ********************************************************************************************************************************/
+
 typedef struct port_stm32_cat_a_io_ep_eXtended_Tag
 {
    struct
@@ -104,10 +150,12 @@ typedef struct port_stm32_cat_a_io_ep_eXtended_Tag
       {
          uint16_t                      size;
       }buf0;
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
       struct
       {
          uint16_t                      size;
       }buf1;
+#endif
       uint16_t                         mps;
       uint8_t                          ep_type;
       uint8_t                          max_num_bufs;
@@ -120,48 +168,10 @@ typedef struct port_stm32_cat_a_io_ep_eXtended_Tag
    }in;
 } port_stm32_cat_a_io_ep_XT;
 
-typedef struct port_stm32_cat_a_dev_if_estimation_Data_Tag
-{
-   size_t max_buffer_reservation;
-   uint_fast8_t num_buffers;
-}port_stm32_cat_a_dev_if_estimation_DT;
-
-typedef struct port_stm32_cat_a_dev_ep_estimation_Data_Tag
-{
-   struct
-   {
-      uint8_t  in;
-      uint8_t  out;
-   }num_bufs;
-}port_stm32_cat_a_dev_ep_estimation_DT;
-
-typedef struct port_stm32_cat_a_dev_interface_shared_mem_start_point_Data_Tag
-{
-   uint16_t start_point;
-   uint16_t size;
-   uint16_t current_offset;
-}port_stm32_cat_a_dev_interface_shared_mem_start_point_DT;
-
-typedef struct port_stm32_cat_a_dev_params_eXtended_Tag
-{
-   uint16_t device_status;
-   uint8_t bulk_eps_num_bufs;
-   USBD_Bool_DT out_on_delay;
-}port_stm32_cat_a_dev_params_XT;
-
-typedef struct port_stm32_cat_a_req_params_eXtended_Tag
-{
-   USBD_Bool_DT set_configuration_ongoing;
-#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
-   uint8_t interface_set_ongoing;
-#endif
-   uint8_t ep_setup_ongoing;
-}port_stm32_cat_a_req_params_XT;
-
-typedef void (*port_stm32_cat_a_disable_ep_HT)(uint8_t ep_reg_num, volatile uint32_t *ep_reg);
+typedef void (*port_stm32_cat_a_io_disable_ep_HT)(uint8_t ep_reg_num, volatile uint32_t *ep_reg);
 
 /** ******************************************************************************************************************************
- * USBD DEV part
+ * USBD DEV part local functions declaration & variables
  ********************************************************************************************************************************/
 
 static void                         port_stm32_cat_a_dev_activate_deactivate (USBD_Params_XT *usbd, USBD_Bool_DT state);
@@ -210,12 +220,12 @@ USBD_Atomic_Bool_DT port_stm32_cat_a_irq_active;
 
 
 /** ******************************************************************************************************************************
- * USBD IO part
+ * USBD IO part local functions declaration & variables
  ********************************************************************************************************************************/
 
-static void                         port_stm32_cat_a_load_data_to_buffer        (const uint8_t* data, uint32_t* buffer, USBD_IO_Inout_Data_Size_DT length, USBD_IO_Inout_Data_Size_DT offset);
+static void                         port_stm32_cat_a_io_load_data_to_buffer     (const uint8_t* data, uint32_t* buffer, USBD_IO_Inout_Data_Size_DT length, USBD_IO_Inout_Data_Size_DT offset);
 static USBD_IO_Inout_Data_Size_DT   port_stm32_cat_a_io_data_in_process_bufs    (port_stm32_cat_a_io_ep_XT *ep, const void* data, USBD_IO_Inout_Data_Size_DT size, USBD_Bool_DT is_last_part);
-static USBD_IO_Inout_Data_Size_DT   port_stm32_cat_a_process_data_out           (port_stm32_cat_a_io_ep_XT *ep, void* data, USBD_IO_Inout_Data_Size_DT size, USBD_Bool_DT is_last_part);
+static USBD_IO_Inout_Data_Size_DT   port_stm32_cat_a_io_process_data_out        (port_stm32_cat_a_io_ep_XT *ep, void* data, USBD_IO_Inout_Data_Size_DT size, USBD_Bool_DT is_last_part);
 #if(USBD_PORT_STM32_CAT_A_DMA_TYPE == PORT_STM32_CAT_A_DMA_HALF_DMA)
 static USBD_IO_Inout_Data_Size_DT   port_stm32_cat_a_io_in_provide              (USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, const void *data, USBD_IO_Inout_Data_Size_DT size, USBD_Bool_DT is_last_part);
 #endif
@@ -230,48 +240,59 @@ static USBD_IO_Inout_Data_Size_DT   port_stm32_cat_a_io_get_ep_in_buffered_size 
 static void                         port_stm32_cat_a_io_stall                   (USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir);
 static void                         port_stm32_cat_a_io_abort                   (USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, USBD_Bool_DT flush_hw_bufs);
 static void                         port_stm32_cat_a_io_halt                    (USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, const USB_Endpoint_Desc_DT *ep_desc, USBD_Bool_DT state);
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
 static void                         port_stm32_cat_a_io_configure               (USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, const USB_Endpoint_Desc_DT *ep_desc, USBD_Bool_DT state);
-static void                         port_stm32_cat_a_disable_ep_ctrl_int_in     (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
-static void                         port_stm32_cat_a_disable_ep_ctrl_int_out    (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
-static void                         port_stm32_cat_a_disable_ep_isochronous     (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
-static void                         port_stm32_cat_a_disable_ep_bulk_in         (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
-static void                         port_stm32_cat_a_disable_ep_bulk_out        (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
-static void                         port_stm32_cat_a_process_in                 (uint8_t ep_num);
-static void                         port_stm32_cat_a_process_out                (uint8_t ep_num);
+static void                         port_stm32_cat_a_io_disable_ep_ctrl_int_in  (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
+static void                         port_stm32_cat_a_io_disable_ep_ctrl_int_out (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
+static void                         port_stm32_cat_a_io_disable_ep_isochronous  (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
+static void                         port_stm32_cat_a_io_disable_ep_bulk_in      (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
+static void                         port_stm32_cat_a_io_disable_ep_bulk_out     (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
+#endif
+static void                         port_stm32_cat_a_io_process_in              (uint8_t ep_num);
+static void                         port_stm32_cat_a_io_process_out             (uint8_t ep_num);
 
 static port_stm32_cat_a_io_ep_XT               port_stm32_cat_a_io_ep[USBD_MAX_NUM_ENDPOINTS];
-static const USBD_IO_DOWN_Common_Handlers_XT port_stm32_cat_a_io_common = USBD_IO_DOWN_FILL_COMMON_HANDLERS(
-      port_stm32_cat_a_io_trigger,
-      port_stm32_cat_a_io_get_ep_out_waiting_size,
-      port_stm32_cat_a_io_get_ep_in_buffered_size,
-      port_stm32_cat_a_io_abort,
-      port_stm32_cat_a_io_stall,
-      port_stm32_cat_a_io_halt,
-      port_stm32_cat_a_io_configure);
-
-static uint8_t port_stm32_cat_a_ep_reg_num_ep[USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS];
-
-static const port_stm32_cat_a_disable_ep_HT port_stm32_cat_a_disable_ep_in[4] =
+static const USBD_IO_DOWN_Common_Handlers_XT   port_stm32_cat_a_io_common =
 {
-   port_stm32_cat_a_disable_ep_ctrl_int_in,
-   port_stm32_cat_a_disable_ep_isochronous,
-   port_stm32_cat_a_disable_ep_bulk_in,
-   port_stm32_cat_a_disable_ep_ctrl_int_in
+   .trigger                   = port_stm32_cat_a_io_trigger,
+   .get_ep_out_waiting_size   = port_stm32_cat_a_io_get_ep_out_waiting_size,
+   .get_ep_in_buffered_size   = port_stm32_cat_a_io_get_ep_in_buffered_size,
+   .abort                     = port_stm32_cat_a_io_abort,
+   .stall                     = port_stm32_cat_a_io_stall,
+   .halt                      = port_stm32_cat_a_io_halt,
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+   .configure                 = port_stm32_cat_a_io_configure
+#endif
 };
-static const port_stm32_cat_a_disable_ep_HT port_stm32_cat_a_disable_ep_out[4] =
+
+static uint8_t port_stm32_cat_a_io_ep_reg_num_ep[USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS];
+
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+
+static const port_stm32_cat_a_io_disable_ep_HT port_stm32_cat_a_io_disable_ep_in[4] =
 {
-   port_stm32_cat_a_disable_ep_ctrl_int_out,
-   port_stm32_cat_a_disable_ep_isochronous,
-   port_stm32_cat_a_disable_ep_bulk_out,
-   port_stm32_cat_a_disable_ep_ctrl_int_out
+   port_stm32_cat_a_io_disable_ep_ctrl_int_in,
+   port_stm32_cat_a_io_disable_ep_isochronous,
+   port_stm32_cat_a_io_disable_ep_bulk_in,
+   port_stm32_cat_a_io_disable_ep_ctrl_int_in
 };
+static const port_stm32_cat_a_io_disable_ep_HT port_stm32_cat_a_io_disable_ep_out[4] =
+{
+   port_stm32_cat_a_io_disable_ep_ctrl_int_out,
+   port_stm32_cat_a_io_disable_ep_isochronous,
+   port_stm32_cat_a_io_disable_ep_bulk_out,
+   port_stm32_cat_a_io_disable_ep_ctrl_int_out
+};
+
+#endif
+
 #ifdef USBD_USE_IOCMD
-static const char * const port_stm32_cat_a_ep_type_string[4] = {"BULK", "CTRL", "ISO ", "INT "};
-static const char * const port_stm32_cat_a_transfer_status_string[4] = {"DISAB", "STALL", "NAK  ", "VALID"};
+static const char * const port_stm32_cat_a_io_ep_type_string[4]         = {"BULK", "CTRL", "ISO ", "INT "};
+static const char * const port_stm32_cat_a_io_transfer_status_string[4] = {"DISAB", "STALL", "NAK  ", "VALID"};
 #endif
 
 /** ******************************************************************************************************************************
- * USBD REQUEST part
+ * USBD REQUEST part local functions declaration & variables
  ********************************************************************************************************************************/
 
 static void port_stm32_cat_a_req_process_incomming_setup(uint8_t ep_num, uint8_t ep_reg_num);
@@ -293,7 +314,7 @@ static const USBD_REQUEST_Port_Callbacks_XT port_stm32_cat_a_req_handlers =
 static port_stm32_cat_a_req_params_XT port_stm32_cat_a_req_params;
 
 /** ******************************************************************************************************************************
- * USBD DEV part functions
+ * USBD DEV part local functions definition
  ********************************************************************************************************************************/
 
 static void port_stm32_cat_a_dev_reset_internal_structures(void)
@@ -326,7 +347,7 @@ static void port_stm32_cat_a_dev_reset_internal_structures(void)
 
    for(ep_num = 0; ep_num < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS; ep_num++)
    {
-      port_stm32_cat_a_ep_reg_num_ep[ep_num] = USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS;
+      port_stm32_cat_a_io_ep_reg_num_ep[ep_num] = USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS;
    }
 } /* port_stm32_cat_a_dev_reset_internal_structures */
 
@@ -455,6 +476,10 @@ static USBD_Bool_DT port_stm32_cat_a_dev_parse_cfg_internal(
    uint_fast8_t num_buffers;
    USBD_Bool_DT result = USBD_TRUE;
 
+#if(USBD_FEATURE_PRESENT != USBD_IO_BULK_TRANSFER_SUPPORTED)
+   USBD_UNUSED_PARAM(num_buffers_per_bulk);
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
    memset(if_estimation, 0, sizeof(port_stm32_cat_a_dev_if_estimation_DT) * USBD_MAX_NUM_INTERFACES);
@@ -496,14 +521,18 @@ static USBD_Bool_DT port_stm32_cat_a_dev_parse_cfg_internal(
             {
                buffers = 2;
             }
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
             else if(USB_EP_DESC_TRANSFER_TYPE_ISOCHRONOUS == ep_type)
             {
                buffers = 2;
             }
+#endif
+#if(USBD_FEATURE_PRESENT == USBD_IO_BULK_TRANSFER_SUPPORTED)
             else if(USB_EP_DESC_TRANSFER_TYPE_BULK == ep_type)
             {
                buffers = num_buffers_per_bulk;
             }
+#endif
             else
             {
                buffers = 1;
@@ -721,91 +750,12 @@ static const USB_Endpoint_Desc_DT* port_stm32_cat_a_dev_get_ep0_desc(USBD_Params
 
 
 
-/**
- * PUBLIC INTERFACES
- */
-
-const USBD_DEV_Port_Handler_XT *USBD_Port_STM32_CAT_A_Get_Port(void)
-{
-   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
-
-   return(&port_stm32_cat_a_dev);
-} /* USBD_Port_STM32_CAT_A_Get_Port */
-
-
-
-#if (USBD_FEATURE_PRESENT == USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE)
-void USBD_Port_STM32_CAT_A_Vbus_Detection(USBD_Bool_DT vbus_5V_present)
-{
-   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
-
-   USBD_NOTICE_1(USBD_DBG_PORT_DEV, "Vbus changed to %s", USBD_BOOL_IS_TRUE(vbus_5V_present) ? "ON" : "OFF");
-
-   if(USBD_CHECK_PTR(void, port_stm32_cat_a_usbd))
-   {
-      if(USBD_BOOL_IS_TRUE(vbus_5V_present))
-      {
-         USBD_DEV_Attached(port_stm32_cat_a_usbd, USBD_TRUE);
-         USBD_DEV_Powered(port_stm32_cat_a_usbd, USBD_TRUE);
-
-         USBD_STM32_CAT_A_RESET_AND_ENABLE_PERIPH();
-
-#if (USBD_FEATURE_PRESENT == USBD_PORT_STM32_CAT_A_USE_PULL_UP)
-         USBD_Port_STM32_CAT_A_Pull_Up_Change(USBD_TRUE);
-#endif
-      }
-      else
-      {
-#if (USBD_FEATURE_PRESENT == USBD_PORT_STM32_CAT_A_USE_PULL_UP)
-         USBD_Port_STM32_CAT_A_Pull_Up_Change(USBD_FALSE);
-#else
-         USBD_ALERT(USBD_DBG_PORT_DEV,"no posibility to disconnect D+ resistor, host will not recognize device disconnection!");
-#endif
-
-         USBD_STM32_CAT_A_DISABLE();
-
-         USBD_DEV_Powered(port_stm32_cat_a_usbd, USBD_FALSE);
-         USBD_DEV_Attached(port_stm32_cat_a_usbd, USBD_FALSE);
-      }
-   }
-   else
-   {
-      USBD_WARN_1(USBD_DBG_PORT_INVALID_PARAMS, "function invalid parameter! usbd: %p", port_stm32_cat_a_usbd);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
-} /* USBD_Port_STM32_CAT_A_Vbus_Detection */
-#endif
-
-static void port_stm32_cat_a_check_out_on_delay(void)
-{
-   uint8_t ep_num = 0;
-   USBD_Bool_DT keep_out_on_delay_flag = USBD_FALSE;
-
-   do
-   {
-      if(USBD_BOOL_IS_TRUE(port_stm32_cat_a_io_ep[ep_num].out.out_on_delay))
-      {
-         if(USBD_BOOL_IS_FALSE(port_stm32_cat_a_io_ep[ep_num].out.is_ep_waiting))
-         {
-            port_stm32_cat_a_io_ep[ep_num].out.out_on_delay = USBD_FALSE;
-            port_stm32_cat_a_process_out(ep_num);
-         }
-         else
-         {
-            keep_out_on_delay_flag = USBD_TRUE;
-         }
-      }
-      ep_num++;
-   }while(ep_num < USBD_MAX_NUM_ENDPOINTS);
-
-   port_stm32_cat_a_dev_prams.out_on_delay = keep_out_on_delay_flag;
-} /* port_stm32_cat_a_check_out_on_delay */
+/** ******************************************************************************************************************************
+ * USBD IO part local functions definition
+ ********************************************************************************************************************************/
 
 #ifdef USBD_USE_IOCMD
-static void port_stm32_cat_a_print_ep_reg_state(const char *desc, uint32_t reg, uint16_t line, uint8_t ep_reg_num)
+static void port_stm32_cat_a_io_print_ep_reg_state(const char *desc, uint32_t reg, uint16_t line, uint8_t ep_reg_num)
 {
 #ifndef USBD_USE_IOCMD
    USBD_UNUSED_PARAM(desc);
@@ -826,427 +776,23 @@ static void port_stm32_cat_a_print_ep_reg_state(const char *desc, uint32_t reg, 
       reg,
       USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__CTR_RX),
       USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__DTOG_RX),
-      port_stm32_cat_a_transfer_status_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_RX)],
+      port_stm32_cat_a_io_transfer_status_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_RX)],
       USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__SETUP),
-      port_stm32_cat_a_ep_type_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__TYPE)],
+      port_stm32_cat_a_io_ep_type_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__TYPE)],
       USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__KIND),
       USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__CTR_TX),
       USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__DTOG_TX),
-      port_stm32_cat_a_transfer_status_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_TX)],
+      port_stm32_cat_a_io_transfer_status_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_TX)],
       USBD_STM32_CAT_A_REG_GET_4BIT(reg, USBDEP_STM32_CAT_A_BIT__ADDR));
 
 #undef IOCMD__LINE__LOCAL
 #define IOCMD__LINE__LOCAL      IOCMD__LINE__
-} /* port_stm32_cat_a_print_ep_reg_state */
+} /* port_stm32_cat_a_io_print_ep_reg_state */
 #else
-#define port_stm32_cat_a_print_ep_reg_state(desc, reg, line, ep_reg_num)
+#define port_stm32_cat_a_io_print_ep_reg_state(desc, reg, line, ep_reg_num)
 #endif
 
-void USBD_Port_STM32_CAT_A_Print_HW_Dump(const char *desc, uint16_t line)
-{
-#ifndef USBD_USE_IOCMD
-   USBD_UNUSED_PARAM(desc);
-   USBD_UNUSED_PARAM(line);
-#else
-   USBDEP_STM32_CAT_A_Mem_Descriptor *mem = USBD_STM32_EPMEM;
-   uint32_t reg;
-   uint_fast8_t ep_reg_num;
-#ifdef IOCMD__LINE__LOCAL
-#undef IOCMD__LINE__LOCAL
-#endif
-#define IOCMD__LINE__LOCAL      line
-
-   for(ep_reg_num = 0; ep_reg_num < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS; ep_reg_num++)
-   {
-      reg = USBD_STM32_REG->EP_REG[ep_reg_num];
-      USBD_EMERG_13(USBD_DBG_PORT_INVALID_PARAMS,
-         "%s EP_REG[%d] = 0x%04X (RX:CTR=%d, DTOG=%d, STAT=%s - SETUP=%d, EP_TYPE=%s, EP_KIND=%d - TX:CTR=%d, DTOG=%d, STAT=%s - EA=%d)",
-         desc,
-         ep_reg_num,
-         reg,
-         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__CTR_RX),
-         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__DTOG_RX),
-         port_stm32_cat_a_transfer_status_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_RX)],
-         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__SETUP),
-         port_stm32_cat_a_ep_type_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__TYPE)],
-         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__KIND),
-         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__CTR_TX),
-         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__DTOG_TX),
-         port_stm32_cat_a_transfer_status_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_TX)],
-         USBD_STM32_CAT_A_REG_GET_4BIT(reg, USBDEP_STM32_CAT_A_BIT__ADDR));
-   }
-
-   for(ep_reg_num = 0; ep_reg_num < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS; ep_reg_num++)
-   {
-      reg = USBD_STM32_REG->EP_REG[ep_reg_num];
-      USBD_EMERG_11(USBD_DBG_PORT_INVALID_PARAMS,
-         "%s EP[%d](%s.%s/%s) MEM::   DB[0] / TX: ADDR: 0x%08X, COUNT: 0x%04X(%5d);   DB[1] / RX: ADDR: 0x%08X, COUNT: 0x%04X(%5d)",
-         desc,
-         ep_reg_num,
-         port_stm32_cat_a_ep_type_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__TYPE)],
-         (0 != USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_TX)) ? " IN" : " - ",
-         (0 != USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_RX)) ? "OUT" : " - ",
-         mem->sb.tx_addr,
-         mem->sb.tx_count,
-         mem->sb.tx_count,
-         mem->sb.rx_addr,
-         mem->sb.rx_count,
-         mem->sb.rx_count);
-      mem++;
-   }
-
-   for(ep_reg_num = 0; ep_reg_num < USBD_MAX_NUM_ENDPOINTS; ep_reg_num++)
-   {
-      USBD_EMERG_15(USBD_DBG_PORT_INVALID_PARAMS,
-         "%s EP[%d].OUT:: mps: %4d, ep_type: %d, ep_reg_num: %d; OND: %d, DWFR: %d, IEP: %d, IEW: %d; buf: data: %08X; size: %5d, packet_size: %5d; dma: data: %08X; size: %5d, total_size: %5d",
-         desc,
-         ep_reg_num,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.mps,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.ep_type,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.hw.ep_reg_num,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.out_on_delay,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.dont_wait_for_ready,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.is_ep_processed,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.is_ep_waiting,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.buf.data,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.buf.size,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.buf.packet_size,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.dma.data,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.dma.size,
-         port_stm32_cat_a_io_ep[ep_reg_num].out.dma.total_size);
-   }
-
-   for(ep_reg_num = 0; ep_reg_num < USBD_MAX_NUM_ENDPOINTS; ep_reg_num++)
-   {
-      USBD_EMERG_12(USBD_DBG_PORT_INVALID_PARAMS,
-         "%s EP[%d].IN :: mps: %4d, ep_type: %d, ep_reg_num: %d; max_num_bufs: %d, num_used_bufs: %d, data_provided: %d; buf0: size: %5d; buf1: size: %5d; dma: data: %08X; size: %5d",
-         desc,
-         ep_reg_num,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.mps,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.ep_type,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.hw.ep_reg_num,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.max_num_bufs,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.num_used_bufs,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.data_provided,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.buf0.size,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.buf1.size,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.dma.data,
-         port_stm32_cat_a_io_ep[ep_reg_num].in.dma.size);
-   }
-   USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS,
-      "%s CNTR: 0x%04X",
-      desc,
-      USBD_STM32_REG->CNTR);
-   USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS,
-      "%s ISTR: 0x%04X",
-      desc,
-      USBD_STM32_REG->ISTR);
-   USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS,
-      "%s FNR: 0x%04X",
-      desc,
-      USBD_STM32_REG->FNR);
-   USBD_EMERG_3(USBD_DBG_PORT_INVALID_PARAMS,
-      "%s DADDR: 0x%04X (ADDR = %d)",
-      desc,
-      USBD_STM32_REG->DADDR,
-      USBD_STM32_REG->DADDR & USBD_STM32_CAT_A_DADDR_ADD);
-   USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS,
-      "%s BTABLE: 0x%04X",
-      desc,
-      USBD_STM32_REG->BTABLE);
-
-#undef IOCMD__LINE__LOCAL
-#define IOCMD__LINE__LOCAL      IOCMD__LINE__
-#endif
-} /* USBD_Port_STM32_CAT_A_Print_HW_Dump */
-
-void USB_LP_CAN1_RX0_IRQHandler(void)
-{
-   uint8_t ep_reg_num = 0;
-
-   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_TRUE);
-
-   USBD_ENTER_FUNC(USBD_DBG_PORT_IRQ);
-
-   USBD_DEBUG_LO_1(USBD_DBG_PORT_IRQ, "USB_LP; ISTR: %04X", USBD_STM32_REG->ISTR);
-
-   if(USBD_CHECK_PTR(void, port_stm32_cat_a_usbd))
-   {
-      if(USBD_BOOL_IS_TRUE(port_stm32_cat_a_dev_prams.out_on_delay))
-      {
-         port_stm32_cat_a_check_out_on_delay();
-      }
-
-      /* data transmission */
-      if(USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_CTR)
-      {
-         do
-         {
-            /* OUT */
-            if(0 != (USBD_STM32_REG->EP_REG[ep_reg_num] & USBDEP_STM32_CAT_A__CTR_RX))
-            {
-               USBD_DEBUG_HI_2(USBD_DBG_PORT_IO, "%s IRQ on reg %d", "OUT", ep_reg_num);
-
-               if(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num] < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)
-               {
-                  /* normal data transfer */
-                  if((USBDEP_STM32_CAT_A__CONTROL | USBDEP_STM32_CAT_A__SETUP)
-                     != (USBD_STM32_REG->EP_REG[ep_reg_num] & (USBDEP_STM32_CAT_A__TYPE | USBDEP_STM32_CAT_A__SETUP)))
-                  {
-                     port_stm32_cat_a_process_out(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num]);
-                  }
-                  /* it is control endpoint and SETUP packet has been received */
-                  else
-                  {
-                     port_stm32_cat_a_req_process_incomming_setup(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num], ep_reg_num);
-                  }
-               }
-               else
-               {
-                  USBD_ERROR_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] is active but was not configured! deactivate", ep_reg_num);
-
-                  USBD_STM32_REG->EP_REG[ep_reg_num] &=
-                     USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-               }
-            }
-            /* IN */
-            else if(0 != (USBD_STM32_REG->EP_REG[ep_reg_num] & USBDEP_STM32_CAT_A__CTR_TX))
-            {
-               USBD_DEBUG_HI_2(USBD_DBG_PORT_IO, "%s IRQ on reg %d", "IN", ep_reg_num);
-
-               if(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num] < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)
-               {
-                  port_stm32_cat_a_process_in(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num]);
-               }
-               else
-               {
-                  USBD_ERROR_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] is active but was not configured! deactivate", ep_reg_num);
-
-                  USBD_STM32_REG->EP_REG[ep_reg_num] &=
-                     USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-               }
-            }
-
-            ep_reg_num++;
-         }while((USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_CTR)
-            && (ep_reg_num < (USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS > USBD_MAX_NUM_ENDPOINTS ? USBD_MAX_NUM_ENDPOINTS : USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)));
-      }
-      /* HOST reset IRQ */
-      if(USBD_STM32_REG->ISTR & (uint32_t)USBD_STM32_CAT_A_ISTR_RESET)
-      {
-         /* temporary - disable all USB IRQs */
-         USBD_STM32_REG->CNTR = 0;
-         /* clear IRQ status */
-         USBD_STM32_REG->ISTR &= ~((uint32_t)USBD_STM32_CAT_A_ISTR_RESET);
-         /* set default address */
-         USBD_STM32_REG->DADDR  = USBD_STM32_CAT_A_DADDR_EF;
-
-         USBD_STM32_REG->EP_REG[0] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-         USBD_STM32_REG->EP_REG[1] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-         USBD_STM32_REG->EP_REG[2] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-         USBD_STM32_REG->EP_REG[3] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-         USBD_STM32_REG->EP_REG[4] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-         USBD_STM32_REG->EP_REG[5] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-         USBD_STM32_REG->EP_REG[6] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-         USBD_STM32_REG->EP_REG[7] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-
-         /* set endpoints table offset to 0 */
-         USBD_STM32_REG->BTABLE = 0;
-
-         USBDEP_SET_TX_BUF_ADDR(0, 64);
-         USBDEP_SET_RX_BUF_ADDR(0, (USBD_STM32_EPMEM[0].sb.tx_addr + USBD_PORT_STM32_CAT_A_EP0_MPS));
-         USBDEP_SET_TX_BUF_ADDR(1, 0);
-         USBDEP_SET_RX_BUF_ADDR(1, 0);
-         USBDEP_SET_TX_BUF_ADDR(2, 0);
-         USBDEP_SET_RX_BUF_ADDR(2, 0);
-         USBDEP_SET_TX_BUF_ADDR(3, 0);
-         USBDEP_SET_RX_BUF_ADDR(3, 0);
-         USBDEP_SET_TX_BUF_ADDR(4, 0);
-         USBDEP_SET_RX_BUF_ADDR(4, 0);
-         USBDEP_SET_TX_BUF_ADDR(5, 0);
-         USBDEP_SET_RX_BUF_ADDR(5, 0);
-         USBDEP_SET_TX_BUF_ADDR(6, 0);
-         USBDEP_SET_RX_BUF_ADDR(6, 0);
-         USBDEP_SET_TX_BUF_ADDR(7, 0);
-         USBDEP_SET_RX_BUF_ADDR(7, 0);
-
-         /* set proper numbers to EP0 registers */
-         port_stm32_cat_a_dev_reset_internal_structures();
-
-         /* All endpoints will be disabled from USBD_DEV_Reset so ommited here */
-
-         /* call USBD engine RESET processor */
-         USBD_DEV_Reset(port_stm32_cat_a_usbd);
-
-         /* if USBD_DEV_Reset finished successfully then port is still active - check it before IRQs enabling */
-         if(USBD_CHECK_PTR(void, port_stm32_cat_a_usbd))
-         {
-            /* enable interruptions - data reception, HOST reset, SUSPEND req, SOF reception */
-            USBD_STM32_REG->CNTR = USBD_STM32_CAT_A_CNTR_CTRM | USBD_STM32_CAT_A_CNTR_RESETM | USBD_STM32_CAT_A_CNTR_SUSPM
-               | USBD_STM32_CAT_A_CNTR_SOFM | USBD_STM32_CAT_A_CNTR_ESOFM;
-         }
-      }
-      /* SOF received/expected */
-      if(USBD_STM32_REG->ISTR & (USBD_STM32_CAT_A_ISTR_SOF | USBD_STM32_CAT_A_ISTR_ESOF))
-      {
-         USBD_STM32_REG->ISTR &= ~((uint32_t)(USBD_STM32_CAT_A_ISTR_SOF | USBD_STM32_CAT_A_ISTR_ESOF));
-
-         USBD_DEV_SOF_Received(port_stm32_cat_a_usbd);
-      }
-      /* SUSPEND state has been forced by HOST (no SOF received) */
-      if(USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_SUSP)
-      {
-         USBD_STM32_REG->ISTR &= ~((uint32_t)USBD_STM32_CAT_A_ISTR_SUSP);
-         USBD_STM32_REG->CNTR &= ~((uint32_t)USBD_STM32_CAT_A_CNTR_SUSPM);
-         USBD_STM32_REG->CNTR |= USBD_STM32_CAT_A_CNTR_WKUPM | USBD_STM32_CAT_A_CNTR_FSUSP;
-         USBD_STM32_REG->CNTR |= USBD_STM32_CAT_A_CNTR_LPMODE;
-
-         USBD_DEV_Suspended(port_stm32_cat_a_usbd);
-
-         // TODO: anything else?
-      }
-      if(USBD_STM32_REG->ISTR & (USBD_STM32_CAT_A_ISTR_PMAOVR | USBD_STM32_CAT_A_ISTR_ERR))
-      {
-         static uint8_t dump_limit = 0;
-         if(dump_limit < USBD_PORT_STM32_CAT_A_DUMP_LIMIT_PRINTS)
-         {
-            dump_limit++;
-            USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS, "unsupported; PMAOVR: %d, ERR: %d",
-               0 != (USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_PMAOVR), 0 != (USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_ERR));
-
-            USBD_Port_STM32_CAT_A_Print_HW_Dump("STATE", __LINE__);
-
-            if(USBD_PORT_STM32_CAT_A_DUMP_LIMIT_PRINTS == dump_limit)
-            {
-               USBD_EMERG(USBD_DBG_PORT_INVALID_PARAMS,
-                  "Error ocured too many times! this dump will no longer be printed! fix your SW!!!");
-            }
-         }
-         USBD_STM32_REG->ISTR &= ~((uint32_t)(USBD_STM32_CAT_A_ISTR_PMAOVR | USBD_STM32_CAT_A_ISTR_ERR));
-         // TODO:
-      }
-   }
-   else
-   {
-      USBD_EMERG_1(USBD_DBG_PORT_INVALID_PARAMS, "function invalid parameter during IRQ - turn OFF USBD!!!! usbd: %p",
-         port_stm32_cat_a_usbd);
-      USBD_STM32_REG->ISTR  = 0;
-      USBD_STM32_CAT_A_DISABLE();
-   }
-
-   if(USBD_BOOL_IS_TRUE(port_stm32_cat_a_dev_prams.out_on_delay))
-   {
-      port_stm32_cat_a_check_out_on_delay();
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);
-
-   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
-} /* USB_LP_CAN1_RX0_IRQHandler */
-
-
-
-void USB_HP_CAN1_TX_IRQHandler(void)
-{
-   uint8_t ep_reg_num = 1;
-
-   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_TRUE);
-
-   USBD_ENTER_FUNC(USBD_DBG_PORT_IRQ);
-
-   USBD_DEBUG_LO_1(USBD_DBG_PORT_IRQ, "USB_HP; ISTR: %04X", USBD_STM32_REG->ISTR);
-
-   if(0 != USBD_STM32_REG->ISTR)
-   {
-      do
-      {
-         /* IN */
-         if(0 != (USBD_STM32_REG->EP_REG[ep_reg_num] & USBDEP_STM32_CAT_A__CTR_TX))
-         {
-            if(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num] < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)
-            {
-               port_stm32_cat_a_process_in(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num]);
-            }
-            else
-            {
-               USBD_ERROR_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] is active but was not configured! deactivate", ep_reg_num);
-
-               USBD_STM32_REG->EP_REG[ep_reg_num] &=
-                  USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-            }
-         }
-         /* OUT */
-         if(0 != (USBD_STM32_REG->EP_REG[ep_reg_num] & USBDEP_STM32_CAT_A__CTR_RX))
-         {
-            if(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num] < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)
-            {
-               /* normal data transfer */
-               if((USBDEP_STM32_CAT_A__CONTROL | USBDEP_STM32_CAT_A__SETUP)
-                  != (USBD_STM32_REG->EP_REG[ep_reg_num] & (USBDEP_STM32_CAT_A__TYPE | USBDEP_STM32_CAT_A__SETUP)))
-               {
-                  port_stm32_cat_a_process_out(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num]);
-               }
-               /* it is control endpoint and SETUP packet has been received */
-               else
-               {
-                  port_stm32_cat_a_req_process_incomming_setup(port_stm32_cat_a_ep_reg_num_ep[ep_reg_num], ep_reg_num);
-               }
-            }
-            else
-            {
-               USBD_ERROR_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] is active but was not configured! deactivate", ep_reg_num);
-
-               USBD_STM32_REG->EP_REG[ep_reg_num] &=
-                  USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
-            }
-         }
-
-         ep_reg_num++;
-      }while((USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_CTR)
-         && (ep_reg_num < (USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS > USBD_MAX_NUM_ENDPOINTS ? USBD_MAX_NUM_ENDPOINTS : USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)));
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);
-
-   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
-} /* USB_HP_CAN1_TX_IRQHandler */
-
-
-
-void USBWakeUp_IRQHandler(void)
-{
-   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_TRUE);
-
-   USBD_ENTER_FUNC(USBD_DBG_PORT_IRQ);
-
-   USBD_Port_STM32_CAT_A_Clear_Exti_Line_18_Irq_Status();
-
-   USBD_DEBUG_LO_1(USBD_DBG_PORT_IRQ, "USB_WakeUp; ISTR: %04X", USBD_STM32_REG->ISTR);
-
-   if(0 != USBD_STM32_REG->ISTR)
-   {
-      USBD_STM32_REG->ISTR &= ~((uint32_t)USBD_STM32_CAT_A_ISTR_WKUP);
-      USBD_STM32_REG->CNTR &= ~((uint32_t)USBD_STM32_CAT_A_ISTR_WKUP);
-      USBD_STM32_REG->CNTR |= USBD_STM32_CAT_A_CNTR_SUSPM;
-      if(0 != USBD_STM32_REG->ISTR)
-      {
-         USBD_WARN_1(USBD_DBG_PORT_IRQ, "still valid IRQ: 0x%08X", USBD_STM32_REG->ISTR);
-      }
-      USBD_DEV_Resumed(port_stm32_cat_a_usbd);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);
-
-   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
-} /* USBWakeUp_IRQHandler */
-
-
-
-/** ******************************************************************************************************************************
- * USBD IO part functions
- ********************************************************************************************************************************/
-
-static void port_stm32_cat_a_load_data_to_buffer (
+static void port_stm32_cat_a_io_load_data_to_buffer (
    const uint8_t* data, uint32_t* buffer, USBD_IO_Inout_Data_Size_DT length, USBD_IO_Inout_Data_Size_DT offset)
 {
    uint8_t additional_byte;
@@ -1298,15 +844,18 @@ static void port_stm32_cat_a_load_data_to_buffer (
    }
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
-} /* port_stm32_cat_a_load_data_to_buffer */
+} /* port_stm32_cat_a_io_load_data_to_buffer */
 
-static inline void port_stm32_cat_a_force_valid_in_stat(port_stm32_cat_a_io_ep_XT *ep)
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+static inline void port_stm32_cat_a_io_force_valid_in_stat(port_stm32_cat_a_io_ep_XT *ep)
 {
    volatile uint32_t temp;
 #ifdef USBD_USE_IOCMD
    volatile uint32_t temp_before;
    volatile uint32_t temp_after;
 #endif
+
+   USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
    /* allow for sending already prepared buffer */
    while(USBDEP_STM32_CAT_A__TX_NAK == (
@@ -1324,7 +873,10 @@ static inline void port_stm32_cat_a_force_valid_in_stat(port_stm32_cat_a_io_ep_X
          /*_AND  */USBDEP_STM32_CAT_A__ADDR_KIND_TYPE | USBDEP_STM32_CAT_A__STAT_TX,
          /*_OR   */USBDEP_STM32_CAT_A__CTR_RX);
    }
-}
+
+   USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
+} /* port_stm32_cat_a_io_force_valid_in_stat */
+#endif
 
 static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
    port_stm32_cat_a_io_ep_XT *ep,
@@ -1344,6 +896,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
 
    ep->in.data_provided = USBD_TRUE;
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
    if(2 == ep->in.max_num_bufs)
    {
       USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "2 bufs; used bufs: %d", ep->in.num_used_bufs);
@@ -1355,7 +908,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
             (USBD_IO_Inout_Data_Size_DT)(ep->in.mps - ep->in.buf0.size) : size;
 
          /* load data to buffer */
-         port_stm32_cat_a_load_data_to_buffer (
+         port_stm32_cat_a_io_load_data_to_buffer (
             data, (uint32_t*)USBDEP_DB_GET_TX_BUFFER_ADDR(ep->in.hw.ep_reg_num), part, ep->in.buf0.size);
 
          result            = part;
@@ -1377,7 +930,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
                /*_AND  */USBDEP_STM32_CAT_A__ADDR_KIND_TYPE | USBDEP_STM32_CAT_A__STAT_TX | USBDEP_STM32_CAT_A__DTOG_RX,
                /*_OR   */USBDEP_STM32_CAT_A__DTOG_RX);
 
-            port_stm32_cat_a_force_valid_in_stat(ep);
+            port_stm32_cat_a_io_force_valid_in_stat(ep);
          }
 
          if(size > part)
@@ -1390,7 +943,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
                (USBD_IO_Inout_Data_Size_DT)(ep->in.mps - ep->in.buf1.size) : size;
 
             /* load data to buffer */
-            port_stm32_cat_a_load_data_to_buffer (
+            port_stm32_cat_a_io_load_data_to_buffer (
                data, (uint32_t*)USBDEP_DB_GET_TX_BUFFER_ADDR(ep->in.hw.ep_reg_num), part, ep->in.buf1.size);
 
             result            += part;
@@ -1410,7 +963,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
             (USBD_IO_Inout_Data_Size_DT)(ep->in.mps - ep->in.buf1.size) : size;
 
          /* load data to buffer */
-         port_stm32_cat_a_load_data_to_buffer (
+         port_stm32_cat_a_io_load_data_to_buffer (
             data, (uint32_t*)USBDEP_DB_GET_TX_BUFFER_ADDR(ep->in.hw.ep_reg_num), part, ep->in.buf1.size);
 
          result            = part;
@@ -1424,6 +977,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
       }
    } /* (2 == ep->in.max_num_bufs) */
    else if(0 == ep->in.num_used_bufs)
+#endif
    {
       USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "1 buf; used bufs: %d", ep->in.num_used_bufs);
 
@@ -1432,7 +986,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
          (USBD_IO_Inout_Data_Size_DT)(ep->in.mps - ep->in.buf0.size) : size;
 
       /* load data to buffer */
-      port_stm32_cat_a_load_data_to_buffer (
+      port_stm32_cat_a_io_load_data_to_buffer (
          data, (uint32_t*)USBDEP_SB_GET_TX_BUFFER_ADDR(ep->in.hw.ep_reg_num), part, ep->in.buf0.size);
 
       result            = part;
@@ -1461,7 +1015,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
    return result;
 } /* port_stm32_cat_a_io_data_in_process_bufs */
 
-static void port_stm32_cat_a_process_in(uint8_t ep_num)
+static void port_stm32_cat_a_io_process_in(uint8_t ep_num)
 {
    port_stm32_cat_a_io_ep_XT *ep;
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
@@ -1487,9 +1041,14 @@ static void port_stm32_cat_a_process_in(uint8_t ep_num)
       {
          (ep->in.num_used_bufs)--;
       }
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
       ep->in.buf0.size      = ep->in.buf1.size;
       ep->in.buf1.size      = 0;
+#else
+      ep->in.buf0.size      = 0;
+#endif
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_BULK_TRANSFER_SUPPORTED)
       /* double buffered BULK EP - there is a second data buffer prepared in previous IRQ; allow for sending */
       if((ep->in.num_used_bufs > 0) && (USB_EP_DESC_TRANSFER_TYPE_BULK == ep->in.ep_type))
       {
@@ -1507,9 +1066,10 @@ static void port_stm32_cat_a_process_in(uint8_t ep_num)
          /* don't ask why register is being modified twice - I also don't understand it
           * but for some reason this processor needs 2 REG modifications to set it from NAK to VALID
           */
-         port_stm32_cat_a_force_valid_in_stat(ep);
+         port_stm32_cat_a_io_force_valid_in_stat(ep);
       }
       else
+#endif
       {
          /* clear only TX IRQ flag */
          USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
@@ -1570,7 +1130,11 @@ static void port_stm32_cat_a_process_in(uint8_t ep_num)
       {
          if(ep->in.num_used_bufs > 0)
          {
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
             size = (USBD_IO_Inout_Data_Size_DT)(ep->in.buf0.size) + (USBD_IO_Inout_Data_Size_DT)(ep->in.buf1.size);
+#else
+            size = (USBD_IO_Inout_Data_Size_DT)(ep->in.buf0.size);
+#endif
          }
          else
          {
@@ -1588,7 +1152,7 @@ static void port_stm32_cat_a_process_in(uint8_t ep_num)
    }
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
-} /* port_stm32_cat_a_process_in */
+} /* port_stm32_cat_a_io_process_in */
 
 
 
@@ -1666,6 +1230,7 @@ void port_stm32_cat_a_release_out_buffer(port_stm32_cat_a_io_ep_XT *ep)
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_BULK_TRANSFER_SUPPORTED)
    if((2 == port_stm32_cat_a_dev_prams.bulk_eps_num_bufs) && (USB_EP_DESC_TRANSFER_TYPE_BULK == ep->out.ep_type))
    {
       /* modify EP control register to allow receiving next data packets */
@@ -1680,6 +1245,7 @@ void port_stm32_cat_a_release_out_buffer(port_stm32_cat_a_io_ep_XT *ep)
          /*_OR   */USBDEP_STM32_CAT_A__CTR_RX /* there could just came next OUT packet - don't clear new IRQ trigger */);
    }
    else
+#endif
    {
       /* modify EP control register to allow receiving next data packets */
       USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
@@ -1706,6 +1272,7 @@ void port_stm32_cat_a_read_out_packet_params(port_stm32_cat_a_io_ep_XT *ep)
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_BULK_TRANSFER_SUPPORTED)
    if((2 == port_stm32_cat_a_dev_prams.bulk_eps_num_bufs) && (USB_EP_DESC_TRANSFER_TYPE_BULK == ep->out.ep_type))
    {
       /* modify EP control register to clear IRQ flag and allow receiving next packet */
@@ -1722,13 +1289,16 @@ void port_stm32_cat_a_read_out_packet_params(port_stm32_cat_a_io_ep_XT *ep)
       ep->out.buf.data        = (void*)USBDEP_DB_GET_RX_BUFFER_ADDR(ep->out.hw.ep_reg_num);
    }
    else
+#endif
    {
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
       if(USB_EP_DESC_TRANSFER_TYPE_ISOCHRONOUS == ep->out.ep_type)
       {
          ep->out.buf.size        = USBDEP_ISO_GET_RX_COUNT(ep->out.hw.ep_reg_num);
          ep->out.buf.data        = (void*)USBDEP_ISO_GET_RX_BUFFER_ADDR(ep->out.hw.ep_reg_num);
       }
       else
+#endif
       {
          ep->out.buf.size        = USBDEP_SB_GET_RX_COUNT(ep->out.hw.ep_reg_num);
          ep->out.buf.data        = (void*)USBDEP_SB_GET_RX_BUFFER_ADDR(ep->out.hw.ep_reg_num);
@@ -1751,7 +1321,7 @@ void port_stm32_cat_a_read_out_packet_params(port_stm32_cat_a_io_ep_XT *ep)
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
 } /* port_stm32_cat_a_read_out_packet_params */
 
-static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_process_data_out(
+static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_process_data_out(
    port_stm32_cat_a_io_ep_XT *ep,
    void* data,
    USBD_IO_Inout_Data_Size_DT size,
@@ -1802,9 +1372,9 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_process_data_out(
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
 
    return size;
-}/* port_stm32_cat_a_process_data_out */
+}/* port_stm32_cat_a_io_process_data_out */
 
-static void port_stm32_cat_a_process_out(uint8_t ep_num)
+static void port_stm32_cat_a_io_process_out(uint8_t ep_num)
 {
    port_stm32_cat_a_io_ep_XT *ep;
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
@@ -1866,14 +1436,14 @@ static void port_stm32_cat_a_process_out(uint8_t ep_num)
          {
             if(ep->out.buf.size >= ((USBD_IO_Inout_Data_Size_DT)(ep->out.mps) & 0xFFFF))
             {
-               size = port_stm32_cat_a_process_data_out(ep, ep->out.dma.data, ep->out.dma.size, USBD_TRUE);
+               size = port_stm32_cat_a_io_process_data_out(ep, ep->out.dma.data, ep->out.dma.size, USBD_TRUE);
 
                ep->out.dma.size -= size;
                ep->out.dma.data  = &((uint8_t*)(ep->out.dma.data))[size];
             }
             else
             {
-               size = port_stm32_cat_a_process_data_out(ep, ep->out.dma.data, ep->out.dma.size, ep->out.dont_wait_for_ready);
+               size = port_stm32_cat_a_io_process_data_out(ep, ep->out.dma.data, ep->out.dma.size, ep->out.dont_wait_for_ready);
 
                ep->out.dma.size -= size;
 
@@ -2008,7 +1578,7 @@ static void port_stm32_cat_a_process_out(uint8_t ep_num)
    }
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
-} /* port_stm32_cat_a_process_out */
+} /* port_stm32_cat_a_io_process_out */
 
 
 
@@ -2130,7 +1700,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_out_memcpy(
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
-   size = port_stm32_cat_a_process_data_out(&port_stm32_cat_a_io_ep[ep_num], data, size, is_last_part);
+   size = port_stm32_cat_a_io_process_data_out(&port_stm32_cat_a_io_ep[ep_num], data, size, is_last_part);
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
 
@@ -2250,7 +1820,10 @@ static USBD_Bool_DT port_stm32_cat_a_io_trigger(USBD_Params_XT *usbd, uint8_t ep
                USBD_IO_CALL_IN_MEMCPY_HANDLER(usbd, tp_params, transaction, port_stm32_cat_a_io_in_memcpy);
             }
             else if( ((0 == ep->in.num_used_bufs) && (ep->in.buf0.size > 0))
-               || ((1 == ep->in.num_used_bufs) && (ep->in.buf1.size > 0)) )
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+               || ((1 == ep->in.num_used_bufs) && (ep->in.buf1.size > 0))
+#endif
+            )
             {
                (void)port_stm32_cat_a_io_data_in_process_bufs(ep, &ep_num, 0, USBD_TRUE);
             }
@@ -2316,7 +1889,11 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_get_ep_in_buffered_size(US
 #else
       if(ep->in.num_used_bufs > 0)
       {
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
          result = (USBD_IO_Inout_Data_Size_DT)(ep->in.buf0.size) + (USBD_IO_Inout_Data_Size_DT)(ep->in.buf1.size);
+#else
+         result = (USBD_IO_Inout_Data_Size_DT)(ep->in.buf0.size);
+#endif
       }
 #endif
    }
@@ -2387,7 +1964,9 @@ static void port_stm32_cat_a_io_abort(USBD_Params_XT *usbd, uint8_t ep_num, USB_
          {
             ep->in.num_used_bufs = 0;
             ep->in.buf0.size     = 0;
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
             ep->in.buf1.size     = 0;
+#endif
             ep->in.data_provided = USBD_FALSE;
 #if(USBD_PORT_STM32_CAT_A_DMA_TYPE == PORT_STM32_CAT_A_DMA_HALF_DMA)
             ep->in.dma.size      = 0;
@@ -2464,6 +2043,7 @@ static void port_stm32_cat_a_io_halt(
             ep->out.buf.packet_size    = (-1);
             ep->out.buf.data           = USBD_MAKE_INVALID_PTR(uint8_t);
 
+#if((USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED) || (USBD_FEATURE_PRESENT == USBD_IO_BULK_TRANSFER_SUPPORTED))
             if( (USB_EP_DESC_TRANSFER_TYPE_ISOCHRONOUS == ep_type)
                || ((USB_EP_DESC_TRANSFER_TYPE_BULK == ep_type) && (1 != port_stm32_cat_a_dev_prams.bulk_eps_num_bufs)) )
             {
@@ -2478,6 +2058,7 @@ static void port_stm32_cat_a_io_halt(
                   /*_OR   */0);
             }
             else
+#endif
             {
                USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
                   ep->out.hw.ep_reg_num,
@@ -2523,6 +2104,7 @@ static void port_stm32_cat_a_io_halt(
             ep->in.max_num_bufs        = 1;
             ep->in.data_provided       = USBD_FALSE;
 
+#if((USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED) || (USBD_FEATURE_PRESENT == USBD_IO_BULK_TRANSFER_SUPPORTED))
             if( (USB_EP_DESC_TRANSFER_TYPE_ISOCHRONOUS == ep_type)
                || ((USB_EP_DESC_TRANSFER_TYPE_BULK == ep_type) && (1 != port_stm32_cat_a_dev_prams.bulk_eps_num_bufs)) )
             {
@@ -2537,6 +2119,7 @@ static void port_stm32_cat_a_io_halt(
                   /*_OR   */0);
             }
             else
+#endif
             {
                USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
                   ep->in.hw.ep_reg_num,
@@ -2558,7 +2141,9 @@ static void port_stm32_cat_a_io_halt(
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO_ONOFF);
 } /* port_stm32_cat_a_io_halt */
 
-static void port_stm32_cat_a_disable_ep_ctrl_int_in(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+
+static void port_stm32_cat_a_io_disable_ep_ctrl_int_in(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
    uint32_t temp;
 #ifdef USBD_USE_IOCMD
@@ -2582,13 +2167,13 @@ static void port_stm32_cat_a_disable_ep_ctrl_int_in(uint8_t ep_reg_num, volatile
    }
    else
    {
-      port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
+      port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
       ep_reg[0] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX | USBDEP_STM32_CAT_A__ADDR;
-      port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
+      port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
    }
-} /* port_stm32_cat_a_disable_ep_ctrl_int_in */
+} /* port_stm32_cat_a_io_disable_ep_ctrl_int_in */
 
-static void port_stm32_cat_a_disable_ep_ctrl_int_out(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
+static void port_stm32_cat_a_io_disable_ep_ctrl_int_out(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
    uint32_t temp;
 #ifdef USBD_USE_IOCMD
@@ -2612,24 +2197,40 @@ static void port_stm32_cat_a_disable_ep_ctrl_int_out(uint8_t ep_reg_num, volatil
    }
    else
    {
-      port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
+      port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
       ep_reg[0] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX | USBDEP_STM32_CAT_A__ADDR;
-      port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
+      port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
    }
-} /* port_stm32_cat_a_disable_ep_ctrl_int_out */
+} /* port_stm32_cat_a_io_disable_ep_ctrl_int_out */
 
-static void port_stm32_cat_a_disable_ep_isochronous(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
+static void port_stm32_cat_a_io_disable_ep_isochronous(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
+#if(USBD_FEATURE_PRESENT != USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
+
+   USBD_UNUSED_PARAM(ep_reg_num);
+   USBD_UNUSED_PARAM(ep_reg);
+
+#else
+
 #ifndef USBD_USE_IOCMD
    USBD_UNUSED_PARAM(ep_reg_num);
 #endif
-   port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
+   port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
    ep_reg[0] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX | USBDEP_STM32_CAT_A__ADDR;
-   port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
-} /* port_stm32_cat_a_disable_ep_isochronous */
+   port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
 
-static void port_stm32_cat_a_disable_ep_bulk_in(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
+#endif
+} /* port_stm32_cat_a_io_disable_ep_isochronous */
+
+static void port_stm32_cat_a_io_disable_ep_bulk_in(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
+#if(USBD_FEATURE_PRESENT != USBD_IO_BULK_TRANSFER_SUPPORTED)
+
+   USBD_UNUSED_PARAM(ep_reg_num);
+   USBD_UNUSED_PARAM(ep_reg);
+
+#else
+
    uint32_t temp;
 #ifdef USBD_USE_IOCMD
    uint32_t temp_before;
@@ -2653,14 +2254,23 @@ static void port_stm32_cat_a_disable_ep_bulk_in(uint8_t ep_reg_num, volatile uin
    }
    else
    {
-      port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
+      port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
       ep_reg[0] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX | USBDEP_STM32_CAT_A__ADDR;
-      port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
+      port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
    }
-} /* port_stm32_cat_a_disable_ep_bulk_in */
 
-static void port_stm32_cat_a_disable_ep_bulk_out(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
+#endif
+} /* port_stm32_cat_a_io_disable_ep_bulk_in */
+
+static void port_stm32_cat_a_io_disable_ep_bulk_out(uint8_t ep_reg_num, volatile uint32_t *ep_reg)
 {
+#if(USBD_FEATURE_PRESENT != USBD_IO_BULK_TRANSFER_SUPPORTED)
+
+   USBD_UNUSED_PARAM(ep_reg_num);
+   USBD_UNUSED_PARAM(ep_reg);
+
+#else
+
    uint32_t temp;
 #ifdef USBD_USE_IOCMD
    uint32_t temp_before;
@@ -2684,11 +2294,13 @@ static void port_stm32_cat_a_disable_ep_bulk_out(uint8_t ep_reg_num, volatile ui
    }
    else
    {
-      port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
+      port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_reg_num);
       ep_reg[0] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX | USBDEP_STM32_CAT_A__ADDR;
-      port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
+      port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_reg_num);
    }
-} /* port_stm32_cat_a_disable_ep_bulk_out */
+
+#endif
+} /* port_stm32_cat_a_io_disable_ep_bulk_out */
 
 static void port_stm32_cat_a_io_configure(
    USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, const USB_Endpoint_Desc_DT *ep_desc, USBD_Bool_DT state)
@@ -2728,7 +2340,7 @@ static void port_stm32_cat_a_io_configure(
       {
          ep_reg = &USBD_STM32_REG->EP_REG[ep->out.hw.ep_reg_num];
 
-         port_stm32_cat_a_disable_ep_out[ep_type](ep->out.hw.ep_reg_num, ep_reg);
+         port_stm32_cat_a_io_disable_ep_out[ep_type](ep->out.hw.ep_reg_num, ep_reg);
 
          USBD_DEBUG_HI_4(USBD_DBG_PORT_IO_ONOFF, "EP: %d; dir: %3s; reg %s: 0x%08X",
                ep_num, (USB_EP_DIRECTION_OUT == dir) ? "OUT" : "IN", "disabled", ep_reg[0]);
@@ -2748,7 +2360,7 @@ static void port_stm32_cat_a_io_configure(
             ep->out.mps             = mps;
             ep->out.ep_type         = ep_type;
 
-            port_stm32_cat_a_ep_reg_num_ep[num] = ep_num;
+            port_stm32_cat_a_io_ep_reg_num_ep[num] = ep_num;
 
             if_num = USBD_DEV_Get_EP_Interface_Num(usbd, ep_num, dir);
 
@@ -2759,21 +2371,21 @@ static void port_stm32_cat_a_io_configure(
             else
             {
                USBD_ERROR_1(USBD_DBG_PORT_IO_ONOFF, "invalid interface number %d!!!", if_num);
-               // TODO: USPD_panic
+               // TODO: USBD_panic
 
                state = USBD_FALSE;
             }
          }
          else
          {
-            port_stm32_cat_a_ep_reg_num_ep[num] = USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS;
+            port_stm32_cat_a_io_ep_reg_num_ep[num] = USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS;
          }
       }
       else if((USB_EP_DIRECTION_IN == dir) && (ep->in.hw.ep_reg_num < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS))
       {
          ep_reg = &USBD_STM32_REG->EP_REG[ep->in.hw.ep_reg_num];
 
-         port_stm32_cat_a_disable_ep_in[ep_type](ep->in.hw.ep_reg_num, ep_reg);
+         port_stm32_cat_a_io_disable_ep_in[ep_type](ep->in.hw.ep_reg_num, ep_reg);
 
          USBD_DEBUG_HI_4(USBD_DBG_PORT_IO_ONOFF, "EP: %d; dir: %3s; reg %s: 0x%08X",
                ep_num, (USB_EP_DIRECTION_OUT == dir) ? "OUT" : "IN", "disabled", ep_reg[0]);
@@ -2801,7 +2413,7 @@ static void port_stm32_cat_a_io_configure(
             ep->in.mps              = mps;
             ep->in.ep_type          = ep_type;
 
-            port_stm32_cat_a_ep_reg_num_ep[num] = ep_num;
+            port_stm32_cat_a_io_ep_reg_num_ep[num] = ep_num;
 
             if_num = USBD_DEV_Get_EP_Interface_Num(usbd, ep_num, dir);
 
@@ -2819,7 +2431,7 @@ static void port_stm32_cat_a_io_configure(
          }
          else
          {
-            port_stm32_cat_a_ep_reg_num_ep[num] = USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS;
+            port_stm32_cat_a_io_ep_reg_num_ep[num] = USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS;
          }
       }
       else
@@ -2857,10 +2469,10 @@ static void port_stm32_cat_a_io_configure(
                   USBDEP_SB_SET_RX_MAX_POSSIBLE_COUNT(ep->out.hw.ep_reg_num, count);
 
                   /* set EP control register to enable it */
-                  port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                   ep_reg[0] =
                      USBDEP_STM32_CAT_A__CTR_TX | USBDEP_STM32_CAT_A__RX_VALID | USBDEP_STM32_CAT_A__CONTROL | (uint32_t)ep_num;
-                  port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                }
                else /* USB_EP_DIRECTION_IN */
                {
@@ -2880,13 +2492,14 @@ static void port_stm32_cat_a_io_configure(
                   USBDEP_SB_CLR_TX_COUNT(num);
 
                   /* set EP control register to enable it */
-                  port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                   ep_reg[0] =
                      USBDEP_STM32_CAT_A__CTR_RX | USBDEP_STM32_CAT_A__TX_NAK | USBDEP_STM32_CAT_A__CONTROL | (uint32_t)ep_num;
-                  port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                }
                break;
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
             case USB_EP_DESC_TRANSFER_TYPE_ISOCHRONOUS:
                if(USB_EP_DIRECTION_OUT == dir)
                {
@@ -2909,10 +2522,10 @@ static void port_stm32_cat_a_io_configure(
                   USBDEP_DB_SET_RX_MAX_POSSIBLE_COUNT(ep->out.hw.ep_reg_num, count);
 
                   /* set EP control register to enable it */
-                  port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                   ep_reg[0] =
                      USBDEP_STM32_CAT_A__RX_VALID | USBDEP_STM32_CAT_A__TX_DIS | USBDEP_STM32_CAT_A__ISOCHRONOUS | (uint32_t)ep_num;
-                  port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                }
                else /* USB_EP_DIRECTION_IN */
                {
@@ -2933,13 +2546,15 @@ static void port_stm32_cat_a_io_configure(
                   port_stm32_cat_a_dev_interface_shared_mem_start_point[if_num].current_offset += mps;
 
                   /* set EP control register to enable it */
-                  port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                   ep_reg[0] =
                      USBDEP_STM32_CAT_A__RX_DIS | USBDEP_STM32_CAT_A__TX_VALID | USBDEP_STM32_CAT_A__ISOCHRONOUS | (uint32_t)ep_num;
-                  port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                }
                break;
+#endif
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_BULK_TRANSFER_SUPPORTED)
             case USB_EP_DESC_TRANSFER_TYPE_BULK:
                if(USB_EP_DIRECTION_OUT == dir)
                {
@@ -2957,10 +2572,10 @@ static void port_stm32_cat_a_io_configure(
                      USBDEP_SB_SET_RX_MAX_POSSIBLE_COUNT(ep->out.hw.ep_reg_num, count);
 
                      /* set EP control register to enable it */
-                     port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                     port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                      ep_reg[0] =
                         USBDEP_STM32_CAT_A__CTR_TX | USBDEP_STM32_CAT_A__RX_VALID | USBDEP_STM32_CAT_A__BULK | (uint32_t)ep_num;
-                     port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                     port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                   }
                   else
                   {
@@ -2976,11 +2591,11 @@ static void port_stm32_cat_a_io_configure(
                      USBDEP_DB_SET_RX_MAX_POSSIBLE_COUNT(ep->out.hw.ep_reg_num, count);
 
                      /* set EP control register to enable it */
-                     port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                     port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                      ep_reg[0] =
                         USBDEP_STM32_CAT_A__RX_VALID | USBDEP_STM32_CAT_A__TX_DIS | USBDEP_STM32_CAT_A__DTOG_TX
                           | USBDEP_STM32_CAT_A__KIND | USBDEP_STM32_CAT_A__BULK   | (uint32_t)ep_num;
-                     port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                     port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                   }
                }
                else /* USB_EP_DIRECTION_IN */
@@ -2997,10 +2612,10 @@ static void port_stm32_cat_a_io_configure(
                      USBDEP_SB_CLR_TX_COUNT(num);
 
                      /* set EP control register to enable it */
-                     port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                     port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                      ep_reg[0] =
                         USBDEP_STM32_CAT_A__CTR_RX | USBDEP_STM32_CAT_A__TX_NAK | USBDEP_STM32_CAT_A__BULK | (uint32_t)ep_num;
-                     port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                     port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                   }
                   else
                   {
@@ -3014,15 +2629,17 @@ static void port_stm32_cat_a_io_configure(
                      port_stm32_cat_a_dev_interface_shared_mem_start_point[if_num].current_offset += mps;
 
                      /* set EP control register to enable it */
-                     port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                     port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                      ep_reg[0] =
                         USBDEP_STM32_CAT_A__RX_DIS | USBDEP_STM32_CAT_A__TX_VALID
                         | USBDEP_STM32_CAT_A__KIND | USBDEP_STM32_CAT_A__BULK   | (uint32_t)ep_num;
-                     port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                     port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                   }
                }
                break;
+#endif
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_INTERRUPT_TRANSFER_SUPPORTED)
             case USB_EP_DESC_TRANSFER_TYPE_INTERRUPT:
                if(USB_EP_DIRECTION_OUT == dir)
                {
@@ -3038,10 +2655,10 @@ static void port_stm32_cat_a_io_configure(
                   USBDEP_SB_SET_RX_MAX_POSSIBLE_COUNT(ep->out.hw.ep_reg_num, count);
 
                   /* set EP control register to enable it */
-                  port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                   ep_reg[0] =
                      USBDEP_STM32_CAT_A__CTR_TX | USBDEP_STM32_CAT_A__RX_VALID | USBDEP_STM32_CAT_A__INTERRUPT | (uint32_t)ep_num;
-                  port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                }
                else /* USB_EP_DIRECTION_IN */
                {
@@ -3055,12 +2672,13 @@ static void port_stm32_cat_a_io_configure(
                   port_stm32_cat_a_dev_interface_shared_mem_start_point[if_num].current_offset += mps;
 
                   /* set EP control register to enable it */
-                  port_stm32_cat_a_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("-> ", ep_reg[0], __LINE__, ep_num);
                   ep_reg[0] =
                      USBDEP_STM32_CAT_A__CTR_RX | USBDEP_STM32_CAT_A__TX_NAK | USBDEP_STM32_CAT_A__INTERRUPT | (uint32_t)ep_num;
-                  port_stm32_cat_a_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
+                  port_stm32_cat_a_io_print_ep_reg_state("<- ", ep_reg[0], __LINE__, ep_num);
                }
                break;
+#endif
 
                default:
                   break;
@@ -3074,8 +2692,10 @@ static void port_stm32_cat_a_io_configure(
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO_ONOFF);
 } /* port_stm32_cat_a_io_configure */
 
+#endif
+
 /** ******************************************************************************************************************************
- * USBD REQUEST part
+ * USBD REQUEST local functions definition
  ********************************************************************************************************************************/
 static void port_stm32_cat_a_req_process_incomming_setup(uint8_t ep_num, uint8_t ep_reg_num)
 {
@@ -3187,4 +2807,511 @@ static USBD_Bool_DT port_stm32_cat_a_req_set_interface (USBD_Params_XT *usbd, ui
    return USBD_TRUE;
 } /* port_stm32_cat_a_req_set_interface */
 #endif
+
+
+
+
+/** ******************************************************************************************************************************
+ * PUBLIC INTERFACES
+ ********************************************************************************************************************************/
+
+const USBD_DEV_Port_Handler_XT *USBD_Port_STM32_CAT_A_Get_Port(void)
+{
+   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
+
+   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
+
+   return(&port_stm32_cat_a_dev);
+} /* USBD_Port_STM32_CAT_A_Get_Port */
+
+
+
+#if (USBD_FEATURE_PRESENT == USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE)
+void USBD_Port_STM32_CAT_A_Vbus_Detection(USBD_Bool_DT vbus_5V_present)
+{
+   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
+
+   USBD_NOTICE_1(USBD_DBG_PORT_DEV, "Vbus changed to %s", USBD_BOOL_IS_TRUE(vbus_5V_present) ? "ON" : "OFF");
+
+   if(USBD_CHECK_PTR(void, port_stm32_cat_a_usbd))
+   {
+      if(USBD_BOOL_IS_TRUE(vbus_5V_present))
+      {
+         USBD_DEV_Attached(port_stm32_cat_a_usbd, USBD_TRUE);
+         USBD_DEV_Powered(port_stm32_cat_a_usbd, USBD_TRUE);
+
+         USBD_STM32_CAT_A_RESET_AND_ENABLE_PERIPH();
+
+#if (USBD_FEATURE_PRESENT == USBD_PORT_STM32_CAT_A_USE_PULL_UP)
+         USBD_Port_STM32_CAT_A_Pull_Up_Change(USBD_TRUE);
+#endif
+      }
+      else
+      {
+#if (USBD_FEATURE_PRESENT == USBD_PORT_STM32_CAT_A_USE_PULL_UP)
+         USBD_Port_STM32_CAT_A_Pull_Up_Change(USBD_FALSE);
+#else
+         USBD_ALERT(USBD_DBG_PORT_DEV,"no posibility to disconnect D+ resistor, host will not recognize device disconnection!");
+#endif
+
+         USBD_STM32_CAT_A_DISABLE();
+
+         USBD_DEV_Powered(port_stm32_cat_a_usbd, USBD_FALSE);
+         USBD_DEV_Attached(port_stm32_cat_a_usbd, USBD_FALSE);
+      }
+   }
+   else
+   {
+      USBD_WARN_1(USBD_DBG_PORT_INVALID_PARAMS, "function invalid parameter! usbd: %p", port_stm32_cat_a_usbd);
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
+} /* USBD_Port_STM32_CAT_A_Vbus_Detection */
+#endif
+
+static void port_stm32_cat_a_check_out_on_delay(void)
+{
+   uint8_t ep_num = 0;
+   USBD_Bool_DT keep_out_on_delay_flag = USBD_FALSE;
+
+   do
+   {
+      if(USBD_BOOL_IS_TRUE(port_stm32_cat_a_io_ep[ep_num].out.out_on_delay))
+      {
+         if(USBD_BOOL_IS_FALSE(port_stm32_cat_a_io_ep[ep_num].out.is_ep_waiting))
+         {
+            port_stm32_cat_a_io_ep[ep_num].out.out_on_delay = USBD_FALSE;
+            port_stm32_cat_a_io_process_out(ep_num);
+         }
+         else
+         {
+            keep_out_on_delay_flag = USBD_TRUE;
+         }
+      }
+      ep_num++;
+   }while(ep_num < USBD_MAX_NUM_ENDPOINTS);
+
+   port_stm32_cat_a_dev_prams.out_on_delay = keep_out_on_delay_flag;
+} /* port_stm32_cat_a_check_out_on_delay */
+
+void USBD_Port_STM32_CAT_A_Print_HW_Dump(const char *desc, uint16_t line)
+{
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(desc);
+   USBD_UNUSED_PARAM(line);
+#else
+   USBDEP_STM32_CAT_A_Mem_Descriptor *mem = USBD_STM32_EPMEM;
+   uint32_t reg;
+   uint_fast8_t ep_reg_num;
+#ifdef IOCMD__LINE__LOCAL
+#undef IOCMD__LINE__LOCAL
+#endif
+#define IOCMD__LINE__LOCAL      line
+
+   for(ep_reg_num = 0; ep_reg_num < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS; ep_reg_num++)
+   {
+      reg = USBD_STM32_REG->EP_REG[ep_reg_num];
+      USBD_EMERG_13(USBD_DBG_PORT_INVALID_PARAMS,
+         "%s EP_REG[%d] = 0x%04X (RX:CTR=%d, DTOG=%d, STAT=%s - SETUP=%d, EP_TYPE=%s, EP_KIND=%d - TX:CTR=%d, DTOG=%d, STAT=%s - EA=%d)",
+         desc,
+         ep_reg_num,
+         reg,
+         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__CTR_RX),
+         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__DTOG_RX),
+         port_stm32_cat_a_io_transfer_status_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_RX)],
+         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__SETUP),
+         port_stm32_cat_a_io_ep_type_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__TYPE)],
+         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__KIND),
+         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__CTR_TX),
+         USBD_STM32_CAT_A_REG_GET_1BIT(reg, USBDEP_STM32_CAT_A_BIT__DTOG_TX),
+         port_stm32_cat_a_io_transfer_status_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_TX)],
+         USBD_STM32_CAT_A_REG_GET_4BIT(reg, USBDEP_STM32_CAT_A_BIT__ADDR));
+   }
+
+   for(ep_reg_num = 0; ep_reg_num < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS; ep_reg_num++)
+   {
+      reg = USBD_STM32_REG->EP_REG[ep_reg_num];
+      USBD_EMERG_11(USBD_DBG_PORT_INVALID_PARAMS,
+         "%s EP[%d](%s.%s/%s) MEM::   DB[0] / TX: ADDR: 0x%08X, COUNT: 0x%04X(%5d);   DB[1] / RX: ADDR: 0x%08X, COUNT: 0x%04X(%5d)",
+         desc,
+         ep_reg_num,
+         port_stm32_cat_a_io_ep_type_string[USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__TYPE)],
+         (0 != USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_TX)) ? " IN" : " - ",
+         (0 != USBD_STM32_CAT_A_REG_GET_2BIT(reg, USBDEP_STM32_CAT_A_BIT__STAT_RX)) ? "OUT" : " - ",
+         mem->sb.tx_addr,
+         mem->sb.tx_count,
+         mem->sb.tx_count,
+         mem->sb.rx_addr,
+         mem->sb.rx_count,
+         mem->sb.rx_count);
+      mem++;
+   }
+
+   for(ep_reg_num = 0; ep_reg_num < USBD_MAX_NUM_ENDPOINTS; ep_reg_num++)
+   {
+      USBD_EMERG_15(USBD_DBG_PORT_INVALID_PARAMS,
+         "%s EP[%d].OUT:: mps: %4d, ep_type: %d, ep_reg_num: %d; OND: %d, DWFR: %d, IEP: %d, IEW: %d; buf: data: %08X; size: %5d, packet_size: %5d; dma: data: %08X; size: %5d, total_size: %5d",
+         desc,
+         ep_reg_num,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.mps,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.ep_type,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.hw.ep_reg_num,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.out_on_delay,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.dont_wait_for_ready,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.is_ep_processed,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.is_ep_waiting,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.buf.data,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.buf.size,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.buf.packet_size,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.dma.data,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.dma.size,
+         port_stm32_cat_a_io_ep[ep_reg_num].out.dma.total_size);
+   }
+
+   for(ep_reg_num = 0; ep_reg_num < USBD_MAX_NUM_ENDPOINTS; ep_reg_num++)
+   {
+      USBD_EMERG_12(USBD_DBG_PORT_INVALID_PARAMS,
+         "%s EP[%d].IN :: mps: %4d, ep_type: %d, ep_reg_num: %d; max_num_bufs: %d, num_used_bufs: %d, data_provided: %d; buf0: size: %5d; buf1: size: %5d; dma: data: %08X; size: %5d",
+         desc,
+         ep_reg_num,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.mps,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.ep_type,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.hw.ep_reg_num,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.max_num_bufs,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.num_used_bufs,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.data_provided,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.buf0.size,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.buf1.size,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.dma.data,
+         port_stm32_cat_a_io_ep[ep_reg_num].in.dma.size);
+   }
+   USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS,
+      "%s CNTR: 0x%04X",
+      desc,
+      USBD_STM32_REG->CNTR);
+   USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS,
+      "%s ISTR: 0x%04X",
+      desc,
+      USBD_STM32_REG->ISTR);
+   USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS,
+      "%s FNR: 0x%04X",
+      desc,
+      USBD_STM32_REG->FNR);
+   USBD_EMERG_3(USBD_DBG_PORT_INVALID_PARAMS,
+      "%s DADDR: 0x%04X (ADDR = %d)",
+      desc,
+      USBD_STM32_REG->DADDR,
+      USBD_STM32_REG->DADDR & USBD_STM32_CAT_A_DADDR_ADD);
+   USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS,
+      "%s BTABLE: 0x%04X",
+      desc,
+      USBD_STM32_REG->BTABLE);
+
+#undef IOCMD__LINE__LOCAL
+#define IOCMD__LINE__LOCAL      IOCMD__LINE__
+#endif
+} /* USBD_Port_STM32_CAT_A_Print_HW_Dump */
+
+void USB_LP_CAN1_RX0_IRQHandler(void)
+{
+#if(1 == USBD_MAX_NUM_ENDPOINTS)
+   uint32_t count;
+#endif
+   uint8_t ep_reg_num = 0;
+
+   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_TRUE);
+
+   USBD_ENTER_FUNC(USBD_DBG_PORT_IRQ);
+
+   USBD_DEBUG_LO_1(USBD_DBG_PORT_IRQ, "USB_LP; ISTR: %04X", USBD_STM32_REG->ISTR);
+
+   if(USBD_CHECK_PTR(void, port_stm32_cat_a_usbd))
+   {
+      if(USBD_BOOL_IS_TRUE(port_stm32_cat_a_dev_prams.out_on_delay))
+      {
+         port_stm32_cat_a_check_out_on_delay();
+      }
+
+      /* data transmission */
+      if(USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_CTR)
+      {
+         do
+         {
+            /* OUT */
+            if(0 != (USBD_STM32_REG->EP_REG[ep_reg_num] & USBDEP_STM32_CAT_A__CTR_RX))
+            {
+               USBD_DEBUG_HI_2(USBD_DBG_PORT_IO, "%s IRQ on reg %d", "OUT", ep_reg_num);
+
+               if(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num] < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)
+               {
+                  /* normal data transfer */
+                  if((USBDEP_STM32_CAT_A__CONTROL | USBDEP_STM32_CAT_A__SETUP)
+                     != (USBD_STM32_REG->EP_REG[ep_reg_num] & (USBDEP_STM32_CAT_A__TYPE | USBDEP_STM32_CAT_A__SETUP)))
+                  {
+                     port_stm32_cat_a_io_process_out(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num]);
+                  }
+                  /* it is control endpoint and SETUP packet has been received */
+                  else
+                  {
+                     port_stm32_cat_a_req_process_incomming_setup(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num], ep_reg_num);
+                  }
+               }
+               else
+               {
+                  USBD_ERROR_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] is active but was not configured! deactivate", ep_reg_num);
+
+                  USBD_STM32_REG->EP_REG[ep_reg_num] &=
+                     USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+               }
+            }
+            /* IN */
+            else if(0 != (USBD_STM32_REG->EP_REG[ep_reg_num] & USBDEP_STM32_CAT_A__CTR_TX))
+            {
+               USBD_DEBUG_HI_2(USBD_DBG_PORT_IO, "%s IRQ on reg %d", "IN", ep_reg_num);
+
+               if(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num] < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)
+               {
+                  port_stm32_cat_a_io_process_in(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num]);
+               }
+               else
+               {
+                  USBD_ERROR_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] is active but was not configured! deactivate", ep_reg_num);
+
+                  USBD_STM32_REG->EP_REG[ep_reg_num] &=
+                     USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+               }
+            }
+
+            ep_reg_num++;
+         }while((USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_CTR)
+            && (ep_reg_num < (USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS > USBD_MAX_NUM_ENDPOINTS ? USBD_MAX_NUM_ENDPOINTS : USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)));
+      }
+      /* HOST reset IRQ */
+      if(USBD_STM32_REG->ISTR & (uint32_t)USBD_STM32_CAT_A_ISTR_RESET)
+      {
+         /* temporary - disable all USB IRQs */
+         USBD_STM32_REG->CNTR = 0;
+         /* clear IRQ status */
+         USBD_STM32_REG->ISTR &= ~((uint32_t)USBD_STM32_CAT_A_ISTR_RESET);
+         /* set default address */
+         USBD_STM32_REG->DADDR  = USBD_STM32_CAT_A_DADDR_EF;
+
+         USBD_STM32_REG->EP_REG[0] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+         USBD_STM32_REG->EP_REG[1] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+         USBD_STM32_REG->EP_REG[2] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+         USBD_STM32_REG->EP_REG[3] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+         USBD_STM32_REG->EP_REG[4] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+         USBD_STM32_REG->EP_REG[5] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+         USBD_STM32_REG->EP_REG[6] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+         USBD_STM32_REG->EP_REG[7] &= USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+
+         /* set endpoints table offset to 0 */
+         USBD_STM32_REG->BTABLE = 0;
+
+         USBDEP_SET_RX_BUF_ADDR(0, USBD_PORT_STM32_CAT_A_EPS_SHARED_MEM_ALOC_TAB_SIZE);
+         USBDEP_SET_TX_BUF_ADDR(0, USBD_PORT_STM32_CAT_A_EPS_SHARED_MEM_ALOC_TAB_SIZE + USBD_PORT_STM32_CAT_A_EP0_MPS);
+
+         for(ep_reg_num = 1; ep_reg_num < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS; ++ep_reg_num)
+         {
+            USBDEP_SET_TX_BUF_ADDR(ep_reg_num, 0);
+            USBDEP_SET_RX_BUF_ADDR(ep_reg_num, 0);
+         }
+
+         /* set proper numbers to EP0 registers */
+         port_stm32_cat_a_dev_reset_internal_structures();
+
+         /* In case we are using only EP 0 then io_configure callback does not exist, enable EP0 here. */
+#if(1 == USBD_MAX_NUM_ENDPOINTS)
+
+         /* set zeroes to all EP fields except EP register number and non-zezroes to specific fields */
+         port_stm32_cat_a_io_ep[0].out.buf.size           = (-1);
+         port_stm32_cat_a_io_ep[0].out.buf.packet_size    = (-1);
+
+         port_stm32_cat_a_io_ep[0].out.mps                = USBD_PORT_STM32_CAT_A_EP0_MPS;
+         port_stm32_cat_a_io_ep[0].out.ep_type            = USB_EP_DESC_TRANSFER_TYPE_CONTROL;
+
+         port_stm32_cat_a_io_ep[0].in.max_num_bufs        = 1;
+         port_stm32_cat_a_io_ep[0].in.data_provided       = USBD_FALSE;
+
+         port_stm32_cat_a_io_ep[0].in.mps                 = USBD_PORT_STM32_CAT_A_EP0_MPS;
+         port_stm32_cat_a_io_ep[0].in.ep_type             = USB_EP_DESC_TRANSFER_TYPE_CONTROL;
+
+         port_stm32_cat_a_io_ep_reg_num_ep[0] = 0;
+
+         count = USBD_PORT_STM32_CAT_A_EP0_MPS;
+         USBDEP_SB_SET_RX_MAX_POSSIBLE_COUNT(0, count);
+         USBDEP_SB_CLR_TX_COUNT(0);
+
+         /* set EP control register to enable it */
+         USBD_STM32_REG->EP_REG[0] =
+            USBDEP_STM32_CAT_A__RX_VALID | USBDEP_STM32_CAT_A__TX_NAK | USBDEP_STM32_CAT_A__CONTROL | (uint32_t)0;
+
+#endif
+
+         /* call USBD engine RESET processor */
+         USBD_DEV_Reset(port_stm32_cat_a_usbd);
+
+         /* if USBD_DEV_Reset finished successfully then port is still active - check it before IRQs enabling */
+         if(USBD_CHECK_PTR(void, port_stm32_cat_a_usbd))
+         {
+            /* enable interruptions - data reception, HOST reset, SUSPEND req, SOF reception */
+            USBD_STM32_REG->CNTR = USBD_STM32_CAT_A_CNTR_CTRM | USBD_STM32_CAT_A_CNTR_RESETM | USBD_STM32_CAT_A_CNTR_SUSPM
+               | USBD_STM32_CAT_A_CNTR_SOFM | USBD_STM32_CAT_A_CNTR_ESOFM;
+         }
+      }
+      /* SOF received/expected */
+      if(USBD_STM32_REG->ISTR & (USBD_STM32_CAT_A_ISTR_SOF | USBD_STM32_CAT_A_ISTR_ESOF))
+      {
+         USBD_STM32_REG->ISTR &= ~((uint32_t)(USBD_STM32_CAT_A_ISTR_SOF | USBD_STM32_CAT_A_ISTR_ESOF));
+
+         USBD_DEV_SOF_Received(port_stm32_cat_a_usbd);
+      }
+      /* SUSPEND state has been forced by HOST (no SOF received) */
+      if(USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_SUSP)
+      {
+         USBD_STM32_REG->ISTR &= ~((uint32_t)USBD_STM32_CAT_A_ISTR_SUSP);
+         USBD_STM32_REG->CNTR &= ~((uint32_t)USBD_STM32_CAT_A_CNTR_SUSPM);
+         USBD_STM32_REG->CNTR |= USBD_STM32_CAT_A_CNTR_WKUPM | USBD_STM32_CAT_A_CNTR_FSUSP;
+         USBD_STM32_REG->CNTR |= USBD_STM32_CAT_A_CNTR_LPMODE;
+
+         USBD_DEV_Suspended(port_stm32_cat_a_usbd);
+
+         // TODO: anything else?
+      }
+      if(USBD_STM32_REG->ISTR & (USBD_STM32_CAT_A_ISTR_PMAOVR | USBD_STM32_CAT_A_ISTR_ERR))
+      {
+         static uint8_t dump_limit = 0;
+         if(dump_limit < USBD_PORT_STM32_CAT_A_DUMP_LIMIT_PRINTS)
+         {
+            dump_limit++;
+            USBD_EMERG_2(USBD_DBG_PORT_INVALID_PARAMS, "unsupported; PMAOVR: %d, ERR: %d",
+               0 != (USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_PMAOVR), 0 != (USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_ERR));
+
+            USBD_Port_STM32_CAT_A_Print_HW_Dump("STATE", __LINE__);
+
+            if(USBD_PORT_STM32_CAT_A_DUMP_LIMIT_PRINTS == dump_limit)
+            {
+               USBD_EMERG(USBD_DBG_PORT_INVALID_PARAMS,
+                  "Error ocured too many times! this dump will no longer be printed! fix your SW!!!");
+            }
+         }
+         USBD_STM32_REG->ISTR &= ~((uint32_t)(USBD_STM32_CAT_A_ISTR_PMAOVR | USBD_STM32_CAT_A_ISTR_ERR));
+         // TODO:
+      }
+   }
+   else
+   {
+      USBD_EMERG_1(USBD_DBG_PORT_INVALID_PARAMS, "function invalid parameter during IRQ - turn OFF USBD!!!! usbd: %p",
+         port_stm32_cat_a_usbd);
+      USBD_STM32_REG->ISTR  = 0;
+      USBD_STM32_CAT_A_DISABLE();
+   }
+
+   if(USBD_BOOL_IS_TRUE(port_stm32_cat_a_dev_prams.out_on_delay))
+   {
+      port_stm32_cat_a_check_out_on_delay();
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);
+
+   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
+} /* USB_LP_CAN1_RX0_IRQHandler */
+
+
+
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+void USB_HP_CAN1_TX_IRQHandler(void)
+{
+   uint8_t ep_reg_num = 1;
+
+   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_TRUE);
+
+   USBD_ENTER_FUNC(USBD_DBG_PORT_IRQ);
+
+   USBD_DEBUG_LO_1(USBD_DBG_PORT_IRQ, "USB_HP; ISTR: %04X", USBD_STM32_REG->ISTR);
+
+   if(0 != USBD_STM32_REG->ISTR)
+   {
+      do
+      {
+         /* IN */
+         if(0 != (USBD_STM32_REG->EP_REG[ep_reg_num] & USBDEP_STM32_CAT_A__CTR_TX))
+         {
+            if(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num] < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)
+            {
+               port_stm32_cat_a_io_process_in(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num]);
+            }
+            else
+            {
+               USBD_ERROR_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] is active but was not configured! deactivate", ep_reg_num);
+
+               USBD_STM32_REG->EP_REG[ep_reg_num] &=
+                  USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+            }
+         }
+         /* OUT */
+         if(0 != (USBD_STM32_REG->EP_REG[ep_reg_num] & USBDEP_STM32_CAT_A__CTR_RX))
+         {
+            if(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num] < USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)
+            {
+               /* normal data transfer */
+               if((USBDEP_STM32_CAT_A__CONTROL | USBDEP_STM32_CAT_A__SETUP)
+                  != (USBD_STM32_REG->EP_REG[ep_reg_num] & (USBDEP_STM32_CAT_A__TYPE | USBDEP_STM32_CAT_A__SETUP)))
+               {
+                  port_stm32_cat_a_io_process_out(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num]);
+               }
+               /* it is control endpoint and SETUP packet has been received */
+               else
+               {
+                  port_stm32_cat_a_req_process_incomming_setup(port_stm32_cat_a_io_ep_reg_num_ep[ep_reg_num], ep_reg_num);
+               }
+            }
+            else
+            {
+               USBD_ERROR_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] is active but was not configured! deactivate", ep_reg_num);
+
+               USBD_STM32_REG->EP_REG[ep_reg_num] &=
+                  USBDEP_STM32_CAT_A__DTOG_RX | USBDEP_STM32_CAT_A__STAT_RX | USBDEP_STM32_CAT_A__DTOG_TX | USBDEP_STM32_CAT_A__STAT_TX;
+            }
+         }
+
+         ep_reg_num++;
+      }while((USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_CTR)
+         && (ep_reg_num < (USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS > USBD_MAX_NUM_ENDPOINTS ? USBD_MAX_NUM_ENDPOINTS : USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS)));
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);
+
+   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
+} /* USB_HP_CAN1_TX_IRQHandler */
+#endif
+
+
+
+void USBWakeUp_IRQHandler(void)
+{
+   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_TRUE);
+
+   USBD_ENTER_FUNC(USBD_DBG_PORT_IRQ);
+
+   USBD_Port_STM32_CAT_A_Clear_Exti_Line_18_Irq_Status();
+
+   USBD_DEBUG_LO_1(USBD_DBG_PORT_IRQ, "USB_WakeUp; ISTR: %04X", USBD_STM32_REG->ISTR);
+
+   if(0 != USBD_STM32_REG->ISTR)
+   {
+      USBD_STM32_REG->ISTR &= ~((uint32_t)USBD_STM32_CAT_A_ISTR_WKUP);
+      USBD_STM32_REG->CNTR &= ~((uint32_t)USBD_STM32_CAT_A_ISTR_WKUP);
+      USBD_STM32_REG->CNTR |= USBD_STM32_CAT_A_CNTR_SUSPM;
+      if(0 != USBD_STM32_REG->ISTR)
+      {
+         USBD_WARN_1(USBD_DBG_PORT_IRQ, "still valid IRQ: 0x%08X", USBD_STM32_REG->ISTR);
+      }
+      USBD_DEV_Resumed(port_stm32_cat_a_usbd);
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);
+
+   USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
+} /* USBWakeUp_IRQHandler */
 
