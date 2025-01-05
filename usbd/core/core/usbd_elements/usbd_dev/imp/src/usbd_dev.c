@@ -75,13 +75,14 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
 static void USBD_DEV_unconfigure(USBD_Params_XT *usbd);
 static void USBD_DEV_calculate_num_endpoints_in_active_config(USBD_Params_XT *usbd);
 
-static const uint8_t USBD_DEV_language_string_descriptor[] = {
+#if(USBD_MAX_NUM_STRINGS > 0)
+
+static const uint8_t USBD_DEV_language_default_string_descriptor[] = {
    0x04,               /* bLength */
    USB_DESC_TYPE_STRING,  /* bDescriptorType: string descriptor */
    0x09,               /* Supported language: English - United States */
    0x04
 };
-
 
 void USBD_DEV_Init_Structure(
       USBD_Params_XT *usbd)
@@ -92,13 +93,9 @@ void USBD_DEV_Init_Structure(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
-      /* table can be installed only if device is not reset yet */
-      if(0 == (usbd->dev.core.data.state & USBD_DEV_STATE_DEFAULT))
-      {
-         tab = USBD_DEV_GET_STRING_TAB_PTR(usbd);
-         usbd->dev.core.data.num_installed_strings = 1;
-         tab[0].string = USBD_DEV_language_string_descriptor;
-      }
+      tab = USBD_DEV_GET_STRING_TAB_PTR(usbd);
+      usbd->dev.core.data.num_installed_strings = 1;
+      tab[0].string = USBD_DEV_language_default_string_descriptor;
    }
    else
    {
@@ -107,6 +104,7 @@ void USBD_DEV_Init_Structure(
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_INIT);
 } /* USBD_DEV_Init_Structure */
+#endif
 
 #ifdef USBD_USE_IOCMD
 static void USBD_DEV_state_change(USBD_Params_XT *usbd, uint8_t new_state, uint16_t line)
@@ -157,6 +155,10 @@ static void USBD_DEV_state_change(USBD_Params_XT *usbd, uint8_t new_state, uint1
 #else
 #define USBD_DEV_state_change(usbd, new_state, line)        usbd->dev.core.data.state = new_state
 #endif
+
+
+
+#if(USBD_MAX_NUM_STRINGS > 0)
 
 static USBD_DEV_Installation_Result_XT USBD_DEV_install_internal_string(
       USBD_Params_XT *usbd,
@@ -474,6 +476,8 @@ uint8_t USBD_DEV_Find_String_Index_By_String_Ptr(
 
    return result;
 } /* USBD_DEV_Find_String_Index_By_String_Ptr */
+
+#endif
 
 
 
@@ -1970,7 +1974,9 @@ void USBD_DEV_Reset(
 {
    const USBD_DEV_Port_Handler_XT *port;
    const USB_Endpoint_Desc_DT *ep0 = USBD_MAKE_INVALID_PTR(const USB_Endpoint_Desc_DT);
+#if(USBD_MAX_NUM_STRINGS > 0)
    USBD_DEV_String_Header_XT *string_tab;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_DEV_ONOFF);
 
@@ -1997,11 +2003,13 @@ void USBD_DEV_Reset(
 #endif
 
          USBD_DEV_state_change(usbd, USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED, __LINE__);
-         string_tab = USBD_DEV_GET_STRING_TAB_PTR(usbd);
 
          usbd->dev.core.data.dev_desc.iManufacturer = 0;
          usbd->dev.core.data.dev_desc.iProduct      = 0;
          usbd->dev.core.data.dev_desc.iSerialNumber = 0;
+
+#if(USBD_MAX_NUM_STRINGS > 0)
+         string_tab = USBD_DEV_GET_STRING_TAB_PTR(usbd);
 
 #if(USBD_MAX_NUM_STRINGS > USBD_DEV_MANUFACTURING_STRING_MANUAL_POSITION)
          if(USBD_CHECK_PTR(const uint8_t, string_tab[USBD_DEV_MANUFACTURING_STRING_MANUAL_POSITION].string))
@@ -2020,6 +2028,7 @@ void USBD_DEV_Reset(
          {
             usbd->dev.core.data.dev_desc.iSerialNumber  = USBD_DEV_SERIAL_NUMBER_STRING_MANUAL_POSITION;
          }
+#endif
 #endif
 
 #ifdef USBD_REQUEST_PRESENT

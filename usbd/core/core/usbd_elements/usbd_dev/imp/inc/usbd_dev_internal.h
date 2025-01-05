@@ -143,4 +143,15 @@
 #define USBD_DEV_SET_EP_IN_DESC_PTR(usbd, ep_num, new_value)   USBD_SET_PTR(const USB_Endpoint_Desc_DT,   (usbd)->dev.core.data.ep[(ep_num)].ep_in_desc, (new_value))
 #define USBD_DEV_SET_EP_OUT_DESC_PTR(usbd, ep_num, new_value)  USBD_SET_PTR(const USB_Endpoint_Desc_DT,   (usbd)->dev.core.data.ep[(ep_num)].ep_out_desc, (new_value))
 
+
+#if(USBD_MAX_NUM_STRINGS > 0)
+/**
+ * initializes dev part of usbd structure.
+ *
+ * \param usbd pointer to usb device
+ */
+void USBD_DEV_Init_Structure(
+      USBD_Params_XT *usbd);
+#endif
+
 #endif

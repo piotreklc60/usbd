@@ -319,7 +319,9 @@ typedef struct USBD_DEV_Params_eXtended_Tag
       struct
       {
          const USBD_DEV_Port_Handler_XT     *port;
+#if(USBD_MAX_NUM_STRINGS > 0)
          USBD_DEV_String_Header_XT           string_tab[USBD_MAX_NUM_STRINGS];
+#endif
          USBD_DEV_Config_Header_XT           config_tab[USBD_MAX_NUM_CONFIGURATIONS];
          USBD_DEV_Interface_Header_XT        interface_tab[USBD_MAX_NUM_INTERFACES];
          struct USBDC_params_eXtended_Tag   *active_config;
@@ -334,7 +336,9 @@ typedef struct USBD_DEV_Params_eXtended_Tag
          uint8_t                             num_used_endpoints;
          uint8_t                             ep_in_interface[USBD_MAX_NUM_ENDPOINTS];
          uint8_t                             ep_out_interface[USBD_MAX_NUM_ENDPOINTS];
+#if(USBD_MAX_NUM_STRINGS > 0)
          uint8_t                             num_installed_strings;
+#endif
          uint8_t                             active_config_num;
          /* USBD_DEV_EP_States_ET */
          uint8_t                             ep_in_state[USBD_MAX_NUM_ENDPOINTS];

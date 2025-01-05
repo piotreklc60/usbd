@@ -88,7 +88,9 @@ void USBD_Init(
       }
 #endif
 
+#if(USBD_MAX_NUM_STRINGS > 0)
       USBD_DEV_Init_Structure(usbd);
+#endif
 #endif
 
 #if (defined(USBD_IO_PRESENT) && (USBD_FEATURE_NOT_PRESENT != USBD_USE_INVALIDATION_ON_INIT))

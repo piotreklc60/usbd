@@ -30,13 +30,7 @@
  * @{
  */
 
-/**
- * initializes dev part of usbd structure.
- *
- * \param usbd pointer to usb device
- */
-void USBD_DEV_Init_Structure(
-      USBD_Params_XT *usbd);
+#if(USBD_MAX_NUM_STRINGS > 0)
 
 /**
  * Installs string in usbd. Each string which has to be visible for HOST
@@ -168,6 +162,8 @@ const uint8_t *USBD_DEV_Get_String(
 uint8_t USBD_DEV_Find_String_Index_By_String_Ptr(
       USBD_Params_XT *usbd,
       const uint8_t *string);
+
+#endif
 
 
 

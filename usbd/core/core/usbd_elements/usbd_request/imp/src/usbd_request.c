@@ -737,6 +737,7 @@ static void USBD_REQUEST_get_descrptor(
                }
                break;
 
+#if(USBD_MAX_NUM_STRINGS > 0)
             case USB_DESC_TYPE_STRING:
                USBD_DEBUG_HI_1(USBD_DBG_REQ_PROCESSING, "value_H => desc type: %s", "STRING");
                USBD_DEBUG_HI_1(USBD_DBG_REQ_PROCESSING, "value_L => string num: %d", (req->wValue & 0x00FF));
@@ -764,6 +765,7 @@ static void USBD_REQUEST_get_descrptor(
                      USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                }
                break;
+#endif
 
             default:
                if(USBD_DEV_CHECK_ACTIVE_CONFIG_PTR(usbd))
