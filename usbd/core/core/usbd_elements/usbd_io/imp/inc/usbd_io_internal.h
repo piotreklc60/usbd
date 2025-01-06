@@ -32,13 +32,6 @@
 #endif
 
 
-#define USBD_IO_UP_IN_CHECK_HANDLERS_PTR(usbd, _ep_num)           USBD_CHECK_PTR(USBD_IO_UP_EP_Handlers_XT,       (usbd)->io.up_link.ep[(_ep_num)].in.handlers.handlers)
-#define USBD_IO_UP_IN_CHECK_TP_PARAMS_PTR(usbd, _ep_num)          USBD_CHECK_PTR(void,                            (usbd)->io.up_link.ep[(_ep_num)].in.data.tp_params)
-#define USBD_IO_UP_IN_CHECK_TP_OWNER_PTR(usbd, _ep_num)           USBD_CHECK_PTR(void,                            (usbd)->io.up_link.ep[(_ep_num)].in.data.tp_owner)
-#define USBD_IO_UP_OUT_CHECK_HANDLERS_PTR(usbd, _ep_num)          USBD_CHECK_PTR(USBD_IO_UP_EP_Handlers_XT,       (usbd)->io.up_link.ep[(_ep_num)].out.handlers.handlers)
-#define USBD_IO_UP_OUT_CHECK_TP_PARAMS_PTR(usbd, _ep_num)         USBD_CHECK_PTR(void,                            (usbd)->io.up_link.ep[(_ep_num)].out.data.tp_params)
-#define USBD_IO_UP_OUT_CHECK_TP_OWNER_PTR(usbd, _ep_num)          USBD_CHECK_PTR(void,                            (usbd)->io.up_link.ep[(_ep_num)].out.data.tp_owner)
-
 #define USBD_IO_UP_CHECK_OUT_DATA_EVENT_HANDLER(ep_handlers)      USBD_CHECK_HANDLER(USBD_IO_UP_OUT_Data_Event_HT,(ep_handlers)->data_event.out)
 #define USBD_IO_UP_CHECK_IN_DATA_EVENT_HANDLER(ep_handlers)       USBD_CHECK_HANDLER(USBD_IO_UP_IN_Data_Event_HT, (ep_handlers)->data_event.in)
 #define USBD_IO_UP_CHECK_ERROR_HANDLER(ep_handlers)               USBD_CHECK_HANDLER(USBD_IO_UP_Error_HT,         (ep_handlers)->error)
@@ -48,41 +41,38 @@
 
 
 
+#define USBD_IO_GET_IN_PIPE_PARAMS(usbd, _ep_num)                 USBD_GET_PTR(USBD_IO_Pipe_Params_XT,            &((usbd)->io.in[_ep_num]))
+#define USBD_IO_GET_OUT_PIPE_PARAMS(usbd, _ep_num)                USBD_GET_PTR(USBD_IO_Pipe_Params_XT,            &((usbd)->io.out[_ep_num]))
 
-#define USBD_IO_UP_IN_GET_HANDLERS_PTR(usbd, _ep_num)             USBD_GET_PTR(USBD_IO_UP_EP_Handlers_XT,         (usbd)->io.up_link.ep[(_ep_num)].in.handlers.handlers)
-#define USBD_IO_UP_IN_GET_RECURSIVE_FLAGS(usbd, _ep_num)          ((usbd)->io.up_link.ep[(_ep_num)].in.handlers.recursive_call_protection)
-#define USBD_IO_UP_IN_GET_TP_PARAMS_PTR(usbd, _ep_num)            USBD_GET_PTR(void,                              (usbd)->io.up_link.ep[(_ep_num)].in.data.tp_params)
-#define USBD_IO_UP_IN_GET_TP_OWNER_PTR(usbd, _ep_num)             USBD_GET_PTR(void,                              (usbd)->io.up_link.ep[(_ep_num)].in.data.tp_owner)
-#define USBD_IO_UP_OUT_GET_HANDLERS_PTR(usbd, _ep_num)            USBD_GET_PTR(USBD_IO_UP_EP_Handlers_XT,         (usbd)->io.up_link.ep[(_ep_num)].out.handlers.handlers)
-#define USBD_IO_UP_OUT_GET_RECURSIVE_FLAGS(usbd, _ep_num)         ((usbd)->io.up_link.ep[(_ep_num)].out.handlers.recursive_call_protection)
-#define USBD_IO_UP_OUT_GET_TP_PARAMS_PTR(usbd, _ep_num)           USBD_GET_PTR(void,                              (usbd)->io.up_link.ep[(_ep_num)].out.data.tp_params)
-#define USBD_IO_UP_OUT_GET_TP_OWNER_PTR(usbd, _ep_num)            USBD_GET_PTR(void,                              (usbd)->io.up_link.ep[(_ep_num)].out.data.tp_owner)
+#define USBD_IO_UP_IN_GET_HANDLERS_PTR(usbd, _ep_num)             USBD_GET_PTR(USBD_IO_UP_EP_Handlers_XT,         (usbd)->io.in[(_ep_num)].up_link.handlers.handlers)
+#define USBD_IO_UP_IN_GET_RECURSIVE_FLAGS(usbd, _ep_num)          ((usbd)->io.in[(_ep_num)].up_link.handlers.recursive_call_protection)
+#define USBD_IO_UP_IN_GET_TP_PARAMS_PTR(usbd, _ep_num)            USBD_GET_PTR(void,                              (usbd)->io.in[(_ep_num)].up_link.data.tp_params)
+#define USBD_IO_UP_IN_GET_TP_OWNER_PTR(usbd, _ep_num)             USBD_GET_PTR(void,                              (usbd)->io.in[(_ep_num)].up_link.data.tp_owner)
+#define USBD_IO_UP_OUT_GET_HANDLERS_PTR(usbd, _ep_num)            USBD_GET_PTR(USBD_IO_UP_EP_Handlers_XT,         (usbd)->io.out[(_ep_num)].up_link.handlers.handlers)
+#define USBD_IO_UP_OUT_GET_RECURSIVE_FLAGS(usbd, _ep_num)         ((usbd)->io.out[(_ep_num)].up_link.handlers.recursive_call_protection)
+#define USBD_IO_UP_OUT_GET_TP_PARAMS_PTR(usbd, _ep_num)           USBD_GET_PTR(void,                              (usbd)->io.out[(_ep_num)].up_link.data.tp_params)
+#define USBD_IO_UP_OUT_GET_TP_OWNER_PTR(usbd, _ep_num)            USBD_GET_PTR(void,                              (usbd)->io.out[(_ep_num)].up_link.data.tp_owner)
 
-#define USBD_IO_UP_GET_IN_DATA_EVENT_HANDLER(ep_handlers)         USBD_GET_HANDLER(USBD_IO_UP_IN_Data_Event_HT,   (ep_handlers)->data_event)
-#define USBD_IO_UP_GET_OUT_DATA_EVENT_HANDLER(ep_handlers)        USBD_GET_HANDLER(USBD_IO_UP_OUT_Data_Event_HT,  (ep_handlers)->data_event)
-#define USBD_IO_UP_GET_ERROR_HANDLER(ep_handlers)                 USBD_GET_HANDLER(USBD_IO_UP_Error_HT,           (ep_handlers)->error)
-#define USBD_IO_UP_GET_STALL_FIN_HANDLER(ep_handlers)             USBD_GET_HANDLER(USBD_IO_UP_Stall_Fin_HT,       (ep_handlers)->sfin)
-#define USBD_IO_UP_GET_REINIT_HANDLER(ep_handlers)                USBD_GET_HANDLER(USBD_IO_UP_Reinit_HT,          (ep_handlers)->reinit)
-#define USBD_IO_UP_GET_ABORT_HANDLER(ep_handlers)                 USBD_GET_HANDLER(USBD_IO_UP_Abort_HT,           (ep_handlers)->abort)
+#define USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe)                 ((pipe)->up_link.handlers.recursive_call_protection)
 
 
 
-
-#define USBD_IO_UP_IN_SET_HANDLERS_PTR(usbd, _ep_num, new_value)  USBD_SET_PTR(USBD_IO_UP_EP_Handlers_XT,         (usbd)->io.up_link.ep[(_ep_num)].in.handlers.handlers,  (new_value))
-#define USBD_IO_UP_IN_SET_TP_PARAMS_PTR(usbd, _ep_num, new_value) USBD_SET_PTR(void,                              (usbd)->io.up_link.ep[(_ep_num)].in.data.tp_params, (new_value))
-#define USBD_IO_UP_IN_SET_TP_OWNER_PTR(usbd, _ep_num, new_value)  USBD_SET_PTR(void,                              (usbd)->io.up_link.ep[(_ep_num)].in.data.tp_owner, (new_value))
-#define USBD_IO_UP_OUT_SET_HANDLERS_PTR(usbd, _ep_num, new_value) USBD_SET_PTR(USBD_IO_UP_EP_Handlers_XT,         (usbd)->io.up_link.ep[(_ep_num)].out.handlers.handlers, (new_value))
-#define USBD_IO_UP_OUT_SET_TP_PARAMS_PTR(usbd,_ep_num, new_value) USBD_SET_PTR(void,                              (usbd)->io.up_link.ep[(_ep_num)].out.data.tp_params, (new_value))
-#define USBD_IO_UP_OUT_SET_TP_OWNER_PTR(usbd, _ep_num, new_value) USBD_SET_PTR(void,                              (usbd)->io.up_link.ep[(_ep_num)].out.data.tp_owner, (new_value))
+#define USBD_IO_UP_PIPE_SET_HANDLERS_PTR(pipe, new_value)         USBD_SET_PTR(USBD_IO_UP_EP_Handlers_XT,         (pipe)->up_link.handlers.handlers, (new_value))
+#define USBD_IO_UP_PIPE_SET_TP_PARAMS_PTR(pipe, new_value)        USBD_SET_PTR(void,                              (pipe)->up_link.data.tp_params, (new_value))
+#define USBD_IO_UP_PIPE_SET_TP_OWNER_PTR(pipe, new_value)         USBD_SET_PTR(void,                              (pipe)->up_link.data.tp_owner, (new_value))
 
 
 
-#define USBD_IO_IN_GET_LOCK_TP_STATE(usbd, _ep_num)               ((usbd)->io.core.ep[(_ep_num)].in.data.tp_params_locked)
-#define USBD_IO_IN_LOCK_TP(usbd, _ep_num)                         (usbd)->io.core.ep[(_ep_num)].in.data.tp_params_locked = USBD_TRUE
-#define USBD_IO_IN_UNLOCK_TP(usbd, _ep_num)                       (usbd)->io.core.ep[(_ep_num)].in.data.tp_params_locked = USBD_FALSE
-#define USBD_IO_OUT_GET_LOCK_TP_STATE(usbd, _ep_num)              ((usbd)->io.core.ep[(_ep_num)].out.data.tp_params_locked)
-#define USBD_IO_OUT_LOCK_TP(usbd, _ep_num)                        (usbd)->io.core.ep[(_ep_num)].out.data.tp_params_locked = USBD_TRUE
-#define USBD_IO_OUT_UNLOCK_TP(usbd, _ep_num)                      (usbd)->io.core.ep[(_ep_num)].out.data.tp_params_locked = USBD_FALSE
+#define USBD_IO_IN_GET_LOCK_TP_STATE(usbd, _ep_num)               ((usbd)->io.in[(_ep_num)].core.data.tp_params_locked)
+#define USBD_IO_IN_LOCK_TP(usbd, _ep_num)                         (usbd)->io.in[(_ep_num)].core.data.tp_params_locked = USBD_TRUE
+#define USBD_IO_IN_UNLOCK_TP(usbd, _ep_num)                       (usbd)->io.in[(_ep_num)].core.data.tp_params_locked = USBD_FALSE
+#define USBD_IO_OUT_GET_LOCK_TP_STATE(usbd, _ep_num)              ((usbd)->io.out[(_ep_num)].core.data.tp_params_locked)
+#define USBD_IO_OUT_LOCK_TP(usbd, _ep_num)                        (usbd)->io.out[(_ep_num)].core.data.tp_params_locked = USBD_TRUE
+#define USBD_IO_OUT_UNLOCK_TP(usbd, _ep_num)                      (usbd)->io.out[(_ep_num)].core.data.tp_params_locked = USBD_FALSE
+
+#define USBD_IO_PIPE_GET_LOCK_TP_STATE(pipe)                      ((pipe)->core.data.tp_params_locked)
+#define USBD_IO_PIPE_LOCK_TP(pipe)                                (pipe)->core.data.tp_params_locked = USBD_TRUE
+#define USBD_IO_PIPE_UNLOCK_TP(pipe)                              (pipe)->core.data.tp_params_locked = USBD_FALSE
 
 
 
@@ -256,12 +246,11 @@
 
 
 
-#define USBD_IO_CORE_GET_IN_EP_ACTIVITY_MARKER(usbd, _ep_num)     ((usbd)->io.core.ep[(_ep_num)].in.data.ep_active)
-#define USBD_IO_CORE_GET_OUT_EP_ACTIVITY_MARKER(usbd, _ep_num)    ((usbd)->io.core.ep[(_ep_num)].out.data.ep_active)
-#define USBD_IO_CORE_SET_IN_EP_ACTIVITY_MARKER(usbd, _ep_num)     (usbd)->io.core.ep[(_ep_num)].in.data.ep_active  = USBD_TRUE
-#define USBD_IO_CORE_SET_OUT_EP_ACTIVITY_MARKER(usbd, _ep_num)    (usbd)->io.core.ep[(_ep_num)].out.data.ep_active = USBD_TRUE
-#define USBD_IO_CORE_CLEAR_IN_EP_ACTIVITY_MARKER(usbd, _ep_num)   (usbd)->io.core.ep[(_ep_num)].in.data.ep_active  = USBD_FALSE
-#define USBD_IO_CORE_CLEAR_OUT_EP_ACTIVITY_MARKER(usbd, _ep_num)  (usbd)->io.core.ep[(_ep_num)].out.data.ep_active = USBD_FALSE
+#define USBD_IO_CORE_GET_IN_EP_ACTIVITY_MARKER(usbd, _ep_num)     ((usbd)->io.in[(_ep_num)].core.data.ep_active)
+#define USBD_IO_CORE_GET_OUT_EP_ACTIVITY_MARKER(usbd, _ep_num)    ((usbd)->io.out[(_ep_num)].core.data.ep_active)
+#define USBD_IO_CORE_GET_PIPE_ACTIVITY_MARKER(pipe)               ((pipe)->core.data.ep_active)
+#define USBD_IO_CORE_SET_PIPE_ACTIVITY_MARKER(pipe)               (pipe)->core.data.ep_active = USBD_TRUE
+#define USBD_IO_CORE_CLEAR_PIPE_ACTIVITY_MARKER(pipe)             (pipe)->core.data.ep_active = USBD_FALSE
 
 
 

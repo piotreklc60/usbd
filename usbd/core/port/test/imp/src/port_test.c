@@ -1964,7 +1964,7 @@ USBD_Bool_DT port_test_process_out(uint8_t ep_num)
 
       if((USB_EP_DESC_TRANSFER_TYPE_CONTROL == ep->in.ep_type) && ((ep->in.num_used_bufs > 0) || (ep->in.dma.size > 0)))
       {
-         USBD_IO_IN_Abort(port_test_usbd, ep_num, USBD_TRUE);
+         USBD_IO_Abort(port_test_usbd, ep_num, USB_EP_DIRECTION_IN, USBD_TRUE);
       }
       else if(USBD_BOOL_IS_FALSE(ep->out.is_ep_waiting))
       {

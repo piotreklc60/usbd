@@ -30,24 +30,6 @@
  * @{
  */
 
-#if(USBD_MAX_NUM_ENDPOINTS > 1)
-#define USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT    USBD_FEATURE_PRESENT
-#else
-#define USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT    USBD_FEATURE_NOT_PRESENT
-#endif
-
-#ifndef USBD_IO_INTERRUPT_TRANSFER_SUPPORTED
-#define USBD_IO_INTERRUPT_TRANSFER_SUPPORTED          USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT
-#endif
-
-#ifndef USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED
-#define USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED        USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT
-#endif
-
-#ifndef USBD_IO_BULK_TRANSFER_SUPPORTED
-#define USBD_IO_BULK_TRANSFER_SUPPORTED               USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT
-#endif
-
 /**
  * Locks permanently tp_params. It means, that there will not be possible
  * to change tp_params for specified endpoint. It can be cleared on USBD_Init or in one of situations described below.
@@ -345,33 +327,20 @@ USBD_IO_UP_DOWN_Transaction_Params_XT *USBD_IO_Get_OUT_Transaction_Params(
       uint8_t ep_num);
 
 /**
- * Aborts transfer on specific IN endpoint by calling down and upper layer "abort" callbacks.
+ * Aborts transfer on specific endpoint by calling down and upper layer "abort" callbacks.
  * This function doesn't call any down layer functions so if needed then it must be processed by "abort" callback.
  *
  * Called only by low level layer (port) or by usbd layer
  *
  * \param usbd pointer to usb device
  * \param ep_num endpoint number
+ * \param dir direction. For possible values please refer to @see USB_EP_Direction_ET
  * \param flush_hw_bufs if USBD_TRUE then hardware buffers will be cleared by port, USBD_FALSE otherwise.
  */
-void USBD_IO_IN_Abort(
+void USBD_IO_Abort(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
-      USBD_Bool_DT flush_hw_bufs);
-
-/**
- * Aborts transfer on specific OUT endpoint by calling down and upper layer "abort" callbacks.
- * This function doesn't call any down layer functions so if needed then it must be processed by "abort" callback.
- *
- * Called only by low level layer (port) or by usbd layer
- *
- * \param usbd pointer to usb device
- * \param ep_num endpoint number
- * \param flush_hw_bufs if USBD_TRUE then hardware buffers will be cleared by port, USBD_FALSE otherwise.
- */
-void USBD_IO_OUT_Abort(
-      USBD_Params_XT *usbd,
-      uint8_t ep_num,
+      USB_EP_Direction_ET dir,
       USBD_Bool_DT flush_hw_bufs);
 
 
@@ -427,7 +396,7 @@ void USBD_IO_DOWN_Process_OUT_Data_Event(
       USBD_IO_OUT_Data_Method_Port_HT mem_cpy);
 
 /**
- * Processes DATA error for CONTROL, BULK and INTERRUPT IN transfer. Has to be called by down layer (port)
+ * Processes DATA error for CONTROL, BULK and INTERRUPT transfer. Has to be called by down layer (port)
  * to inform upper layer that transfer error occured.
  * In this situation endpoint goes to HALT state, upper layer transfer is aborted and "abort" callback
  * is called.
@@ -436,25 +405,12 @@ void USBD_IO_DOWN_Process_OUT_Data_Event(
  *
  * \param usbd pointer to usb device
  * \param ep_num endpoint number
+ * \param dir direction. For possible values please refer to @see USB_EP_Direction_ET
  */
-void USBD_IO_DOWN_Process_IN_Error_CBI(
+void USBD_IO_DOWN_Process_Error_CBI(
       USBD_Params_XT *usbd,
-      uint8_t ep_num);
-
-/**
- * Processes DATA error for CONTROL, BULK and INTERRUPT OUT transfer. Has to be called by down layer (port)
- * to inform upper layer that transfer error occured.
- * In this situation endpoint goes to HALT state, upper layer transfer is aborted and "abort" callback
- * is called.
- *
- * Called only by low level layer (port)
- *
- * \param usbd pointer to usb device
- * \param ep_num endpoint number
- */
-void USBD_IO_DOWN_Process_OUT_Error_CBI(
-      USBD_Params_XT *usbd,
-      uint8_t ep_num);
+      uint8_t ep_num,
+      USB_EP_Direction_ET dir);
 
 
 #if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
@@ -468,28 +424,13 @@ void USBD_IO_DOWN_Process_OUT_Error_CBI(
  *
  * \param usbd pointer to usb device
  * \param ep_num endpoint number
+ * \param dir direction. For possible values please refer to @see USB_EP_Direction_ET
  * \param size size of corrupted packet or zero
  */
-void USBD_IO_DOWN_Process_IN_Error_Iso(
+void USBD_IO_DOWN_Process_Error_Iso(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
-      USBD_IO_Inout_Data_Size_DT size);
-
-/**
- * Processes DATA error for ISOCHRONOUS OUT transfer. Has to be called by down layer (port)
- * to inform upper layer that previous packet has not been sent successfully.
- * "USBD_IO_Process_IN" has to be normally called after this function to perform next packet
- * and upper layer has to decide if transfer shall be continued or not.
- *
- * Called only by low level layer (port)
- *
- * \param usbd pointer to usb device
- * \param ep_num endpoint number
- * \param size size of corrupted packet or zero
- */
-void USBD_IO_DOWN_Process_OUT_Error_Iso(
-      USBD_Params_XT *usbd,
-      uint8_t ep_num,
+      USB_EP_Direction_ET dir,
       USBD_IO_Inout_Data_Size_DT size);
 #endif
 

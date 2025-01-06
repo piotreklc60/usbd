@@ -1414,7 +1414,7 @@ static void port_stm32_cat_a_io_process_out(uint8_t ep_num)
             /*_AND  */USBDEP_STM32_CAT_A__ADDR_TYPE | USBDEP_STM32_CAT_A__STAT_RX,
             /*_OR   */0);
 
-         USBD_IO_IN_Abort(port_stm32_cat_a_usbd, ep_num, USBD_TRUE);
+         USBD_IO_Abort(port_stm32_cat_a_usbd, ep_num, USB_EP_DIRECTION_IN, USBD_TRUE);
       }
       else if(USBD_BOOL_IS_FALSE(ep->out.is_ep_waiting))
       {

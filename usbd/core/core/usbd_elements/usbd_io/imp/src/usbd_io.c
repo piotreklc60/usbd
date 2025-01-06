@@ -49,78 +49,61 @@ void USBD_IO_EP_Enable_And_Configure(
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
    const USBD_IO_DOWN_Common_Handlers_XT *down_handlers;
 #endif
-   const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
-   void *tp_params;
-   void *tp_owner;
+   USBD_IO_Pipe_Params_XT                *pipe;
+   const USBD_IO_UP_EP_Handlers_XT       *ep_handlers;
+#ifdef USBD_USE_IOCMD
+   const char                            *dir_desc;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_IO_ONOFF);
 
    if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
    {
-      USBD_NOTICE_2(USBD_DBG_IO_ONOFF, "EP: %d.%s enabled", ep_num, (USB_EP_DIRECTION_OUT == dir) ? "OUT" : "IN");
-
       if(USB_EP_DIRECTION_OUT == dir)
       {
-         ep_handlers = USBD_IO_UP_OUT_GET_HANDLERS_PTR(usbd, ep_num);
-         tp_params   = USBD_IO_UP_OUT_GET_TP_PARAMS_PTR(usbd, ep_num);
-         tp_owner    = USBD_IO_UP_OUT_GET_TP_OWNER_PTR(usbd, ep_num);
-
-         USBD_IO_CORE_CLEAR_OUT_EP_ACTIVITY_MARKER(usbd, ep_num);
-
-         /**
-         * there is needed to enable upper layer before enabling port to prevent from situation
-         * when hardware will call IRQ when upper layer was not initialized yet
-         */
-         if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-         {
-            if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
-            {
-               USBD_IO_CALL_UP_REINIT(
-                  tp_params,
-                  tp_owner,
-                  ep_handlers,
-                  USBD_IO_GET_OUT_TRANSACATION_PARAMS(usbd, ep_num),
-                  USBD_TRUE,
-                  USBD_IO_UP_OUT_GET_RECURSIVE_FLAGS(usbd, ep_num));
-            }
-         }
-
-         /**
-          * EP activity - used during TP setting
-          */
-         USBD_IO_CORE_SET_OUT_EP_ACTIVITY_MARKER(usbd, ep_num);
+#ifdef USBD_USE_IOCMD
+         dir_desc = "OUT";
+#endif
+         pipe = USBD_IO_GET_OUT_PIPE_PARAMS(usbd, ep_num);
       }
       else
       {
-         ep_handlers = USBD_IO_UP_IN_GET_HANDLERS_PTR(usbd, ep_num);
-         tp_params   = USBD_IO_UP_IN_GET_TP_PARAMS_PTR(usbd, ep_num);
-         tp_owner    = USBD_IO_UP_IN_GET_TP_OWNER_PTR(usbd, ep_num);
-
-         USBD_IO_CORE_CLEAR_IN_EP_ACTIVITY_MARKER(usbd, ep_num);
-
-         /**
-         * there is needed to enable upper layer before enabling port to prevent from situation
-         * when hardware will call IRQ when upper layer was not initialized yet
-         */
-         if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-         {
-            if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
-            {
-               USBD_IO_CALL_UP_REINIT(
-                  tp_params,
-                  tp_owner,
-                  ep_handlers,
-                  USBD_IO_GET_IN_TRANSACATION_PARAMS(usbd, ep_num),
-                  USBD_TRUE,
-                  USBD_IO_UP_IN_GET_RECURSIVE_FLAGS(usbd, ep_num));
-            }
-         }
-
-         /**
-          * EP activity - used during TP setting
-          */
-         USBD_IO_CORE_SET_IN_EP_ACTIVITY_MARKER(usbd, ep_num);
+#ifdef USBD_USE_IOCMD
+         dir_desc = "IN";
+#endif
+         pipe = USBD_IO_GET_IN_PIPE_PARAMS(usbd, ep_num);
       }
+
+      USBD_NOTICE_2(USBD_DBG_IO_ONOFF, "EP: %d.%s enabled", ep_num, dir_desc);
+
+      /**
+       * EP activity - used during TP setting
+       */
+      USBD_IO_CORE_CLEAR_PIPE_ACTIVITY_MARKER(pipe);
+
+      ep_handlers = pipe->up_link.handlers.handlers;
+      /**
+      * there is needed to enable upper layer before enabling port to prevent from situation
+      * when hardware will call IRQ when upper layer was not initialized yet
+      */
+      if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
+      {
+         if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
+         {
+            USBD_IO_CALL_UP_REINIT(
+               pipe->up_link.data.tp_params,
+               pipe->up_link.data.tp_owner,
+               ep_handlers,
+               USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
+               USBD_TRUE,
+               USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
+         }
+      }
+
+      /**
+       * EP activity - used during TP setting
+       */
+      USBD_IO_CORE_SET_PIPE_ACTIVITY_MARKER(pipe);
 
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
       /**
@@ -155,150 +138,97 @@ void USBD_IO_EP_Disable(
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
    const USBD_IO_DOWN_Common_Handlers_XT *down_handlers;
 #endif
-   const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
+   USBD_IO_Pipe_Params_XT                *pipe;
+   const USBD_IO_UP_EP_Handlers_XT       *ep_handlers;
+#ifdef USBD_USE_IOCMD
+   const char                            *dir_desc;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_IO_ONOFF);
 
    if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
    {
-      USBD_NOTICE_2(USBD_DBG_IO_ONOFF, "EP: %d.%s disabled", ep_num, (USB_EP_DIRECTION_OUT == dir) ? "OUT" : "IN");
-
       if(USB_EP_DIRECTION_OUT == dir)
       {
-         /**
-          * EP activity - used during TP setting
-          */
-         USBD_IO_CORE_CLEAR_OUT_EP_ACTIVITY_MARKER(usbd, ep_num);
-
-         if(USBD_BOOL_IS_TRUE(usbd->dev.core.data.active) || USBD_BOOL_IS_TRUE(force_hw_disabling))
-         {
-#if(USBD_MAX_NUM_ENDPOINTS > 1)
-            /**
-             * call "DOWN_CONFIGURE" to disable hardware
-             */
-            if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd))
-            {
-               down_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
-
-               if(USBD_IO_DOWN_CHECK_CONFIGURE_HANDLER(down_handlers))
-               {
-                  USBD_IO_CALL_DOWN_CONFIGURE(usbd, down_handlers, ep_num, USB_EP_DIRECTION_OUT, USBD_FALSE);
-               }
-            }
+#ifdef USBD_USE_IOCMD
+         dir_desc = "OUT";
 #endif
-
-            ep_handlers = USBD_IO_UP_OUT_GET_HANDLERS_PTR(usbd, ep_num);
-
-            if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-            {
-               if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
-               {
-                  USBD_IO_CALL_UP_REINIT(
-                     USBD_IO_UP_OUT_GET_TP_PARAMS_PTR(usbd, ep_num),
-                     USBD_IO_UP_OUT_GET_TP_OWNER_PTR(usbd, ep_num),
-                     ep_handlers,
-                     USBD_IO_GET_OUT_TRANSACATION_PARAMS(usbd, ep_num),
-                     USBD_FALSE,
-                     USBD_IO_UP_OUT_GET_RECURSIVE_FLAGS(usbd, ep_num));
-               }
-            }
-         }
-
-         /**
-          * If TP is not locked then it is completely removed on following events:
-          * - USBD activated (USBD_DEV_Activate was called)
-          * - USBD deactivated (USBD_DEV_Deactivate was called)
-          * - USB power ON
-          * - USB power OFF
-          * - USB reset
-          * - configuration set
-          * - interface set.
-          * It should to be installed again on USBD_EVENT_REASON_CONFIGURED or USBD_EVENT_REASON_INTERFACE_SET event.
-          * If TP is locked then it is completely removed only on following events:
-          * - USBD activated (USBD_DEV_Activate was called)
-          * - USBD deactivated (USBD_DEV_Deactivate was called)
-          * - USB power ON
-          * - USB power OFF
-          * - USB reset
-          * - configuration set
-          * It should be installed again and locked on USBD_EVENT_REASON_CONFIGURED.
-          */
-         if(USBD_BOOL_IS_FALSE(USBD_IO_OUT_GET_LOCK_TP_STATE(usbd, ep_num)) || USBD_BOOL_IS_TRUE(force_tp_remove))
-         {
-            USBD_IO_OUT_UNLOCK_TP(usbd, ep_num);
-            USBD_IO_UP_OUT_SET_HANDLERS_PTR(usbd,  ep_num, USBD_MAKE_INVALID_PTR(const USBD_IO_UP_EP_Handlers_XT));
-            USBD_IO_UP_OUT_SET_TP_PARAMS_PTR(usbd, ep_num, USBD_MAKE_INVALID_PTR(void));
-            USBD_IO_UP_OUT_SET_TP_OWNER_PTR(usbd,  ep_num, USBD_MAKE_INVALID_PTR(void));
-         }
-      } /** if(USB_EP_DIRECTION_OUT == dir) */
+         pipe = USBD_IO_GET_OUT_PIPE_PARAMS(usbd, ep_num);
+      }
       else
       {
-         /**
-          * EP activity - used during TP setting
-          */
-         USBD_IO_CORE_CLEAR_IN_EP_ACTIVITY_MARKER(usbd, ep_num);
-
-         if(USBD_BOOL_IS_TRUE(usbd->dev.core.data.active))
-         {
-#if(USBD_MAX_NUM_ENDPOINTS > 1)
-            /**
-             * call "DOWN_CONFIGURE" to disable hardware
-             */
-            if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd))
-            {
-               down_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
-
-               if(USBD_IO_DOWN_CHECK_CONFIGURE_HANDLER(down_handlers))
-               {
-                  USBD_IO_CALL_DOWN_CONFIGURE(usbd, down_handlers, ep_num, USB_EP_DIRECTION_IN, USBD_FALSE);
-               }
-            }
+#ifdef USBD_USE_IOCMD
+         dir_desc = "IN";
 #endif
+         pipe = USBD_IO_GET_IN_PIPE_PARAMS(usbd, ep_num);
+      }
 
-            ep_handlers = USBD_IO_UP_IN_GET_HANDLERS_PTR(usbd, ep_num);
+      USBD_NOTICE_2(USBD_DBG_IO_ONOFF, "EP: %d.%s disabled", ep_num, dir_desc);
 
-            if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
+      /**
+       * EP activity - used during TP setting
+       */
+      USBD_IO_CORE_CLEAR_PIPE_ACTIVITY_MARKER(pipe);
+
+      if(USBD_BOOL_IS_TRUE(usbd->dev.core.data.active) || USBD_BOOL_IS_TRUE(force_hw_disabling))
+      {
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+         /**
+          * call "DOWN_CONFIGURE" to disable hardware
+          */
+         if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd))
+         {
+            down_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
+
+            if(USBD_IO_DOWN_CHECK_CONFIGURE_HANDLER(down_handlers))
             {
-               if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
-               {
-                  USBD_IO_CALL_UP_REINIT(
-                     USBD_IO_UP_IN_GET_TP_PARAMS_PTR(usbd, ep_num),
-                     USBD_IO_UP_IN_GET_TP_OWNER_PTR(usbd, ep_num),
-                     ep_handlers,
-                     USBD_IO_GET_IN_TRANSACATION_PARAMS(usbd, ep_num),
-                     USBD_FALSE,
-                     USBD_IO_UP_IN_GET_RECURSIVE_FLAGS(usbd, ep_num));
-               }
+               USBD_IO_CALL_DOWN_CONFIGURE(usbd, down_handlers, ep_num, dir, USBD_FALSE);
             }
          }
+#endif
+         ep_handlers = pipe->up_link.handlers.handlers;
 
-         /**
-          * If TP is not locked then it is completely removed on following events:
-          * - USBD activated (USBD_DEV_Activate was called)
-          * - USBD deactivated (USBD_DEV_Deactivate was called)
-          * - USB power ON
-          * - USB power OFF
-          * - USB reset
-          * - configuration set
-          * - interface set.
-          * It should to be installed again on USBD_EVENT_REASON_CONFIGURED or USBD_EVENT_REASON_INTERFACE_SET event.
-          * If TP is locked then it is completely removed only on following events:
-          * - USBD activated (USBD_DEV_Activate was called)
-          * - USBD deactivated (USBD_DEV_Deactivate was called)
-          * - USB power ON
-          * - USB power OFF
-          * - USB reset
-          * - configuration set
-          * It should be installed again and locked on USBD_EVENT_REASON_CONFIGURED.
-          */
-         if(USBD_BOOL_IS_FALSE(USBD_IO_IN_GET_LOCK_TP_STATE(usbd, ep_num)) || USBD_BOOL_IS_TRUE(force_tp_remove))
+         if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
          {
-            USBD_IO_IN_UNLOCK_TP(usbd, ep_num);
-            USBD_IO_UP_IN_SET_HANDLERS_PTR(usbd,  ep_num, USBD_MAKE_INVALID_PTR(const USBD_IO_UP_EP_Handlers_XT));
-            USBD_IO_UP_IN_SET_TP_PARAMS_PTR(usbd, ep_num, USBD_MAKE_INVALID_PTR(void));
-            USBD_IO_UP_IN_SET_TP_OWNER_PTR(usbd,  ep_num, USBD_MAKE_INVALID_PTR(void));
+            if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
+            {
+               USBD_IO_CALL_UP_REINIT(
+                  pipe->up_link.data.tp_params,
+                  pipe->up_link.data.tp_owner,
+                  ep_handlers,
+                  USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
+                  USBD_FALSE,
+                  USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
+            }
          }
-      } /** if(USB_EP_DIRECTION_IN == dir) */
+      }
+
+      /**
+       * If TP is not locked then it is completely removed on following events:
+       * - USBD activated (USBD_DEV_Activate was called)
+       * - USBD deactivated (USBD_DEV_Deactivate was called)
+       * - USB power ON
+       * - USB power OFF
+       * - USB reset
+       * - configuration set
+       * - interface set.
+       * It should to be installed again on USBD_EVENT_REASON_CONFIGURED or USBD_EVENT_REASON_INTERFACE_SET event.
+       * If TP is locked then it is completely removed only on following events:
+       * - USBD activated (USBD_DEV_Activate was called)
+       * - USBD deactivated (USBD_DEV_Deactivate was called)
+       * - USB power ON
+       * - USB power OFF
+       * - USB reset
+       * - configuration set
+       * It should be installed again and locked on USBD_EVENT_REASON_CONFIGURED.
+       */
+      if(USBD_BOOL_IS_FALSE(USBD_IO_PIPE_GET_LOCK_TP_STATE(pipe)) || USBD_BOOL_IS_TRUE(force_tp_remove))
+      {
+         USBD_IO_PIPE_UNLOCK_TP(pipe);
+         USBD_IO_UP_PIPE_SET_HANDLERS_PTR(pipe,  USBD_MAKE_INVALID_PTR(const USBD_IO_UP_EP_Handlers_XT));
+         USBD_IO_UP_PIPE_SET_TP_PARAMS_PTR(pipe, USBD_MAKE_INVALID_PTR(void));
+         USBD_IO_UP_PIPE_SET_TP_OWNER_PTR(pipe,  USBD_MAKE_INVALID_PTR(void));
+      }
    }
    else
    {
@@ -314,126 +244,81 @@ void USBD_IO_Perform_Halt(
       USB_EP_Direction_ET dir,
       USBD_Bool_DT state)
 {
+   USBD_IO_Pipe_Params_XT *pipe;
    const USBD_IO_DOWN_Common_Handlers_XT *common_handlers;
    const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
+#ifdef USBD_USE_IOCMD
+   const char *dir_desc;
+#endif
+   USBD_Bool_DT call_down_layer = USBD_FALSE;
 
    USBD_ENTER_FUNC(USBD_DBG_IO_ONOFF);
 
    if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
    {
-      USBD_NOTICE_3(USBD_DBG_IO_ONOFF, "halt set to '%s' for EP: %d.%s",
-         USBD_BOOL_IS_FALSE(state) ? "false" : "true", ep_num, (USB_EP_DIRECTION_OUT == dir) ? "OUT" : "IN");
-
       if(USB_EP_DIRECTION_OUT == dir)
       {
-         USBD_IO_CORE_CLEAR_OUT_EP_ACTIVITY_MARKER(usbd, ep_num);
-
-         /**
-         * if state is true (halt shall be set) then "DOWN_CALL" shall be called
-         * before "UP_REINIT" to stop hardware activities before stopping upper layer
-         */
-         if(USBD_BOOL_IS_TRUE(state))
-         {
-            if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd))
-            {
-               common_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
-
-               if(USBD_IO_DOWN_CHECK_HALT_HANDLER(common_handlers))
-               {
-                  USBD_IO_CALL_DOWN_HALT(usbd, common_handlers, ep_num, USB_EP_DIRECTION_OUT, USBD_TRUE);
-               }
-            }
-         }
-
-         ep_handlers = USBD_IO_UP_OUT_GET_HANDLERS_PTR(usbd, ep_num);
-
-         if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-         {
-            if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
-            {
-               USBD_IO_CALL_UP_REINIT(
-                  USBD_IO_UP_OUT_GET_TP_PARAMS_PTR(usbd, ep_num),
-                  USBD_IO_UP_OUT_GET_TP_OWNER_PTR(usbd, ep_num),
-                  ep_handlers,
-                  USBD_IO_GET_OUT_TRANSACATION_PARAMS(usbd, ep_num),
-                  state,
-                  USBD_IO_UP_OUT_GET_RECURSIVE_FLAGS(usbd, ep_num));
-            }
-         }
-
-         /**
-         * if state is false (halt shall be cleared) then "DOWN_CALL" shall be called
-         * after "UP_REINIT" to enable hardware activities when upper layer is prepared for processing IRQs
-         */
-         if(USBD_BOOL_IS_FALSE(state))
-         {
-            USBD_IO_CORE_SET_OUT_EP_ACTIVITY_MARKER(usbd, ep_num);
-
-            if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd))
-            {
-               common_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
-
-               if(USBD_IO_DOWN_CHECK_HALT_HANDLER(common_handlers))
-               {
-                  USBD_IO_CALL_DOWN_HALT(usbd, common_handlers, ep_num, USB_EP_DIRECTION_OUT, USBD_FALSE);
-               }
-            }
-         }
+#ifdef USBD_USE_IOCMD
+         dir_desc = "OUT";
+#endif
+         pipe = USBD_IO_GET_OUT_PIPE_PARAMS(usbd, ep_num);
       }
       else
       {
-         USBD_IO_CORE_CLEAR_IN_EP_ACTIVITY_MARKER(usbd, ep_num);
+#ifdef USBD_USE_IOCMD
+         dir_desc = "IN";
+#endif
+         pipe = USBD_IO_GET_IN_PIPE_PARAMS(usbd, ep_num);
+      }
 
-         /**
-         * if state is true (halt shall be set) then "DOWN_CALL" shall be called
-         * before "UP_REINIT" to stop hardware activities before stopping upper layer
-         */
-         if(USBD_BOOL_IS_TRUE(state))
+      common_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
+      if(USBD_CHECK_PTR(const USBD_IO_DOWN_Common_Handlers_XT, common_handlers)
+         && USBD_IO_DOWN_CHECK_HALT_HANDLER(common_handlers))
+      {
+         call_down_layer = USBD_TRUE;
+      }
+
+      USBD_NOTICE_3(USBD_DBG_IO_ONOFF, "halt set to '%s' for EP: %d.%s",
+         USBD_BOOL_IS_FALSE(state) ? "false" : "true", ep_num, dir_desc);
+
+      USBD_IO_CORE_CLEAR_PIPE_ACTIVITY_MARKER(pipe);
+
+      /**
+      * if state is true (halt shall be set) then "DOWN_CALL" shall be called
+      * before "UP_REINIT" to stop hardware activities before stopping upper layer
+      */
+      if(USBD_BOOL_IS_TRUE(state) && USBD_BOOL_IS_TRUE(call_down_layer))
+      {
+         USBD_IO_CALL_DOWN_HALT(usbd, common_handlers, ep_num, dir, USBD_TRUE);
+      }
+
+      ep_handlers = pipe->up_link.handlers.handlers;
+
+      if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
+      {
+         if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
          {
-            if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd))
-            {
-               common_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
-
-               if(USBD_IO_DOWN_CHECK_HALT_HANDLER(common_handlers))
-               {
-                  USBD_IO_CALL_DOWN_HALT(usbd, common_handlers, ep_num, USB_EP_DIRECTION_IN, USBD_TRUE);
-               }
-            }
+            USBD_IO_CALL_UP_REINIT(
+               pipe->up_link.data.tp_params,
+               pipe->up_link.data.tp_owner,
+               ep_handlers,
+               USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
+               state,
+               USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
          }
+      }
 
-         ep_handlers = USBD_IO_UP_IN_GET_HANDLERS_PTR(usbd, ep_num);
+      /**
+      * if state is false (halt shall be cleared) then "DOWN_CALL" shall be called
+      * after "UP_REINIT" to enable hardware activities when upper layer is prepared for processing IRQs
+      */
+      if(USBD_BOOL_IS_FALSE(state))
+      {
+         USBD_IO_CORE_SET_PIPE_ACTIVITY_MARKER(pipe);
 
-         if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
+         if(USBD_BOOL_IS_TRUE(call_down_layer))
          {
-            if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
-            {
-               USBD_IO_CALL_UP_REINIT(
-                  USBD_IO_UP_IN_GET_TP_PARAMS_PTR(usbd, ep_num),
-                  USBD_IO_UP_IN_GET_TP_OWNER_PTR(usbd, ep_num),
-                  ep_handlers,
-                  USBD_IO_GET_IN_TRANSACATION_PARAMS(usbd, ep_num),
-                  state,
-                  USBD_IO_UP_IN_GET_RECURSIVE_FLAGS(usbd, ep_num));
-            }
-         }
-
-         /**
-         * if state is false (halt shall be cleared) then "DOWN_CALL" shall be called
-         * after "UP_REINIT" to enable hardware activities when upper layer is prepared for processing IRQs
-         */
-         if(USBD_BOOL_IS_FALSE(state))
-         {
-            USBD_IO_CORE_SET_IN_EP_ACTIVITY_MARKER(usbd, ep_num);
-
-            if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd))
-            {
-               common_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
-
-               if(USBD_IO_DOWN_CHECK_HALT_HANDLER(common_handlers))
-               {
-                  USBD_IO_CALL_DOWN_HALT(usbd, common_handlers, ep_num, USB_EP_DIRECTION_IN, USBD_FALSE);
-               }
-            }
+            USBD_IO_CALL_DOWN_HALT(usbd, common_handlers, ep_num, dir, USBD_FALSE);
          }
       }
    }
@@ -535,81 +420,62 @@ void USBD_IO_UP_Set_TP(
       void *tp_params,
       void *tp_owner)
 {
+   USBD_IO_Pipe_Params_XT                *pipe;
+#ifdef USBD_USE_IOCMD
+   const char                            *dir_desc;
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_IO_STATE);
 
    if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
    {
       if(USB_EP_DIRECTION_OUT == dir)
       {
-         if(USBD_BOOL_IS_FALSE(USBD_IO_OUT_GET_LOCK_TP_STATE(usbd, ep_num)))
+#ifdef USBD_USE_IOCMD
+         dir_desc = "OUT";
+#endif
+         pipe = USBD_IO_GET_OUT_PIPE_PARAMS(usbd, ep_num);
+      }
+      else
+      {
+#ifdef USBD_USE_IOCMD
+         dir_desc = "IN";
+#endif
+         pipe = USBD_IO_GET_IN_PIPE_PARAMS(usbd, ep_num);
+      }
+
+      if(USBD_BOOL_IS_FALSE(USBD_IO_PIPE_GET_LOCK_TP_STATE(pipe)))
+      {
+         USBD_INFO_HI_5(USBD_DBG_IO_STATE, "set TP: params:%p; owner:%p; handlers:%p for EP: %d.%s",
+            tp_params, tp_owner, handlers, ep_num, dir_desc);
+
+         USBD_IO_UP_PIPE_SET_HANDLERS_PTR(pipe,  handlers);
+         USBD_IO_UP_PIPE_SET_TP_PARAMS_PTR(pipe, tp_params);
+         USBD_IO_UP_PIPE_SET_TP_OWNER_PTR(pipe,  tp_owner);
+
+         /**
+          * if endpoint was already active and we are only changing TP then TP must be immediately reactivated.
+          */
+         if(USBD_BOOL_IS_TRUE(USBD_IO_CORE_GET_PIPE_ACTIVITY_MARKER(pipe)))
          {
-            USBD_INFO_HI_5(USBD_DBG_IO_STATE, "set TP: params:%p; owner:%p; handlers:%p for EP: %d.%s",
-               tp_params, tp_owner, handlers, ep_num, "OUT");
-
-            USBD_IO_UP_OUT_SET_HANDLERS_PTR(usbd, ep_num, handlers);
-            USBD_IO_UP_OUT_SET_TP_PARAMS_PTR(usbd, ep_num, tp_params);
-            USBD_IO_UP_OUT_SET_TP_OWNER_PTR(usbd, ep_num, tp_owner);
-
-            /**
-             * if endpoint was already active and we are only changing TP then TP must be immediately reactivated.
-             */
-            if(USBD_BOOL_IS_TRUE(USBD_IO_CORE_GET_OUT_EP_ACTIVITY_MARKER(usbd, ep_num)))
+            if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, handlers))
             {
-               if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, handlers))
+               if(USBD_IO_UP_CHECK_REINIT_HANDLER(handlers))
                {
-                  if(USBD_IO_UP_CHECK_REINIT_HANDLER(handlers))
-                  {
-                     USBD_IO_CALL_UP_REINIT(
-                        tp_params,
-                        tp_owner,
-                        handlers,
-                        USBD_IO_GET_OUT_TRANSACATION_PARAMS(usbd, ep_num),
-                        USBD_TRUE,
-                        USBD_IO_UP_OUT_GET_RECURSIVE_FLAGS(usbd, ep_num));
-                  }
+                  USBD_IO_CALL_UP_REINIT(
+                     tp_params,
+                     tp_owner,
+                     handlers,
+                     USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
+                     USBD_TRUE,
+                     USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
                }
             }
-         }
-         else
-         {
-            USBD_WARN_2(USBD_DBG_IO_STATE, "set TP params for locked EP: %d.%s failed!", ep_num, "OUT");
          }
       }
       else
       {
-         if(USBD_BOOL_IS_FALSE(USBD_IO_IN_GET_LOCK_TP_STATE(usbd, ep_num)))
-         {
-            USBD_INFO_HI_5(USBD_DBG_IO_STATE, "set TP: params:%p; owner:%p; handlers:%p for EP: %d.%s",
-               tp_params, tp_owner, handlers, ep_num, "IN");
-
-            USBD_IO_UP_IN_SET_HANDLERS_PTR(usbd, ep_num, handlers);
-            USBD_IO_UP_IN_SET_TP_PARAMS_PTR(usbd, ep_num, tp_params);
-            USBD_IO_UP_IN_SET_TP_OWNER_PTR(usbd, ep_num, tp_owner);
-
-            /**
-             * if endpoint was already active and we are only changing TP then TP must be immediately reactivated.
-             */
-            if(USBD_BOOL_IS_TRUE(USBD_IO_CORE_GET_IN_EP_ACTIVITY_MARKER(usbd, ep_num)))
-            {
-               if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, handlers))
-               {
-                  if(USBD_IO_UP_CHECK_REINIT_HANDLER(handlers))
-                  {
-                     USBD_IO_CALL_UP_REINIT(
-                        tp_params,
-                        tp_owner,
-                        handlers,
-                        USBD_IO_GET_IN_TRANSACATION_PARAMS(usbd, ep_num),
-                        USBD_TRUE,
-                        USBD_IO_UP_IN_GET_RECURSIVE_FLAGS(usbd, ep_num));
-                  }
-               }
-            }
-         }
-         else
-         {
-            USBD_WARN_2(USBD_DBG_IO_STATE, "set TP params for locked EP: %d.%s failed!", ep_num, "IN");
-         }
+         USBD_WARN_2(USBD_DBG_IO_STATE, "set TP params for locked EP: %d.%s failed!", ep_num, dir_desc);
       }
    }
    else
@@ -1070,62 +936,82 @@ USBD_IO_UP_DOWN_Transaction_Params_XT *USBD_IO_Get_OUT_Transaction_Params(
    return result;
 } /* USBD_IO_Get_OUT_Transaction_Params */
 
-void USBD_IO_IN_Abort(
+void USBD_IO_Abort(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
+      USB_EP_Direction_ET dir,
       USBD_Bool_DT flush_hw_bufs)
 {
-   const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
    const USBD_IO_DOWN_Common_Handlers_XT *common_handlers;
+   USBD_IO_Pipe_Params_XT                *pipe;
+   const USBD_IO_UP_EP_Handlers_XT       *ep_handlers;
+#ifdef USBD_USE_IOCMD
+   const char                            *dir_desc;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_IO_PROCESSING);
 
    if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
    {
-      if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd) && USBD_BOOL_IS_TRUE(USBD_IO_CORE_GET_IN_EP_ACTIVITY_MARKER(usbd, ep_num)))
+      if(USB_EP_DIRECTION_OUT == dir)
+      {
+#ifdef USBD_USE_IOCMD
+         dir_desc = "OUT";
+#endif
+         pipe = USBD_IO_GET_OUT_PIPE_PARAMS(usbd, ep_num);
+      }
+      else
+      {
+#ifdef USBD_USE_IOCMD
+         dir_desc = "IN";
+#endif
+         pipe = USBD_IO_GET_IN_PIPE_PARAMS(usbd, ep_num);
+      }
+
+      if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd) && USBD_BOOL_IS_TRUE(USBD_IO_CORE_GET_PIPE_ACTIVITY_MARKER(pipe)))
       {
          common_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
 
          if(USBD_IO_DOWN_CHECK_ABORT_HANDLER(common_handlers))
          {
-            USBD_DEBUG_HI_1(USBD_DBG_IO_PROCESSING, "abort IN on EP: %d", ep_num);
+            USBD_DEBUG_HI_2(USBD_DBG_IO_PROCESSING, "abort %s on EP: %d", dir_desc, ep_num);
 
-            USBD_IO_CALL_DOWN_ABORT(usbd, common_handlers, ep_num, USB_EP_DIRECTION_IN, flush_hw_bufs);
+            USBD_IO_CALL_DOWN_ABORT(usbd, common_handlers, ep_num, dir, flush_hw_bufs);
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!", "abort IN", ep_num, "no port handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!", "abort", dir_desc, ep_num, "no port handler");
          }
       }
       else
       {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "abort IN", ep_num, "ep not active/no port handlers");
+         USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+            "abort", dir_desc, ep_num, "ep not active/no port handlers");
       }
 
-      ep_handlers = USBD_IO_UP_IN_GET_HANDLERS_PTR(usbd, ep_num);
+      ep_handlers = pipe->up_link.handlers.handlers;
 
       if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
       {
          if(USBD_IO_UP_CHECK_ABORT_HANDLER(ep_handlers))
          {
-            USBD_DEBUG_HI_1(USBD_DBG_IO_PROCESSING, "up abort on IN EP: %d", ep_num);
+            USBD_DEBUG_HI_2(USBD_DBG_IO_PROCESSING, "up abort on %s EP: %d", dir_desc, ep_num);
 
             USBD_IO_CALL_UP_ABORT(
-               USBD_IO_UP_IN_GET_TP_PARAMS_PTR(usbd, ep_num),
+               pipe->up_link.data.tp_params,
                ep_handlers,
-               USBD_IO_GET_IN_TRANSACATION_PARAMS(usbd, ep_num),
-               USBD_IO_UP_IN_GET_RECURSIVE_FLAGS(usbd, ep_num));
+               USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
+               USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!", "abort IN", ep_num, "no 'abort' handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!", "abort", dir_desc, ep_num, "no 'abort' handler");
          }
       }
       else
       {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "abort IN", ep_num, "no handlers collection");
+         USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+            "abort", dir_desc, ep_num, "no handlers collection");
       }
    }
    else
@@ -1134,73 +1020,7 @@ void USBD_IO_IN_Abort(
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
-} /* USBD_IO_IN_Abort */
-
-void USBD_IO_OUT_Abort(
-      USBD_Params_XT *usbd,
-      uint8_t ep_num,
-      USBD_Bool_DT flush_hw_bufs)
-{
-   const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
-   const USBD_IO_DOWN_Common_Handlers_XT *common_handlers;
-
-   USBD_ENTER_FUNC(USBD_DBG_IO_PROCESSING);
-
-   if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
-   {
-      if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd) && USBD_BOOL_IS_TRUE(USBD_IO_CORE_GET_OUT_EP_ACTIVITY_MARKER(usbd, ep_num)))
-      {
-         common_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
-
-         if(USBD_IO_DOWN_CHECK_ABORT_HANDLER(common_handlers))
-         {
-            USBD_DEBUG_HI_1(USBD_DBG_IO_PROCESSING, "abort OUT on EP: %d", ep_num);
-
-            USBD_IO_CALL_DOWN_ABORT(usbd, common_handlers, ep_num, USB_EP_DIRECTION_OUT, flush_hw_bufs);
-         }
-         else
-         {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!", "abort OUT", ep_num, "no port handler");
-         }
-      }
-      else
-      {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "abort OUT", ep_num, "ep not active/no port handlers");
-      }
-
-      ep_handlers = USBD_IO_UP_OUT_GET_HANDLERS_PTR(usbd, ep_num);
-
-      if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-      {
-         if(USBD_IO_UP_CHECK_ABORT_HANDLER(ep_handlers))
-         {
-            USBD_DEBUG_HI_1(USBD_DBG_IO_PROCESSING, "up abort on OUT EP: %d", ep_num);
-
-            USBD_IO_CALL_UP_ABORT(
-               USBD_IO_UP_OUT_GET_TP_PARAMS_PTR(usbd, ep_num),
-               ep_handlers,
-               USBD_IO_GET_OUT_TRANSACATION_PARAMS(usbd, ep_num),
-               USBD_IO_UP_OUT_GET_RECURSIVE_FLAGS(usbd, ep_num));
-         }
-         else
-         {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!", "abort OUT", ep_num, "no 'abort' handler");
-         }
-      }
-      else
-      {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "abort OUT", ep_num, "no handlers collection");
-      }
-   }
-   else
-   {
-      USBD_WARN_2(USBD_DBG_IO_INVALID_PARAMS, "function invalid parameters! ep_num: %d, usbd: %p", ep_num, usbd);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
-} /* USBD_IO_OUT_Abort */
+} /* USBD_IO_Abort */
 
 
 
@@ -1325,43 +1145,63 @@ void USBD_IO_DOWN_Process_OUT_Data_Event(
    USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
 } /* USBD_IO_DOWN_Process_OUT_Data_Event */
 
-void USBD_IO_DOWN_Process_IN_Error_CBI(
+void USBD_IO_DOWN_Process_Error_CBI(
       USBD_Params_XT *usbd,
-      uint8_t ep_num)
+      uint8_t ep_num,
+      USB_EP_Direction_ET dir)
 {
    const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
+   USBD_IO_Pipe_Params_XT          *pipe;
+#ifdef USBD_USE_IOCMD
+   const char                      *dir_desc;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_IO_PROCESSING);
 
    if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
    {
-      USBD_DEV_Set_EP_Halt(usbd, ep_num, USB_EP_DIRECTION_IN, USBD_TRUE);
+      if(USB_EP_DIRECTION_OUT == dir)
+      {
+#ifdef USBD_USE_IOCMD
+         dir_desc = "OUT";
+#endif
+         pipe = USBD_IO_GET_OUT_PIPE_PARAMS(usbd, ep_num);
+      }
+      else
+      {
+#ifdef USBD_USE_IOCMD
+         dir_desc = "IN";
+#endif
+         pipe = USBD_IO_GET_IN_PIPE_PARAMS(usbd, ep_num);
+      }
 
-      ep_handlers = USBD_IO_UP_IN_GET_HANDLERS_PTR(usbd, ep_num);
+      USBD_DEV_Set_EP_Halt(usbd, ep_num, dir, USBD_TRUE);
+
+      ep_handlers = pipe->up_link.handlers.handlers;
 
       if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
       {
          if(USBD_IO_UP_CHECK_ERROR_HANDLER(ep_handlers))
          {
-            USBD_INFO_LO_1(USBD_DBG_IO_PROCESSING, "up error cbi on IN EP: %d", ep_num);
+            USBD_INFO_LO_2(USBD_DBG_IO_PROCESSING, "up error cbi on %s EP: %d", dir_desc, ep_num);
 
             USBD_IO_CALL_UP_ERROR(
-               USBD_IO_UP_IN_GET_TP_PARAMS_PTR(usbd, ep_num),
+               pipe->up_link.data.tp_params,
                ep_handlers,
-               USBD_IO_GET_IN_TRANSACATION_PARAMS(usbd, ep_num),
+               USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
                0,
-               USBD_IO_UP_IN_GET_RECURSIVE_FLAGS(usbd, ep_num));
+               USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-               "up abort CBI IN", ep_num, "no handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+               "up abort CBI", dir_desc, ep_num, "no handler");
          }
       }
       else
       {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "up abort CBI IN", ep_num, "no handlers collection");
+         USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+            "up abort CBI", dir_desc, ep_num, "no handlers collection");
       }
    }
    else
@@ -1370,93 +1210,66 @@ void USBD_IO_DOWN_Process_IN_Error_CBI(
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
-} /* USBD_IO_DOWN_Process_IN_Error_CBI */
-
-void USBD_IO_DOWN_Process_OUT_Error_CBI(
-      USBD_Params_XT *usbd,
-      uint8_t ep_num)
-{
-   const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
-
-   USBD_ENTER_FUNC(USBD_DBG_IO_PROCESSING);
-
-   if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
-   {
-      USBD_DEV_Set_EP_Halt(usbd, ep_num, USB_EP_DIRECTION_OUT, USBD_TRUE);
-
-      ep_handlers = USBD_IO_UP_OUT_GET_HANDLERS_PTR(usbd, ep_num);
-
-      if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-      {
-         if(USBD_IO_UP_CHECK_ERROR_HANDLER(ep_handlers))
-         {
-            USBD_INFO_LO_1(USBD_DBG_IO_PROCESSING, "up error cbi on OUT EP: %d", ep_num);
-
-            USBD_IO_CALL_UP_ERROR(
-               USBD_IO_UP_OUT_GET_TP_PARAMS_PTR(usbd, ep_num),
-               ep_handlers,
-               USBD_IO_GET_OUT_TRANSACATION_PARAMS(usbd, ep_num),
-               0,
-               USBD_IO_UP_OUT_GET_RECURSIVE_FLAGS(usbd, ep_num));
-         }
-         else
-         {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-               "up abort CBI OUT", ep_num, "no handler");
-         }
-      }
-      else
-      {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "up abort CBI OUT", ep_num, "no handlers collection");
-      }
-   }
-   else
-   {
-      USBD_WARN_2(USBD_DBG_IO_INVALID_PARAMS, "function invalid parameters! ep_num: %d, usbd: %p", ep_num, usbd);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
-} /* USBD_IO_DOWN_Process_OUT_Error_CBI */
+} /* USBD_IO_DOWN_Process_Error_CBI */
 
 
 #if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
-void USBD_IO_DOWN_Process_IN_Error_Iso(
+void USBD_IO_DOWN_Process_Error_Iso(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
+      USB_EP_Direction_ET dir,
       USBD_IO_Inout_Data_Size_DT size)
 {
    const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
+   USBD_IO_Pipe_Params_XT          *pipe;
+#ifdef USBD_USE_IOCMD
+   const char                      *dir_desc;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_IO_PROCESSING);
 
    if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
    {
-      ep_handlers = USBD_IO_UP_IN_GET_HANDLERS_PTR(usbd, ep_num);
+      if(USB_EP_DIRECTION_OUT == dir)
+      {
+#ifdef USBD_USE_IOCMD
+         dir_desc = "OUT";
+#endif
+         pipe = USBD_IO_GET_OUT_PIPE_PARAMS(usbd, ep_num);
+      }
+      else
+      {
+#ifdef USBD_USE_IOCMD
+         dir_desc = "IN";
+#endif
+         pipe = USBD_IO_GET_IN_PIPE_PARAMS(usbd, ep_num);
+      }
+
+      ep_handlers = pipe->up_link.handlers.handlers;
 
       if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
       {
          if(USBD_IO_UP_CHECK_ERROR_HANDLER(ep_handlers))
          {
-            USBD_INFO_LO_2(USBD_DBG_IO_PROCESSING, "up error iso on IN EP: %d; size = %d", ep_num, size);
+            USBD_INFO_LO_3(USBD_DBG_IO_PROCESSING, "up error iso on %s EP: %d; size = %d", dir_desc, ep_num, size);
 
             USBD_IO_CALL_UP_ERROR(
-               USBD_IO_UP_IN_GET_TP_PARAMS_PTR(usbd, ep_num),
+               pipe->up_link.data.tp_params,
                ep_handlers,
-               USBD_IO_GET_IN_TRANSACATION_PARAMS(usbd, ep_num),
+               USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
                size,
-               USBD_IO_UP_IN_GET_RECURSIVE_FLAGS(usbd, ep_num));
+               USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-               "up abort ISO IN", ep_num, "no handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+               "up abort ISO", dir_desc, ep_num, "no handler");
          }
       }
       else
       {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "up abort ISO IN", ep_num, "no handlers collection");
+         USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+            "up abort ISO", dir_desc, ep_num, "no handlers collection");
       }
    }
    else
@@ -1465,53 +1278,7 @@ void USBD_IO_DOWN_Process_IN_Error_Iso(
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
-} /* USBD_IO_DOWN_Process_IN_Error_Iso */
-
-void USBD_IO_DOWN_Process_OUT_Error_Iso(
-      USBD_Params_XT *usbd,
-      uint8_t ep_num,
-      USBD_IO_Inout_Data_Size_DT size)
-{
-   const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
-
-   USBD_ENTER_FUNC(USBD_DBG_IO_PROCESSING);
-
-   if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
-   {
-      ep_handlers = USBD_IO_UP_OUT_GET_HANDLERS_PTR(usbd, ep_num);
-
-      if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-      {
-         if(USBD_IO_UP_CHECK_ERROR_HANDLER(ep_handlers))
-         {
-            USBD_INFO_LO_2(USBD_DBG_IO_PROCESSING, "up error iso on OUT EP: %d; size = %d", ep_num, size);
-
-            USBD_IO_CALL_UP_ERROR(
-               USBD_IO_UP_OUT_GET_TP_PARAMS_PTR(usbd, ep_num),
-               ep_handlers,
-               USBD_IO_GET_OUT_TRANSACATION_PARAMS(usbd, ep_num),
-               size,
-               USBD_IO_UP_OUT_GET_RECURSIVE_FLAGS(usbd, ep_num));
-         }
-         else
-         {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-               "up abort ISO OUT", ep_num, "no handler");
-         }
-      }
-      else
-      {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "up abort ISO OUT", ep_num, "no handlers collection");
-      }
-   }
-   else
-   {
-      USBD_WARN_2(USBD_DBG_IO_INVALID_PARAMS, "function invalid parameters! ep_num: %d, usbd: %p", ep_num, usbd);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
-} /* USBD_IO_DOWN_Process_OUT_Error_Iso */
+} /* USBD_IO_DOWN_Process_Error_Iso */
 #endif
 
 #ifdef USBD_IO_POST_IMP_INCLUDE

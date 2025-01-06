@@ -566,20 +566,11 @@ static USBD_Bool_DT USBD_IOTP_BUFF_proc_abort(USBD_IOTP_BUFF_Params_XT *tp, USBD
 
    if(USBD_BOOL_IS_TRUE(USBD_IOTP_BUFF_Is_Transfer_Active(tp)) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
    {
-      if(USB_EP_DIRECTION_OUT == USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp))
-      {
-         USBD_IO_OUT_Abort(
-            USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-            flush_hw_bufs);
-      }
-      else
-      {
-         USBD_IO_IN_Abort(
-            USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-            flush_hw_bufs);
-      }
+      USBD_IO_Abort(
+         USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
+         USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
+         USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp),
+         flush_hw_bufs);
    }
 
    USBD_DEBUG_HI_4(

@@ -526,7 +526,7 @@ static void perform_test(USBD_Params_XT *usbd)
 {
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
-   USBD_IO_IN_Abort(usbd, test_ep_num, USBD_TRUE);
+   USBD_IO_Abort(usbd, test_ep_num, USB_EP_DIRECTION_IN, USBD_TRUE);
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
 }

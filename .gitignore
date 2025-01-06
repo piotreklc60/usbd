@@ -21,3 +21,11 @@
 *.lst
 crt0_STM32x.c
 stm32f10x_conf.h
+
+usbd/tests/dev_test/test/test
+usbd/tests/event_test/test/test
+usbd/tests/io_test/test/test
+usbd/tests/iotp_buff_test/iocmd_iotp_test/test
+usbd/tests/iotp_event_test/iocmd_iotp_test/test
+usbd/tests/request_test/integration/test
+usbd/tests/request_test/unit/test

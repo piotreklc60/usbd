@@ -96,13 +96,13 @@ void USBD_Init(
 #if (defined(USBD_IO_PRESENT) && (USBD_FEATURE_NOT_PRESENT != USBD_USE_INVALIDATION_ON_INIT))
       for(i = 0; i < USBD_MAX_NUM_ENDPOINTS; i++)
       {
-         USBD_INVALIDATE_PTR_ON_INIT(USBD_IO_UP_EP_Handlers_XT    ,usbd->io.up_link.ep[i].in.handlers.handlers);
-         USBD_INVALIDATE_PTR_ON_INIT(USBD_IO_UP_EP_Handlers_XT    ,usbd->io.up_link.ep[i].out.handlers.handlers);
+         USBD_INVALIDATE_PTR_ON_INIT(USBD_IO_UP_EP_Handlers_XT    ,usbd->io.in[i].up_link.handlers.handlers);
+         USBD_INVALIDATE_PTR_ON_INIT(USBD_IO_UP_EP_Handlers_XT    ,usbd->io.out[i].up_link.handlers.handlers);
 
-         USBD_INVALIDATE_PTR_ON_INIT(void                         ,usbd->io.up_link.ep[i].in.data.tp_params);
-         USBD_INVALIDATE_PTR_ON_INIT(void                         ,usbd->io.up_link.ep[i].out.data.tp_params);
-         USBD_INVALIDATE_PTR_ON_INIT(void                         ,usbd->io.up_link.ep[i].in.data.tp_owner);
-         USBD_INVALIDATE_PTR_ON_INIT(void                         ,usbd->io.up_link.ep[i].out.data.tp_owner);
+         USBD_INVALIDATE_PTR_ON_INIT(void                         ,usbd->io.in[i].up_link.data.tp_params);
+         USBD_INVALIDATE_PTR_ON_INIT(void                         ,usbd->io.out[i].up_link.data.tp_params);
+         USBD_INVALIDATE_PTR_ON_INIT(void                         ,usbd->io.in[i].up_link.data.tp_owner);
+         USBD_INVALIDATE_PTR_ON_INIT(void                         ,usbd->io.out[i].up_link.data.tp_owner);
       }
       USBD_INVALIDATE_PTR_ON_INIT(USBD_IO_DOWN_Common_Handlers_XT ,usbd->io.down_link.common.handlers);
 #endif

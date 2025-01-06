@@ -270,11 +270,11 @@ static void test_up_reinit(void *tp_params, void *tp_owner, USBD_IO_UP_DOWN_Tran
 
       if(USB_EP_DIRECTION_OUT == test_dir)
       {
-         ep_active = test_usbd->io.core.ep[test_ep_num].out.data.ep_active;
+         ep_active = USBD_IO_CORE_GET_OUT_EP_ACTIVITY_MARKER(test_usbd, test_ep_num);
       }
       else
       {
-         ep_active = test_usbd->io.core.ep[test_ep_num].in.data.ep_active;
+         ep_active = USBD_IO_CORE_GET_IN_EP_ACTIVITY_MARKER(test_usbd, test_ep_num);
       }
 
       if(USBD_BOOL_IS_TRUE(ep_active))
@@ -422,11 +422,11 @@ static void test_down_common_halt(USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_D
 
    if(USB_EP_DIRECTION_OUT == dir)
    {
-      ep_active = usbd->io.core.ep[ep_num].out.data.ep_active;
+      ep_active = USBD_IO_CORE_GET_OUT_EP_ACTIVITY_MARKER(test_usbd, test_ep_num);
    }
    else
    {
-      ep_active = usbd->io.core.ep[ep_num].in.data.ep_active;
+      ep_active = USBD_IO_CORE_GET_IN_EP_ACTIVITY_MARKER(test_usbd, test_ep_num);
    }
 
    if((USBD_BOOL_IS_TRUE(ep_active) && USBD_BOOL_IS_TRUE(state)) || (USBD_BOOL_IS_FALSE(ep_active) && USBD_BOOL_IS_FALSE(state)))

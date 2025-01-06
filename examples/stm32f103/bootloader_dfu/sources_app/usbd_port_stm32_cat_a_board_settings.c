@@ -218,9 +218,11 @@ void USBD_Port_STM32_CAT_A_Configure_USB_Irqs(USBD_Bool_DT configure)
       HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 3, 0);
       HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
       /* configure higher priority (data transfer) USB Dev IRQ */
       HAL_NVIC_SetPriority(USB_HP_CAN1_TX_IRQn, 2, 0);
       HAL_NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
+#endif
    }
    else
    {
@@ -230,8 +232,10 @@ void USBD_Port_STM32_CAT_A_Configure_USB_Irqs(USBD_Bool_DT configure)
       /* deconfigure lower priority USB Dev IRQ */
       HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
       /* deconfigure higher priority (data transfer) USB Dev IRQ */
       HAL_NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
+#endif
    }
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);

@@ -41,10 +41,12 @@
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 static void USBD_IOTP_EVENT_io_data_provide_in(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
    USBD_IO_IN_Data_Method_Port_HT data_method);
+#endif
 static void USBD_IOTP_EVENT_io_data_memcpy_in(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
@@ -54,12 +56,14 @@ static void USBD_IOTP_EVENT_io_evdata_in(
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
    USBD_IO_Inout_Data_Size_DT size,
    USBD_IO_IN_Data_Method_Port_HT mem_cpy);
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 static void USBD_IOTP_EVENT_io_provide_out(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
    USBD_IO_Inout_Data_Size_DT packet_size,
    USBD_IO_Inout_Data_Size_DT left_size,
    USBD_IO_OUT_Data_Method_Port_HT provide);
+#endif
 static void USBD_IOTP_EVENT_io_memcpy_out(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
@@ -522,20 +526,11 @@ USBD_Bool_DT USBD_IOTP_EVENT_Abort(
          {
             if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
             {
-               if(USB_EP_DIRECTION_OUT == USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp))
-               {
-                  USBD_IO_OUT_Abort(
-                     USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-                     USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-                     flush_hw_bufs);
-               }
-               else
-               {
-                  USBD_IO_IN_Abort(
-                     USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-                     USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-                     flush_hw_bufs);
-               }
+               USBD_IO_Abort(
+                  USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
+                  USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
+                  USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp),
+                  flush_hw_bufs);
             }
          }
          else
@@ -617,6 +612,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send(
                   tp->core.transfer_params.in.proc.data              = data;
                   tp->core.transfer_params.in.proc.size_left         = size;
                   tp->core.transfer_params.in.proc.last_packet_size  = size % tp->core.pipe_params.data.mps;
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
                   if(USB_EP_DESC_TRANSFER_TYPE_CONTROL != tp->core.pipe_params.data.ep_type)
                   {
                      if((0 == tp->core.transfer_params.in.proc.last_packet_size) && (size > 0))
@@ -624,6 +620,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send(
                         tp->core.transfer_params.in.proc.last_packet_size = tp->core.pipe_params.data.mps;
                      }
                   }
+#endif
 
                   USBD_ATOMIC_BOOL_SET(tp->core.transfer_active, USBD_TRUE);
 
@@ -783,6 +780,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send_Status_For_Out_Tp(
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 static void USBD_IOTP_EVENT_io_data_provide_in(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
@@ -852,6 +850,7 @@ static void USBD_IOTP_EVENT_io_data_provide_in(
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 } /* USBD_IOTP_EVENT_io_data_provide_in */
+#endif
 
 static void USBD_IOTP_EVENT_io_data_memcpy_in(
    void *tp_params,
@@ -1039,14 +1038,18 @@ static void USBD_IOTP_EVENT_io_evdata_in(
 
 
 
-USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Ready(
+static USBD_Bool_DT USBD_IOTP_EVENT_recv(
       USBD_IOTP_EVENT_Params_XT *tp,
       void *data,
       USBD_IO_Inout_Data_Size_DT size,
-      USBD_IO_Inout_Data_Size_DT *size_left)
+      USBD_IO_Inout_Data_Size_DT *size_left,
+      USBD_Bool_DT dont_wait_for_ready)
 {
    void                                  *tp_owner;
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
+#ifdef USBD_USE_IOCMD
+   const char                            *recv_option_desc = USBD_BOOL_IS_TRUE(dont_wait_for_ready) ? "ready" : "wait";
+#endif
    USBD_Bool_DT                           is_last_part = USBD_TRUE;
    USBD_Bool_DT                           result;
 
@@ -1064,10 +1067,11 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Ready(
       if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_EVENT_dummy_data)
          && (USB_EP_DIRECTION_OUT == USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp)))
       {
-         USBD_DEBUG_HI_7(
+         USBD_DEBUG_HI_8(
             USBD_DBG_IOTPEV_PROCESSING,
-            "recv_and_ready before::"
+            "recv_and_%s before::"
             "ep: %d::%s; size = %d; tr_active = %s; size_left = %d; dont_wait_for_ready = %s; data = 0x%08X",
+            recv_option_desc,
             USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
             USBD_IO_UP_Is_EP_Active(
                USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
@@ -1093,7 +1097,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Ready(
                   tp->up_link.data.size_transferred                     = 0;
                   tp->core.transfer_params.out.proc.data                = data;
                   tp->core.transfer_params.out.proc.size_left           = size;
-                  tp->core.transfer_params.out.proc.dont_wait_for_ready = USBD_TRUE;
+                  tp->core.transfer_params.out.proc.dont_wait_for_ready = dont_wait_for_ready;
                   result                                                = USBD_TRUE;
 
                   if(size > tp->core.pipe_params.data.mps)
@@ -1118,7 +1122,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Ready(
                      result = USBD_IO_UP_Trigger_OUT(
                         USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
                         USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-                        USBD_TRUE);
+                        dont_wait_for_ready);
                   }
                   else
                   {
@@ -1132,6 +1136,10 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Ready(
                         if(size > tp->core.transfer_params.out.proc.size_left)
                         {
                            size = tp->core.transfer_params.out.proc.size_left;
+                           is_last_part = USBD_FALSE;
+                        }
+                        else if((size == tp->core.transfer_params.out.proc.size_left) && USBD_BOOL_IS_FALSE(dont_wait_for_ready))
+                        {
                            is_last_part = USBD_FALSE;
                         }
 
@@ -1180,7 +1188,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Ready(
                         result = USBD_IO_UP_Trigger_OUT(
                            USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
                            USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-                           USBD_TRUE);
+                           dont_wait_for_ready);
                      }
                   }
 
@@ -1215,10 +1223,11 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Ready(
             }
          }
 
-         USBD_DEBUG_HI_8(
+         USBD_DEBUG_HI_9(
             USBD_DBG_IOTPEV_PROCESSING,
-            "recv_and_ready after ::"
+            "recv_and_%s after ::"
             "ep: %d::%s; size = %d; tr_active = %s; size_left = %d; dont_wait_for_ready = %s; data = 0x%08X, result: %s",
+            recv_option_desc,
             USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
             USBD_IO_UP_Is_EP_Active(
                USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
@@ -1236,7 +1245,16 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Ready(
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 
    return result;
-} /* USBD_IOTP_EVENT_Recv_And_Ready */
+} /* USBD_IOTP_EVENT_recv */
+
+USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Ready(
+      USBD_IOTP_EVENT_Params_XT  *tp,
+      void                       *data,
+      USBD_IO_Inout_Data_Size_DT  size,
+      USBD_IO_Inout_Data_Size_DT *size_left)
+{
+   return USBD_IOTP_EVENT_recv(tp, data, size, size_left, USBD_TRUE);
+}/* USBD_IOTP_EVENT_Recv_And_Ready */
 
 
 
@@ -1246,202 +1264,8 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_And_Wait(
       USBD_IO_Inout_Data_Size_DT size,
       USBD_IO_Inout_Data_Size_DT *size_left)
 {
-   void                                  *tp_owner;
-   USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
-   USBD_Bool_DT                           is_last_part = USBD_TRUE;
-   USBD_Bool_DT                           result;
-
-   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
-
-   result = USBD_FALSE;
-
-   if((USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp))
-      && (USBD_CHECK_PTR(void, data)))
-   {
-      tp_owner = USBD_IO_UP_Get_OUT_TP_Owner(
-         USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-         USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp));
-
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_EVENT_dummy_data)
-         && (USB_EP_DIRECTION_OUT == USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp)))
-      {
-         USBD_DEBUG_HI_7(
-            USBD_DBG_IOTPEV_PROCESSING,
-            "recv_and_wait  before::"
-            "ep: %d::%s; size = %d; tr_active = %s; size_left = %d; dont_wait_for_ready = %s; data = 0x%08X",
-            USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-            USBD_IO_UP_Is_EP_Active(
-               USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-               USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-               USB_EP_DIRECTION_OUT) ? "active" : "passive",
-            size,
-            USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-            tp->core.transfer_params.out.proc.size_left,
-            USBD_BOOL_IS_TRUE(tp->core.transfer_params.out.proc.dont_wait_for_ready) ? "true" : "false",
-            tp->core.transfer_params.out.proc.data);
-
-         if(USBD_ATOMIC_BOOL_IS_FALSE(tp->core.transfer_active))
-         {
-            /* check if transaction can be processed or if request must be synchronizes to USBD task/irq */
-            if(USBD_BOOL_IS_FALSE(USBD_IS_INVOKE_NEEDED(USBD_IOTP_EVENT_GET_INVOKE_PARAMS(tp))))
-            {
-               transaction = USBD_IO_Get_OUT_Transaction_Params(
-                  USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-                  USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp));
-
-               if(USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction))
-               {
-                  tp->up_link.data.size_transferred                     = 0;
-                  tp->core.transfer_params.out.proc.data                = data;
-                  tp->core.transfer_params.out.proc.size_left           = size;
-                  tp->core.transfer_params.out.proc.dont_wait_for_ready = USBD_FALSE;
-                  result                                                = USBD_TRUE;
-
-                  if(size > tp->core.pipe_params.data.mps)
-                  {
-                     USBD_ATOMIC_BOOL_SET(tp->core.transfer_active, USBD_TRUE);
-                     USBD_IO_SET_OUT_PROVIDE_HANDLER(
-                        transaction, USBD_IOTP_EVENT_io_provide_out);
-                     USBD_IO_SET_OUT_MEMCPY_HANDLER(
-                        transaction, USBD_IOTP_EVENT_io_memcpy_out);
-                  }
-                  else
-                  {
-                     USBD_ATOMIC_BOOL_SET(tp->core.transfer_active, USBD_TRUE);
-                     USBD_IO_SET_OUT_PROVIDE_HANDLER(
-                        transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
-                     USBD_IO_SET_OUT_MEMCPY_HANDLER(
-                        transaction, USBD_IOTP_EVENT_io_memcpy_out);
-                  }
-
-                  if(!USBD_CHECK_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, tp->core.transfer_params.out.proc.mem_cpy))
-                  {
-                     result = USBD_IO_UP_Trigger_OUT(
-                        USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-                        USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-                        USBD_FALSE);
-                  }
-                  else
-                  {
-                     size = USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(
-                        USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-                        USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-                        USBD_TRUE);
-
-                     if(size >= 0)
-                     {
-                        if(size > tp->core.transfer_params.out.proc.size_left)
-                        {
-                           size = tp->core.transfer_params.out.proc.size_left;
-                           is_last_part = USBD_FALSE;
-                        }
-                        else if(size == tp->core.transfer_params.out.proc.size_left)
-                        {
-                           is_last_part = USBD_FALSE;
-                        }
-
-                        size = USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, tp->core.transfer_params.out.proc.mem_cpy)(
-                           USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-                           USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-                           USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp),
-                           tp->core.transfer_params.out.proc.data,
-                           size,
-                           is_last_part);
-
-                        tp->up_link.data.size_transferred            = size;
-                        tp->core.transfer_params.out.proc.size_left -= size;
-                        tp->core.transfer_params.out.proc.data      += size;
-
-                        if(0 == tp->core.transfer_params.out.proc.size_left)
-                        {
-                           USBD_ATOMIC_BOOL_SET(tp->core.transfer_active, USBD_FALSE);
-
-                           USBD_IO_SET_OUT_PROVIDE_HANDLER(
-                              transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
-                           USBD_IO_SET_OUT_MEMCPY_HANDLER(
-                              transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
-                        }
-
-                        if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active))
-                        {
-                           if(tp->core.transfer_params.out.proc.size_left > tp->core.pipe_params.data.mps)
-                           {
-                              USBD_IO_SET_OUT_PROVIDE_HANDLER(
-                                 transaction, USBD_IOTP_EVENT_io_provide_out);
-                              USBD_IO_SET_OUT_MEMCPY_HANDLER(
-                                 transaction, USBD_IOTP_EVENT_io_memcpy_out);
-                           }
-                           else
-                           {
-                              USBD_IO_SET_OUT_PROVIDE_HANDLER(
-                                 transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
-                              USBD_IO_SET_OUT_MEMCPY_HANDLER(
-                                 transaction, USBD_IOTP_EVENT_io_memcpy_out);
-                           }
-                        }
-                     }
-                     else
-                     {
-                        result = USBD_IO_UP_Trigger_OUT(
-                           USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-                           USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-                           USBD_FALSE);
-                     }
-                  }
-
-                  if(USBD_BOOL_IS_FALSE(result))
-                  {
-                     USBD_DEBUG_HI(USBD_DBG_IOTPEV_PROCESSING, "trigger failed");
-
-                     USBD_IO_SET_OUT_PROVIDE_HANDLER(
-                        transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
-                     USBD_IO_SET_OUT_MEMCPY_HANDLER(
-                        transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
-
-                     USBD_ATOMIC_BOOL_SET(tp->core.transfer_active, USBD_FALSE);
-                  }
-
-                  if(USBD_CHECK_PTR(USBD_IO_Inout_Data_Size_DT, size_left))
-                  {
-                     if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active))
-                     {
-                        *size_left = size;
-                     }
-                     else
-                     {
-                        *size_left = (-1);
-                     }
-                  }
-               }
-            }
-            else
-            {
-               USBD_EMERG(USBD_DBG_IOTPEV_PROCESSING, "Invoke not implemented!");
-            }
-         }
-
-         USBD_DEBUG_HI_8(
-            USBD_DBG_IOTPEV_PROCESSING,
-            "recv_and_wait  after ::"
-            "ep: %d::%s; size = %d; tr_active = %s; size_left = %d; dont_wait_for_ready = %s; data = 0x%08X, result: %s",
-            USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-            USBD_IO_UP_Is_EP_Active(
-               USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-               USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-               USB_EP_DIRECTION_OUT) ? "active" : "passive",
-            size,
-            USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-            tp->core.transfer_params.out.proc.size_left,
-            USBD_BOOL_IS_TRUE(tp->core.transfer_params.out.proc.dont_wait_for_ready) ? "true" : "false",
-            tp->core.transfer_params.out.proc.data,
-            USBD_BOOL_IS_TRUE(result) ? "true" : "false");
-      }
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
-
-   return result;
-} /* USBD_IOTP_EVENT_Recv_And_Wait */
+   return USBD_IOTP_EVENT_recv(tp, data, size, size_left, USBD_FALSE);
+}/* USBD_IOTP_EVENT_Recv_And_Wait */
 
 
 
@@ -1450,7 +1274,9 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_Ready(
 {
    void                                  *tp_owner;
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
    USBD_IO_OUT_Data_Method_TP_HT          provide;
+#endif
    USBD_IO_OUT_Data_Method_TP_HT          mem_cpy;
    USBD_Bool_DT                           result;
 
@@ -1487,7 +1313,9 @@ USBD_Bool_DT USBD_IOTP_EVENT_Recv_Ready(
                USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
                USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp));
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
             provide = USBD_IO_GET_OUT_PROVIDE_HANDLER(transaction);
+#endif
             mem_cpy = USBD_IO_GET_OUT_MEMCPY_HANDLER(transaction);
 
             USBD_IO_SET_OUT_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
@@ -1571,6 +1399,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send_Stall(
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 static void USBD_IOTP_EVENT_io_provide_out(
    void* tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
@@ -1659,6 +1488,7 @@ static void USBD_IOTP_EVENT_io_provide_out(
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 } /* USBD_IOTP_EVENT_io_provide_out */
+#endif
 
 
 

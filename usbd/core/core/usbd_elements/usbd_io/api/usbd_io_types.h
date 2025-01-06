@@ -37,6 +37,28 @@
  * @{
  */
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+#define USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT    USBD_FEATURE_PRESENT
+#else
+#define USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT    USBD_FEATURE_NOT_PRESENT
+#endif
+
+#ifndef USBD_IO_INTERRUPT_TRANSFER_SUPPORTED
+#define USBD_IO_INTERRUPT_TRANSFER_SUPPORTED          USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT
+#endif
+
+#ifndef USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED
+#define USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED        USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT
+#endif
+
+#ifndef USBD_IO_BULK_TRANSFER_SUPPORTED
+#define USBD_IO_BULK_TRANSFER_SUPPORTED               USBD_IO_IIB_TRANSFER_TYPES_DEFAULT_SUPPORT
+#endif
+
+#ifndef USBD_IO_PROVIDE_METHODS_SUPPORTED
+#define USBD_IO_PROVIDE_METHODS_SUPPORTED             USBD_FEATURE_PRESENT
+#endif
+
 #define USBD_IO_UP_SET_IN_DATA_EVENT_HANDLER(up_ep_handlers, new_handler)        USBD_SET_HANDLER(USBD_IO_UP_IN_Data_Event_HT,   (up_ep_handlers)->data_event.in,    (new_handler))
 #define USBD_IO_UP_SET_OUT_DATA_EVENT_HANDLER(up_ep_handlers, new_handler)       USBD_SET_HANDLER(USBD_IO_UP_OUT_Data_Event_HT,  (up_ep_handlers)->data_event.out,   (new_handler))
 #define USBD_IO_UP_SET_ERROR_HANDLER(up_ep_handlers, new_handler)                USBD_SET_HANDLER(USBD_IO_UP_Error_HT,           (up_ep_handlers)->error,            (new_handler))
@@ -61,16 +83,22 @@
 
 
 
-#define USBD_IO_GET_IN_TP_PARAMS_PTR(_usbd, _ep_num)                             USBD_GET_PTR(void, (_usbd)->io.up_link.ep[(_ep_num)].in.data.tp_params)
-#define USBD_IO_GET_OUT_TP_PARAMS_PTR(_usbd, _ep_num)                            USBD_GET_PTR(void, (_usbd)->io.up_link.ep[(_ep_num)].out.data.tp_params)
+#define USBD_IO_GET_IN_TP_PARAMS_PTR(_usbd, _ep_num)                             USBD_GET_PTR(void, (_usbd)->io.in[(_ep_num)].up_link.data.tp_params)
+#define USBD_IO_GET_OUT_TP_PARAMS_PTR(_usbd, _ep_num)                            USBD_GET_PTR(void, (_usbd)->io.out[(_ep_num)].up_link.data.tp_params)
 
-#define USBD_IO_GET_IN_TRANSACATION_PARAMS(_usbd, _ep_num)                       (&((_usbd)->io.transaction[(_ep_num)]))
-#define USBD_IO_GET_OUT_TRANSACATION_PARAMS(_usbd, _ep_num)                      (&((_usbd)->io.transaction[(_ep_num)]))
+#define USBD_IO_GET_IN_TRANSACATION_PARAMS(_usbd, _ep_num)                       (&((_usbd)->io.in[(_ep_num)].transaction))
+#define USBD_IO_GET_OUT_TRANSACATION_PARAMS(_usbd, _ep_num)                      (&((_usbd)->io.out[(_ep_num)].transaction))
+
+#define USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe)                               (&((pipe)->transaction))
 
 #define USBD_IO_GET_IN_PROVIDE_HANDLER(_transaction)                             ((_transaction)->handlers.in.provide)
 #define USBD_IO_GET_IN_MEMCPY_HANDLER(_transaction)                              ((_transaction)->handlers.in.mem_cpy)
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 #define USBD_IO_SET_IN_PROVIDE_HANDLER(_transaction, new_handler)                USBD_SET_HANDLER(USBD_IO_IN_Data_Method_TP_HT, (_transaction)->handlers.in.provide, (new_handler))
+#else
+#define USBD_IO_SET_IN_PROVIDE_HANDLER(_transaction, new_handler)
+#endif
 #define USBD_IO_SET_IN_MEMCPY_HANDLER(_transaction, new_handler)                 USBD_SET_HANDLER(USBD_IO_IN_Data_Method_TP_HT, (_transaction)->handlers.in.mem_cpy, (new_handler))
 
 #define USBD_IO_CHECK_IN_PROVIDE_HANDLER(_transaction)                           (USBD_CHECK_HANDLER(USBD_IO_IN_Data_Method_TP_HT, (_transaction)->handlers.in.provide))
@@ -121,7 +149,11 @@
 #define USBD_IO_GET_OUT_MEMCPY_HANDLER(_transaction)                 ((_transaction)->handlers.out.mem_cpy)
 
 #define USBD_IO_SET_OUT_TRANSFERRED_SIZE(_transaction, new_value)    (_transaction)->data.out.transferred_size = (new_value)
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 #define USBD_IO_SET_OUT_PROVIDE_HANDLER(_transaction, new_handler)   USBD_SET_HANDLER(USBD_IO_OUT_Data_Method_TP_HT, (_transaction)->handlers.out.provide, (new_handler))
+#else
+#define USBD_IO_SET_OUT_PROVIDE_HANDLER(_transaction, new_handler)
+#endif
 #define USBD_IO_SET_OUT_MEMCPY_HANDLER(_transaction, new_handler)    USBD_SET_HANDLER(USBD_IO_OUT_Data_Method_TP_HT, (_transaction)->handlers.out.mem_cpy, (new_handler))
 
 #define USBD_IO_CHECK_OUT_PROVIDE_HANDLER(_transaction)              (USBD_CHECK_HANDLER(USBD_IO_OUT_Data_Method_TP_HT, (_transaction)->handlers.out.provide))
@@ -667,35 +699,66 @@ typedef struct USBD_IO_DOWN_Common_Handlers_eXtended_Tag
  */
 typedef struct USBD_IO_UP_DOWN_Transaction_Params_eXtended_Tag
 {
-   struct
+   union
    {
       struct
       {
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
          USBD_IO_OUT_Data_Method_TP_HT       provide;
+#endif
          USBD_IO_OUT_Data_Method_TP_HT       mem_cpy;
       }out;
       struct
       {
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
          USBD_IO_IN_Data_Method_TP_HT        provide;
+#endif
          USBD_IO_IN_Data_Method_TP_HT        mem_cpy;
       }in;
    }handlers;
-   struct
+   union
    {
       struct
       {
          /* used only for DMA transactions, otherwise always equal to 0 */
          USBD_IO_Inout_Data_Size_DT          transferred_size;
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
          USBD_Bool_DT                        provide_recursive_call_protection;
+#endif
          USBD_Bool_DT                        mem_cpy_recursive_call_protection;
       }out;
       struct
       {
+#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
          USBD_Bool_DT                        provide_recursive_call_protection;
+#endif
          USBD_Bool_DT                        mem_cpy_recursive_call_protection;
       }in;
    }data;
 }USBD_IO_UP_DOWN_Transaction_Params_XT;
+
+typedef struct USBD_IO_Pipe_Params_eXtendedTag
+{
+   /** \brief up link data */
+   struct
+   {
+      USBD_IO_UP_EP_Handlers_RCP_XT handlers;
+      struct
+      {
+         void *tp_params;
+         void *tp_owner;
+      }data;
+   }up_link;
+   USBD_IO_UP_DOWN_Transaction_Params_XT transaction;
+   struct
+   {
+      struct
+      {
+         USBD_Bool_DT ep_active;
+         USBD_Bool_DT tp_params_locked;
+      }data;
+   }core;
+}USBD_IO_Pipe_Params_XT;
 
 /**
  * \struct USBD_IO_Params_XT
@@ -703,32 +766,6 @@ typedef struct USBD_IO_UP_DOWN_Transaction_Params_eXtended_Tag
  */
 typedef struct USBD_IO_Params_eXtended_Tag
 {
-   /** \brief up link data */
-   struct
-   {
-      /** \brief parameters declared for each endpoint independently */
-      struct
-      {
-         struct
-         {
-            USBD_IO_UP_EP_Handlers_RCP_XT handlers;
-            struct
-            {
-               void *tp_params;
-               void *tp_owner;
-            }data;
-         }in;
-         struct
-         {
-            USBD_IO_UP_EP_Handlers_RCP_XT handlers;
-            struct
-            {
-               void *tp_params;
-               void *tp_owner;
-            }data;
-         }out;
-      }ep[USBD_MAX_NUM_ENDPOINTS];
-   }up_link;
    /** \brief port (down link) data */
    struct
    {
@@ -738,30 +775,8 @@ typedef struct USBD_IO_Params_eXtended_Tag
          const USBD_IO_DOWN_Common_Handlers_XT *handlers;
       }common;
    }down_link;
-   /** \brief data shared between up layer and down (port) layer */
-   USBD_IO_UP_DOWN_Transaction_Params_XT transaction[USBD_MAX_NUM_ENDPOINTS];
-   struct
-   {
-      struct
-      {
-         struct
-         {
-            struct
-            {
-               USBD_Bool_DT ep_active;
-               USBD_Bool_DT tp_params_locked;
-            }data;
-         }in;
-         struct
-         {
-            struct
-            {
-               USBD_Bool_DT ep_active;
-               USBD_Bool_DT tp_params_locked;
-            }data;
-         }out;
-      }ep[USBD_MAX_NUM_ENDPOINTS];
-   }core;
+   USBD_IO_Pipe_Params_XT  in[USBD_MAX_NUM_ENDPOINTS];
+   USBD_IO_Pipe_Params_XT out[USBD_MAX_NUM_ENDPOINTS];
 }USBD_IO_Params_XT;
 
 /** @} */ /* USBD_IO_TYPES */

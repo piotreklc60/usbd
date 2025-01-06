@@ -541,7 +541,7 @@ static void perform_test(USBD_Params_XT *usbd)
 {
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
-   USBD_IO_DOWN_Process_IN_Error_CBI(usbd, test_ep_num);
+   USBD_IO_DOWN_Process_Error_CBI(usbd, test_ep_num, USB_EP_DIRECTION_IN);
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
 }
