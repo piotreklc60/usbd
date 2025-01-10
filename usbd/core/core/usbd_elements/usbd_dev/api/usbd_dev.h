@@ -198,6 +198,7 @@ USBD_Bool_DT USBD_DEV_Set_Dev_Desc(
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
 /**
  * Checks if configuration descriptor has correct structure.
  * This procedure also checks configuration descriptor regarding to port parameters
@@ -221,6 +222,7 @@ USBD_DEV_Config_Desc_Check_Result_XT USBD_DEV_Check_Config_Desc(
       const USBD_DEV_Port_Handler_XT *port,
       const uint8_t *desc,
       uint16_t desc_size);
+#endif
 
 /**
  * Installs configuration in usbd.
@@ -385,6 +387,7 @@ const USB_Endpoint_Desc_DT *USBD_DEV_Get_EP_Desc(
       uint8_t ep_num,
       USB_EP_Direction_ET dir);
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
 /**
  * Gets number of interface which uses this endpoint
  *
@@ -398,6 +401,9 @@ uint8_t USBD_DEV_Get_EP_Interface_Num(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
       USB_EP_Direction_ET dir);
+#else
+#define USBD_DEV_Get_EP_Interface_Num(usbd, ep_num, dir)       0xFF
+#endif
 
 /**
  * Sets/resets HALT condition for specified endpoint and disables/enables it.
@@ -474,6 +480,7 @@ uint16_t USBD_DEV_Get_Frame_Num(
 
 
 
+#if((USBD_DEV_LOW_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED) && (USBD_DEV_FULL_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED))
 /**
  * Checks which USB speed types are supported by hardware
  *
@@ -483,7 +490,11 @@ uint16_t USBD_DEV_Get_Frame_Num(
  */
 USBD_DEV_Speed_ET USBD_DEV_Get_Supported_Speed(
       USBD_Params_XT *usbd);
+#else
+#define USBD_DEV_Get_Supported_Speed(usbd)      USBD_DEV_SUPPORTED_SPEED
+#endif
 
+#if((USBD_DEV_LOW_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED) && (USBD_DEV_FULL_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED))
 /**
  * Checks which USB speed is currently used by hardware
  *
@@ -493,6 +504,9 @@ USBD_DEV_Speed_ET USBD_DEV_Get_Supported_Speed(
  */
 USBD_DEV_Speed_ET USBD_DEV_Get_Current_Speed(
       USBD_Params_XT *usbd);
+#else
+#define USBD_DEV_Get_Current_Speed(usbd)        USBD_DEV_SUPPORTED_SPEED
+#endif
 
 
 

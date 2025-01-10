@@ -110,44 +110,43 @@ static const USB_Endpoint_Desc_DT*  port_test_dev_get_ep0_low_full_speed(USBD_Pa
 static const USB_Endpoint_Desc_DT*  port_test_dev_get_ep0_high_speed    (USBD_Params_XT *usbd);
 
 static USBD_Bool_DT                 port_test_dev_activity = USBD_FALSE;
-static USB_Endpoint_Desc_DT         port_test_dev_ep0_full =
-{
-   USB_ENDPOINT_DESC_STRUCT_FILL(
+static USB_Endpoint_Desc_DT         port_test_dev_ep0_full = USB_ENDPOINT_DESC_STRUCT_FILL(
       /* _ep_num */              0,
       /* _ep_dir */              USB_EP_DESC_DIR_INOUT_CONTROL,
       /* _ep_type */             USB_EP_DESC_TRANSFER_TYPE_CONTROL,
       /* _ep_sync - iso */       USB_EP_DESC_SYNC_TYPE_NOT_USED,
       /* _ep_usage - iso/irq3 */ USB_EP_DESC_USAGE_TYPE_NOT_USED,
       /* _wMaxPacketSize */      TEST_EP0_MPS,
-      /* _bInterval */           0xFF)
-};
-static USB_Endpoint_Desc_DT   port_test_dev_ep0_high =
-{
-   USB_ENDPOINT_DESC_STRUCT_FILL(
+      /* _bInterval */           0xFF);
+static USB_Endpoint_Desc_DT   port_test_dev_ep0_high = USB_ENDPOINT_DESC_STRUCT_FILL(
       /* _ep_num */              0,
       /* _ep_dir */              USB_EP_DESC_DIR_INOUT_CONTROL,
       /* _ep_type */             USB_EP_DESC_TRANSFER_TYPE_CONTROL,
       /* _ep_sync - iso */       USB_EP_DESC_SYNC_TYPE_NOT_USED,
       /* _ep_usage - iso/irq3 */ USB_EP_DESC_USAGE_TYPE_NOT_USED,
       /* _wMaxPacketSize */      TEST_EP0_MPS,
-      /* _bInterval */           0xFF)
-};
+      /* _bInterval */           0xFF);
 static USBD_DEV_Speed_ET               port_test_dev_speed = USBD_DEV_FULL_AND_HIGH_SPEED;
 static uint16_t                        port_test_dev_device_status = 0;
 static uint16_t                        port_test_dev_frame_nr = 0;
 static const USBD_DEV_Port_Handler_XT  port_test_dev =
 {
-   {
-      port_test_dev_activate_deactivate,
-      port_test_dev_parse_ep,
-      port_test_dev_parse_cfg,
-      port_test_dev_get_supported_speed,
-      port_test_dev_get_current_speed,
-      port_test_dev_get_dev_status,
-      port_test_dev_get_frame_nr,
-      port_test_dev_get_ep0_low_full_speed,
-      port_test_dev_get_ep0_high_speed
-   }
+   .handlers.activate               = port_test_dev_activate_deactivate,
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
+   .handlers.ep_parse               = port_test_dev_parse_ep,
+   .handlers.cfg_parse              = port_test_dev_parse_cfg,
+#endif
+#if((USBD_DEV_LOW_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED) && (USBD_DEV_FULL_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED))
+   .handlers.get_supported_speed    = port_test_dev_get_supported_speed,
+   .handlers.get_current_speed      = port_test_dev_get_current_speed,
+#endif
+   .handlers.get_device_status      = port_test_dev_get_dev_status,
+   .handlers.get_frame_num          = port_test_dev_get_frame_nr,
+   .handlers.get_ep0_low_full_speed = port_test_dev_get_ep0_low_full_speed,
+#if(USBD_DEV_SUPPORTED_SPEED >= USBD_DEV_HIGH_SPEED_SUPPORTED)
+   .handlers.get_ep0_high_speed     = port_test_dev_get_ep0_high_speed,
+#endif
+   .data.ep_both_directions_must_have_same_type = USBD_TRUE
 };
 static USBD_Params_XT *port_test_usbd = USBD_MAKE_INVALID_PTR(USBD_Params_XT);
 

@@ -73,7 +73,9 @@
 
 static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_DEV_Set_Configuration_Respond_HT respond);
 static void USBD_DEV_unconfigure(USBD_Params_XT *usbd);
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
 static void USBD_DEV_calculate_num_endpoints_in_active_config(USBD_Params_XT *usbd);
+#endif
 
 #if(USBD_MAX_NUM_STRINGS > 0)
 
@@ -579,6 +581,7 @@ USBD_Bool_DT USBD_DEV_Set_Dev_Desc(
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
 USBD_DEV_Config_Desc_Check_Result_XT USBD_DEV_Check_Config_Desc(
       USBD_Params_XT *usbd,
       const USBD_DEV_Port_Handler_XT *port,
@@ -1089,6 +1092,7 @@ USBD_DEV_Config_Desc_Check_Result_XT USBD_DEV_Check_Config_Desc(
 
    return result;
 } /* USBD_DEV_Check_Config_Desc */
+#endif
 
 USBD_DEV_Installation_Result_XT USBD_DEV_Install_Config(
       USBD_Params_XT *usbd,
@@ -1101,6 +1105,10 @@ USBD_DEV_Installation_Result_XT USBD_DEV_Install_Config(
    USBD_DEV_Installation_Result_XT result;
    uint16_t config_desc_size;
    uint8_t config_index;
+
+#if(USBD_FEATURE_PRESENT != USBD_DEV_SUPPORT_CONFIG_VALIDATION)
+   USBD_UNUSED_PARAM(port);
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_DEV_INIT);
 
@@ -1133,7 +1141,9 @@ USBD_DEV_Installation_Result_XT USBD_DEV_Install_Config(
                {
                   result.result = USBD_DEV_INSTALLATION_DATA_INVALID_STRUCTURE;
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
                   if(USBD_DEV_CONFIG_DESC_OK == USBD_DEV_Check_Config_Desc(usbd, port, config_desc, config_desc_size).result)
+#endif
                   {
                      result.result     = USBD_DEV_INSTALLATION_OK;
                      result.index      = config_index;
@@ -1397,6 +1407,7 @@ uint8_t USBD_DEV_Get_Num_Interfaces_In_Active_Config(
    return result;
 } /* USBD_DEV_Get_Num_Interfaces_In_Active_Config */
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
 static void USBD_DEV_calculate_num_endpoints_in_active_config(USBD_Params_XT *usbd)
 {
    const uint8_t *desc;
@@ -1442,10 +1453,11 @@ static void USBD_DEV_calculate_num_endpoints_in_active_config(USBD_Params_XT *us
       }
    }
 
-   usbd->dev.core.data.num_used_endpoints = result;
+   USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, result);
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_ONOFF);
 } /* USBD_DEV_calculate_num_endpoints_in_active_config */
+#endif
 
 uint8_t USBD_DEV_Get_Num_Endpoints_In_Active_Config(
       USBD_Params_XT *usbd)
@@ -1456,7 +1468,7 @@ uint8_t USBD_DEV_Get_Num_Endpoints_In_Active_Config(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
-      result = usbd->dev.core.data.num_used_endpoints;
+      result = USBD_DEV_GET_NUM_USED_ENDPOINTS(usbd);
    }
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_STATE);
@@ -1535,6 +1547,7 @@ const USB_Endpoint_Desc_DT *USBD_DEV_Get_EP_Desc(
    return result;
 } /* USBD_DEV_Get_EP_Desc */
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
 uint8_t USBD_DEV_Get_EP_Interface_Num(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
@@ -1554,6 +1567,7 @@ uint8_t USBD_DEV_Get_EP_Interface_Num(
 
    return interface_num;
 } /* USBD_DEV_Get_EP_Interface_Num */
+#endif
 
 void USBD_DEV_Set_EP_Halt(
       USBD_Params_XT *usbd,
@@ -1698,7 +1712,7 @@ static void USBD_DEV_reset_dev_and_disable_endpoints(
    USBD_DEV_SET_ACTIVE_CONFIG_PTR(usbd, USBD_MAKE_INVALID_PTR(USBDC_Params_XT));
    USBD_DEV_SET_ACTIVE_CONFIG_DESC_PTR(usbd, USBD_MAKE_INVALID_PTR(const uint8_t));
 
-   usbd->dev.core.data.num_used_endpoints = num_first_endpoints_protected;
+   USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, num_first_endpoints_protected);
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_ONOFF);
 } /* USBD_DEV_reset_dev_and_disable_endpoints */
@@ -1833,6 +1847,7 @@ uint16_t USBD_DEV_Get_Frame_Num(
 
 
 
+#if((USBD_DEV_LOW_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED) && (USBD_DEV_FULL_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED))
 USBD_DEV_Speed_ET USBD_DEV_Get_Supported_Speed(
       USBD_Params_XT *usbd)
 {
@@ -1888,6 +1903,7 @@ USBD_DEV_Speed_ET USBD_DEV_Get_Current_Speed(
 
    return result;
 } /* USBD_DEV_Get_Current_Speed */
+#endif
 
 
 
@@ -1901,7 +1917,7 @@ void USBD_DEV_Attached(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
-      usbd->dev.core.data.num_used_endpoints = 0;
+      USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, 0);
 
       if(USBD_BOOL_IS_TRUE(state))
       {
@@ -1986,7 +2002,7 @@ void USBD_DEV_Reset(
    {
       USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_TRUE);
 
-      usbd->dev.core.data.num_used_endpoints = 1;
+      USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, 1);
 
       /// TODO: check if dev->core.data.dev_desc.bNumConfigurations > 0 - if not, then deactivate and maybe call USBD_panic
       if(usbd->dev.core.data.dev_desc.bNumConfigurations > 0)
@@ -2049,6 +2065,7 @@ void USBD_DEV_Reset(
                ep0 = USBD_DEV_GET_PORT_EP0_LOW_FULL_SPEED_DESC(usbd, port);
             }
 
+#if(USBD_DEV_SUPPORTED_SPEED >= USBD_DEV_HIGH_SPEED_SUPPORTED)
             if(USBD_DEV_CHECK_PORT_CURRENT_SPEED_HANDLER(port))
             {
                if(USBD_DEV_HIGH_SPEED == (USBD_DEV_HIGH_SPEED & USBD_DEV_GET_PORT_CURRENT_SPEED(usbd, port)))
@@ -2064,6 +2081,7 @@ void USBD_DEV_Reset(
                   }
                }
             }
+#endif
 
             if(USBD_CHECK_PTR(const USB_Endpoint_Desc_DT, ep0))
             {
@@ -2128,7 +2146,7 @@ void USBD_DEV_Addressed(
       USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_ADDRESSED);
 #endif
 
-      usbd->dev.core.data.num_used_endpoints = 1;
+      USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, 1);
 
       USBD_DEV_state_change(
          usbd, USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED, __LINE__);
@@ -2139,15 +2157,19 @@ void USBD_DEV_Addressed(
 
 static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_DEV_Set_Configuration_Respond_HT respond)
 {
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    const USBD_DEV_Port_Handler_XT *port;
+#endif
    USB_Interface_Desc_DT *if_desc;
    const uint8_t *cfg_desc;
    uint16_t desc_size = 0;
-   uint16_t pos;
    uint16_t if_pos1;
    uint16_t if_pos2;
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+   uint16_t pos;
    uint8_t ep_cntr;
    uint8_t ep_num;
+#endif
    uint8_t if_num;
    USBD_Bool_DT result;
 
@@ -2161,6 +2183,7 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
    desc_size += cfg_desc[3];
    desc_size *= 256;
    desc_size += cfg_desc[2];
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    /** 1. parse configuration descriptor by core and port */
    if(USBD_CHECK_PORT_PTR(usbd))
    {
@@ -2171,6 +2194,7 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
          result = USBD_FALSE;
       }
    }
+#endif
 
    if(USBD_BOOL_IS_TRUE(result))
    {
@@ -2202,6 +2226,7 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
                (USBD_DEV_GET_INTERFACE_TAB_PTR((usbd)))[if_num].desc = if_desc;
             }
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
             pos = if_pos1;
             for(ep_cntr = 0; ep_cntr < cfg_desc[if_pos1 + 4]; ep_cntr++)
             {
@@ -2235,6 +2260,7 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
                   break;
                }
             }
+#endif
          }
       }
    }
@@ -2281,8 +2307,9 @@ USBD_Bool_DT USBD_DEV_Configured(
          * previously used configuration must be turned off at first
          */
          USBD_DEV_unconfigure(usbd);
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
          USBD_DEV_reset_dev_and_disable_endpoints(usbd, 1, USBD_FALSE);
-
+#endif
          /** check if config value is correct */
          if(0 != config_num)
          {
@@ -2300,7 +2327,9 @@ USBD_Bool_DT USBD_DEV_Configured(
             USBD_DEV_SET_ACTIVE_CONFIG_PTR(usbd, config_tab[config_num].usbdc);
             USBD_DEV_SET_ACTIVE_CONFIG_DESC_PTR(usbd, (const uint8_t*)(config_tab[config_num].config_desc));
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
             USBD_DEV_calculate_num_endpoints_in_active_config(usbd);
+#endif
 
             if(USBD_DEV_CHECK_ACTIVE_CONFIG_PTR(usbd) && USBD_DEV_CHECK_ACTIVE_CONFIG_DESC_PTR(usbd))
             {
@@ -2324,7 +2353,7 @@ USBD_Bool_DT USBD_DEV_Configured(
                   USBD_DEV_SET_ACTIVE_CONFIG_PTR(usbd, USBD_MAKE_INVALID_PTR(USBDC_Params_XT));
                   USBD_DEV_SET_ACTIVE_CONFIG_DESC_PTR(usbd, USBD_MAKE_INVALID_PTR(const uint8_t));
 
-                  usbd->dev.core.data.num_used_endpoints = 1;
+                  USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, 1);
                }
             }
          }
@@ -2357,12 +2386,14 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
    const uint8_t *cfg_desc;
    USBD_DEV_Set_Interface_Result_ET result;
    uint16_t desc_size = 0;
-   uint16_t pos;
    uint16_t new_if_pos;
-   uint16_t old_if_pos;
    uint16_t if_pos2;
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+   uint16_t pos;
+   uint16_t old_if_pos;
    uint8_t ep_cntr;
    uint8_t ep_num;
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_DEV_ONOFF);
 
@@ -2391,12 +2422,13 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
             {
                result = USBD_DEV_SET_INTERFACE_RESULT_OK;
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
                /** deconfigure old alternate setting if exist */
                if(USBD_CHECK_PTR(
                   USB_Interface_Desc_DT,
                   (USBD_DEV_GET_INTERFACE_TAB_PTR(usbd))[interface_num].desc))
                {
-                  /** find old version od interface in configuration description */
+                  /** find old version of the interface in configuration description */
                   old_if_pos = USB_CDP_Find_Interface(
                      cfg_desc,
                      desc_size,
@@ -2413,7 +2445,7 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
                      }
 
                      pos = old_if_pos;
-                     /** disable all endpoints which were used by old alternate setting of interface */
+                     /** disable all endpoints which were used by old alternate setting of the interface */
                      for(ep_cntr = 0; ep_cntr < cfg_desc[old_if_pos + 4]; ep_cntr++)
                      {
                         pos = USB_CDP_Find_Next_Endpoint(cfg_desc, desc_size, pos);
@@ -2448,6 +2480,7 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
                      }
                   }
                }
+#endif
 
                /** configure new alternate setting */
 
@@ -2468,6 +2501,7 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
                USBD_EVENT_Process_Warm_Event(usbd, USBD_EVENT_REASON_INTERFACE_SET);
 #endif
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
                pos = new_if_pos;
                for(ep_cntr = 0; ep_cntr < cfg_desc[new_if_pos + 4]; ep_cntr++)
                {
@@ -2501,6 +2535,7 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
                      break;
                   }
                }
+#endif
             }
             else
             {

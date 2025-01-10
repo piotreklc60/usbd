@@ -51,6 +51,10 @@
 #error "REQUEST module must be present to use this port implementation"
 #endif
 
+#if((USBD_FEATURE_PRESENT != USBD_DEV_SUPPORT_CONFIG_VALIDATION) && (USBD_MAX_NUM_ENDPOINTS > 1))
+#error "USBD_DEV_SUPPORT_CONFIG_VALIDATION must be enabled when more than endpoint ) is used to allocate EPs shared memory properly!"
+#endif
+
 
 
 #define USBD_PORT_STM32_CAT_A_MAX_NUM_ENDPOINTS               8
@@ -175,45 +179,38 @@ typedef void (*port_stm32_cat_a_io_disable_ep_HT)(uint8_t ep_reg_num, volatile u
  ********************************************************************************************************************************/
 
 static void                         port_stm32_cat_a_dev_activate_deactivate (USBD_Params_XT *usbd, USBD_Bool_DT state);
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
 static USBD_Bool_DT                 port_stm32_cat_a_dev_parse_cfg           (USBD_Params_XT *usbd, const uint8_t *desc, uint16_t desc_size, USBD_DEV_Config_Desc_Check_Result_XT *details);
-static USBD_DEV_Speed_ET            port_stm32_cat_a_dev_get_supported_speed (USBD_Params_XT *usbd);
-static USBD_DEV_Speed_ET            port_stm32_cat_a_dev_get_current_speed   (USBD_Params_XT *usbd);
+#endif
 static uint16_t                     port_stm32_cat_a_dev_get_dev_status      (USBD_Params_XT *usbd);
 static uint16_t                     port_stm32_cat_a_dev_get_frame_nr        (USBD_Params_XT *usbd);
 static const USB_Endpoint_Desc_DT*  port_stm32_cat_a_dev_get_ep0_desc        (USBD_Params_XT *usbd);
 
-static const USB_Endpoint_Desc_DT  port_stm32_cat_a_dev_ep0_full =
+static const USB_Endpoint_Desc_DT   port_stm32_cat_a_dev_ep0_full = USB_ENDPOINT_DESC_STRUCT_FILL(
+   0 /* EP number */,
+   USB_EP_DESC_DIR_INOUT_CONTROL,
+   USB_EP_DESC_TRANSFER_TYPE_CONTROL,
+   USB_EP_DESC_SYNC_TYPE_NOT_USED,
+   USB_EP_DESC_USAGE_TYPE_NOT_USED,
+   USBD_PORT_STM32_CAT_A_EP0_MPS,
+   0xFF /* bInterval */);
+static const USBD_DEV_Port_Handler_XT port_stm32_cat_a_dev =
 {
-   /* bLength           */ USB_DESC_TYPE_ENDPOINT_SIZE,
-   /* bDescriptorType   */ USB_DESC_TYPE_ENDPOINT,
-   /* bEndpointAddress  */ 0,
-   /* bmAttributes      */ USB_EP_DESC_TRANSFER_TYPE_CONTROL,
-   {
-   /* wMaxPacketSize.L  */ USBD_PORT_STM32_CAT_A_EP0_MPS,
-   /* wMaxPacketSize.H  */ 0
-   },
-   /* bInterval         */ 0xFF,
-};
-static const USBD_DEV_Port_Handler_XT   port_stm32_cat_a_dev =
-{
-   {
-      port_stm32_cat_a_dev_activate_deactivate,
-      USBD_MAKE_INVALID_HANDLER(USBD_DEV_PORT_Parse_EP_Desc_Variants_HT),
-      port_stm32_cat_a_dev_parse_cfg,
-      port_stm32_cat_a_dev_get_supported_speed,
-      port_stm32_cat_a_dev_get_current_speed,
-      port_stm32_cat_a_dev_get_dev_status,
-      port_stm32_cat_a_dev_get_frame_nr,
-      port_stm32_cat_a_dev_get_ep0_desc,
-      USBD_MAKE_INVALID_HANDLER(USBD_DEV_PORT_Get_EP_Desc_HT)/* high_speed */
-   },
-   {
-      USBD_TRUE
-   }
+   .handlers.activate               = port_stm32_cat_a_dev_activate_deactivate,
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
+   .handlers.ep_parse               = USBD_MAKE_INVALID_HANDLER(USBD_DEV_PORT_Parse_EP_Desc_Variants_HT),
+   .handlers.cfg_parse              = port_stm32_cat_a_dev_parse_cfg,
+#endif
+   .handlers.get_device_status      = port_stm32_cat_a_dev_get_dev_status,
+   .handlers.get_frame_num          = port_stm32_cat_a_dev_get_frame_nr,
+   .handlers.get_ep0_low_full_speed = port_stm32_cat_a_dev_get_ep0_desc,
+   .data.ep_both_directions_must_have_same_type = USBD_TRUE
 };
 static USBD_Params_XT *port_stm32_cat_a_usbd = USBD_MAKE_INVALID_PTR(USBD_Params_XT);
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
 static port_stm32_cat_a_dev_interface_shared_mem_start_point_DT port_stm32_cat_a_dev_interface_shared_mem_start_point[USBD_MAX_NUM_INTERFACES];
+#endif
 
 port_stm32_cat_a_dev_params_XT port_stm32_cat_a_dev_prams;
 USBD_Atomic_Bool_DT port_stm32_cat_a_irq_active;
@@ -327,7 +324,9 @@ static void port_stm32_cat_a_dev_reset_internal_structures(void)
    port_stm32_cat_a_req_params.interface_set_ongoing       = USBD_MAX_NUM_INTERFACES;
 #endif
    memset(port_stm32_cat_a_io_ep, 0, sizeof(port_stm32_cat_a_io_ep));
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    memset(port_stm32_cat_a_dev_interface_shared_mem_start_point, 0, sizeof(port_stm32_cat_a_dev_interface_shared_mem_start_point));
+#endif
    memset(&port_stm32_cat_a_dev_prams, 0, sizeof(port_stm32_cat_a_dev_prams));
    port_stm32_cat_a_dev_prams.bulk_eps_num_bufs = 1;
    port_stm32_cat_a_dev_prams.out_on_delay = USBD_FALSE;
@@ -456,6 +455,7 @@ USBD_Bool_DT port_stm32_cat_a_does_estimation_fit_hw(port_stm32_cat_a_dev_if_est
    return result;
 } /* port_stm32_cat_a_does_estimation_fit_hw */
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
 static USBD_Bool_DT port_stm32_cat_a_dev_parse_cfg_internal(
    port_stm32_cat_a_dev_if_estimation_DT *if_estimation,
    port_stm32_cat_a_dev_ep_estimation_DT *ep_estimation,
@@ -683,33 +683,8 @@ static USBD_Bool_DT port_stm32_cat_a_dev_parse_cfg(
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
 
    return result;
-}
-
-static USBD_DEV_Speed_ET port_stm32_cat_a_dev_get_supported_speed(USBD_Params_XT *usbd)
-{
-   USBD_DEV_Speed_ET result;
-
-   USBD_UNUSED_PARAM(usbd);
-
-   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
-
-   result = USBD_DEV_FULL_SPEED;
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
-
-   return result;
-} /* port_stm32_cat_a_dev_get_supported_speed */
-
-static USBD_DEV_Speed_ET port_stm32_cat_a_dev_get_current_speed(USBD_Params_XT *usbd)
-{
-   USBD_UNUSED_PARAM(usbd);
-
-   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
-
-   return USBD_DEV_FULL_SPEED;
-} /* port_stm32_cat_a_dev_get_current_speed */
+} /* port_stm32_cat_a_dev_parse_cfg */
+#endif
 
 static uint16_t port_stm32_cat_a_dev_get_dev_status(USBD_Params_XT *usbd)
 {

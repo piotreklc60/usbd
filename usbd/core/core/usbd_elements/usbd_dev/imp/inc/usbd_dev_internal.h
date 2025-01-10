@@ -31,6 +31,13 @@
 #include "usbd.h"
 #endif
 
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+#define USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, num_used_eps)    (usbd)->dev.core.data.num_used_endpoints = num_used_eps
+#define USBD_DEV_GET_NUM_USED_ENDPOINTS(usbd)                  (usbd)->dev.core.data.num_used_endpoints
+#else
+#define USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, num_used_eps)
+#define USBD_DEV_GET_NUM_USED_ENDPOINTS(usbd)                  (0 == ((usbd)->dev.core.data.state & USBD_DEV_STATE_DEFAULT)) ? 0 : 1
+#endif
 
 #define USBD_CHECK_PORT_PTR(usbd)                              (USBD_CHECK_PTR(const USBD_DEV_Port_Handler_XT,                (usbd)->dev.core.data.port))
 
@@ -80,8 +87,13 @@
 #define USBD_DEV_SET_ACTIVE_CONFIG_NUM(usbd, new_value)        (usbd)->dev.core.data.active_config_num            = (new_value)
 #define USBD_DEV_SET_ACTIVE_CONFIG_PTR(usbd, new_value)        USBD_SET_PTR(USBDC_Params_XT,  (usbd)->dev.core.data.active_config,    (new_value))
 #define USBD_DEV_SET_ACTIVE_CONFIG_DESC_PTR(usbd, new_value)   USBD_SET_PTR(const uint8_t,    (usbd)->dev.core.data.active_config_desc,(new_value))
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
 #define USBD_DEV_SET_EP_IN_INTERFACE(usbd, ep_num, new_value)  (usbd)->dev.core.data.ep_in_interface[(ep_num)]    = (new_value)
 #define USBD_DEV_SET_EP_OUT_INTERFACE(usbd, ep_num, new_value) (usbd)->dev.core.data.ep_out_interface[(ep_num)]   = (new_value)
+#else
+#define USBD_DEV_SET_EP_IN_INTERFACE(usbd, ep_num, new_value)
+#define USBD_DEV_SET_EP_OUT_INTERFACE(usbd, ep_num, new_value)
+#endif
 #define USBD_DEV_SET_EP_IN_STATE(usbd, ep_num, new_value)      (usbd)->dev.core.data.ep_in_state[(ep_num)]        = (new_value)
 #define USBD_DEV_SET_EP_OUT_STATE(usbd, ep_num, new_value)     (usbd)->dev.core.data.ep_out_state[(ep_num)]       = (new_value)
 

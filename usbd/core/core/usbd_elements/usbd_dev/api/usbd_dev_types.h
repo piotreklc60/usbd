@@ -36,6 +36,19 @@
  * @{
  */
 
+#ifndef USBD_DEV_SUPPORT_CONFIG_VALIDATION
+#define USBD_DEV_SUPPORT_CONFIG_VALIDATION            USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_DEV_SUPPORTED_SPEED
+#define USBD_DEV_SUPPORTED_SPEED                      (USBD_DEV_LOW_SPEED_SUPPORTED | USBD_DEV_FULL_SPEED_SUPPORTED | USBD_DEV_HIGH_SPEED_SUPPORTED)
+#endif
+
+#define USBD_DEV_LOW_SPEED_SUPPORTED                  (1 << 0)
+#define USBD_DEV_FULL_SPEED_SUPPORTED                 (1 << 1)
+#define USBD_DEV_HIGH_SPEED_SUPPORTED                 (1 << 2)
+#define USBD_DEV_SUPER_SPEED_SUPPORTED                (1 << 3)
+
 /**
  * \typedef USBD_DEV_States_ET
  * Device state types
@@ -65,9 +78,9 @@ typedef enum USBD_DEV_EP_States_Enum_Tag
 typedef enum USBD_DEV_Speed_Enum_Tag
 {
    USBD_DEV_SPEED_INVALID        = 0,
-   USBD_DEV_LOW_SPEED            = (1 << 0),
-   USBD_DEV_FULL_SPEED           = (1 << 1),
-   USBD_DEV_HIGH_SPEED           = (1 << 2),
+   USBD_DEV_LOW_SPEED            = USBD_DEV_LOW_SPEED_SUPPORTED,
+   USBD_DEV_FULL_SPEED           = USBD_DEV_FULL_SPEED_SUPPORTED,
+   USBD_DEV_HIGH_SPEED           = USBD_DEV_HIGH_SPEED_SUPPORTED,
    USBD_DEV_FULL_AND_HIGH_SPEED  = (USBD_DEV_HIGH_SPEED | USBD_DEV_FULL_SPEED),
    USBD_DEV_SPEED_MASK           = (USBD_DEV_HIGH_SPEED | USBD_DEV_FULL_SPEED | USBD_DEV_LOW_SPEED)
 }USBD_DEV_Speed_ET;
@@ -271,14 +284,20 @@ typedef struct USBD_DEV_Port_Handler_eXtended_Tag
    struct
    {
       USBD_DEV_PORT_Activate_Deactivate_HT      activate;
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
       USBD_DEV_PORT_Parse_EP_Desc_Variants_HT   ep_parse;
       USBD_DEV_PORT_Parse_Cfg_Desc_HT           cfg_parse;
+#endif
+#if((USBD_DEV_LOW_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED) && (USBD_DEV_FULL_SPEED_SUPPORTED != USBD_DEV_SUPPORTED_SPEED))
       USBD_DEV_PORT_Get_Speed_HT                get_supported_speed;
       USBD_DEV_PORT_Get_Speed_HT                get_current_speed;
+#endif
       USBD_DEV_PORT_Get_U16_Data_HT             get_device_status;
       USBD_DEV_PORT_Get_U16_Data_HT             get_frame_num;
       USBD_DEV_PORT_Get_EP_Desc_HT              get_ep0_low_full_speed;
+#if(USBD_DEV_SUPPORTED_SPEED >= USBD_DEV_HIGH_SPEED_SUPPORTED)
       USBD_DEV_PORT_Get_EP_Desc_HT              get_ep0_high_speed;
+#endif
    }handlers;
    struct
    {
@@ -333,9 +352,11 @@ typedef struct USBD_DEV_Params_eXtended_Tag
          }ep[USBD_MAX_NUM_ENDPOINTS];
          USB_Device_Desc_DT                  dev_desc;
          USBD_DEV_States_ET                  state;
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
          uint8_t                             num_used_endpoints;
          uint8_t                             ep_in_interface[USBD_MAX_NUM_ENDPOINTS];
          uint8_t                             ep_out_interface[USBD_MAX_NUM_ENDPOINTS];
+#endif
 #if(USBD_MAX_NUM_STRINGS > 0)
          uint8_t                             num_installed_strings;
 #endif

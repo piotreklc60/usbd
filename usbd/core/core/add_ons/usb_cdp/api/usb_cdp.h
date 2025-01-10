@@ -125,6 +125,7 @@
    ***************************************************************************** */
 
 #define USB_DEVICE_DESC_STRUCT_FILL(_bcdUSB, _bDeviceClass, _bDeviceSubclass, _bDeviceProtocol, _bMaxPacketSize0, _idVendor, _idProduct, _bcdDevice, _iManufacturer, _iProduct, _iSerialNumber, _bNumConfigurations) \
+{ \
    (uint8_t)(USB_DESC_TYPE_DEVICE_SIZE), \
    (uint8_t)(USB_DESC_TYPE_DEVICE),      \
    (uint16_t)(_bcdUSB),          \
@@ -138,7 +139,8 @@
    (uint8_t )(_iManufacturer),   \
    (uint8_t )(_iProduct),        \
    (uint8_t )(_iSerialNumber),   \
-   (uint8_t )(_bNumConfigurations)
+   (uint8_t )(_bNumConfigurations) \
+}
 
 #define USB_SET_CONFIGURATION_DESC_W_TOTAL_LENGTH(_desc, _wTotalLength)    (_desc)[2] = (_wTotalLength) & 0xFF; (_desc)[3] = ((_wTotalLength) >> 8) & 0xFF
 
@@ -154,6 +156,7 @@
    (uint8_t)((_max_current_mA) * 2)
 
 #define USB_CONFIGURATION_DESC_STRUCT_FILL(_wTotalLength, _bNumInterfaces, _bConfigurationValue, _iConfiguration, _self_powered, _remote_wakeup, _max_current_mA) \
+{ \
    (uint8_t)(USB_DESC_TYPE_CONFIGURATION_SIZE),\
    (uint8_t)(USB_DESC_TYPE_CONFIGURATION),     \
    { \
@@ -164,7 +167,8 @@
    (uint8_t)(_bConfigurationValue), \
    (uint8_t)(_iConfiguration),      \
    (uint8_t)(((_self_powered) & USB_CFG_DESC_SELF_POWERED_MASK) | ((_remote_wakeup) & USB_CFG_DESC_REMOTE_WAKEUP_MASK) | 0x80), \
-   (uint8_t)((_max_current_mA) * 2)
+   (uint8_t)((_max_current_mA) * 2) \
+}
 
 #define USB_INTERFACE_ASSOCIATION_DESC_TABLE_FILL(_bFirstInterface, _bInterfaceCount, _bFunctionClass, _bFunctionSubClass, _bFunctionProtocol, _iFunction) \
    (uint8_t)(USB_DESC_TYPE_INTERFACE_ASSOCIATION_SIZE), \
@@ -197,6 +201,7 @@
    (uint8_t)(_bInterval)
 
 #define USB_ENDPOINT_DESC_STRUCT_FILL(_ep_num, _ep_dir, _ep_type, _ep_sync/*iso*/, _ep_usage/*iso/irq3*/, _wMaxPacketSize, _bInterval) \
+{ \
    (uint8_t)(USB_DESC_TYPE_ENDPOINT_SIZE),  \
    (uint8_t)(USB_DESC_TYPE_ENDPOINT),       \
    (uint8_t)(((_ep_num) & USB_EP_DESC_ADDR_MASK) | ((_ep_dir) & USB_EP_DESC_DIR_MASK)), \
@@ -205,7 +210,8 @@
       (uint8_t)(_wMaxPacketSize & 0xFF),        \
       (uint8_t)(_wMaxPacketSize / 256)          \
    }, \
-   (uint8_t)(_bInterval)
+   (uint8_t)(_bInterval) \
+}
 
 
 typedef enum USB_EP_Direction_Enum_Tag

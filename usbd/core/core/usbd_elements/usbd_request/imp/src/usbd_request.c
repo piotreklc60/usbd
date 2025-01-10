@@ -115,8 +115,10 @@ static USBD_Bool_DT USBD_REQUEST_process_other_standard_requests(
       uint8_t ep_num,
       USBD_REQUEST_Req_DT *req)
 {
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
    USB_EP_Direction_ET dir;
    uint8_t req_ep_num;
+#endif
    uint8_t number;
    USBD_Bool_DT result;
 
@@ -140,6 +142,7 @@ static USBD_Bool_DT USBD_REQUEST_process_other_standard_requests(
             }
          }
       }
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
       else if(USBD_BMREQUESTTYPE_ENDPOINT == (req->bmRequestType & USBD_BMREQUESTTYPE_DESTINATION_MASK))
       {
          req_ep_num = req->wIndex & 0x007F;
@@ -163,6 +166,7 @@ static USBD_Bool_DT USBD_REQUEST_process_other_standard_requests(
             }
          }
       }
+#endif
       /* All other request types are processed by vendor irq */
       else
       {
@@ -555,8 +559,10 @@ static void USBD_REQUEST_get_descrptor(
 #ifdef USBD_USE_IOCMD
    const char *name = "";
 #endif
+#if(USBD_DEV_SUPPORTED_SPEED >= USBD_DEV_HIGH_SPEED_SUPPORTED)
    const USB_Endpoint_Desc_DT *ep0_desc;
    const USBD_DEV_Port_Handler_XT *port;
+#endif
    const uint8_t *desc;
    USBD_IO_Inout_Data_Size_DT size;
    uint16_t number;
@@ -599,6 +605,7 @@ static void USBD_REQUEST_get_descrptor(
 
                break;
 
+#if(USBD_DEV_SUPPORTED_SPEED >= USBD_DEV_HIGH_SPEED_SUPPORTED)
             case USB_DESC_TYPE_DEVICE_QUALIFIER:
                USBD_DEBUG_HI_1(USBD_DBG_REQ_PROCESSING, "value_H => desc type: %s", "DEVICE_QUALIFIER");
                if(USBD_CHECK_PORT_PTR(usbd))
@@ -688,6 +695,7 @@ static void USBD_REQUEST_get_descrptor(
                   }
                }
                break;
+#endif
 
             case USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION:
             case USB_DESC_TYPE_CONFIGURATION:

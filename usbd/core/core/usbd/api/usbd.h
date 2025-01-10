@@ -30,6 +30,10 @@
 #include "std_libs.h"
 #endif
 
+#ifndef USBD_PRECONFIG_BY_PORT_H_
+#include "usbd_preconfig_by_port.h"
+#endif
+
 #ifndef USBD_CFG_H_
 #include "usbd_cfg.h"
 #endif
@@ -65,7 +69,6 @@
 #elif(USBD_MAX_NUM_STRINGS > 255)
 #error "USBD_MAX_NUM_STRINGS too big!!! max possible is 255 endpoints!"
 #endif
-
 
 
 #ifndef USBD_DBG_H_

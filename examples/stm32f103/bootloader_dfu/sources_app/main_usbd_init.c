@@ -203,9 +203,10 @@ static void dfu_user_event(DFU_Params_XT *dfu, DFU_Event_ET event)
 void main_usbd_init(void)
 {
    USBD_DEV_Installation_Result_XT install_result;
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    USBD_DEV_Config_Desc_Check_Result_XT check_result;
+#endif
    USB_Device_Desc_DT dev;
-   uint8_t *desc;
 
    USBD_ENTER_FUNC(MAIN_APP);
 
@@ -214,9 +215,8 @@ void main_usbd_init(void)
 
    USB_SET_CONFIGURATION_DESC_W_TOTAL_LENGTH(config_desc_dfu, sizeof(config_desc_dfu));
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    check_result = USBD_DEV_Check_Config_Desc(&usbd, USBD_PORT_STM32_CAT_A, (uint8_t*)(&config_desc_dfu), sizeof(config_desc_dfu));
-
-   desc = config_desc_dfu;
 
    if(USBD_DEV_CONFIG_DESC_OK != check_result.result)
    {
@@ -225,8 +225,9 @@ void main_usbd_init(void)
          check_result.if_num, check_result.if_alt,
          check_result.ep_num, USB_EP_DIRECTION_OUT == check_result.ep_dir ? "OUT" : "IN");
    }
+#endif
 
-   USBDC_Bind_Config_Desc(&usbdc, desc);
+   USBDC_Bind_Config_Desc(&usbdc, config_desc_dfu);
 
    USBD_NOTICE_1(MAIN_APP, "init DFU as %s", "DFU");
 
