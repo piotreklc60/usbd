@@ -41,6 +41,34 @@
 #include "usbd_io_internal.h"
 #endif
 
+static void USBD_IO_up_call_reinit(USBD_IO_Pipe_Params_XT *pipe, USBD_Bool_DT state)
+{
+   const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
+
+   USBD_ENTER_FUNC(USBD_DBG_IO_ONOFF);
+
+   ep_handlers = pipe->up_link.handlers.handlers;
+   /**
+   * there is needed to enable upper layer before enabling port to prevent from situation
+   * when hardware will call IRQ when upper layer was not initialized yet
+   */
+   if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
+   {
+      if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
+      {
+         USBD_IO_CALL_UP_REINIT(
+            pipe->up_link.data.tp_params,
+            pipe->up_link.data.tp_owner,
+            ep_handlers,
+            USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
+            state,
+            USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
+      }
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IO_ONOFF);
+} /* USBD_IO_up_call_reinit */
+
 void USBD_IO_EP_Enable_And_Configure(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
@@ -50,7 +78,6 @@ void USBD_IO_EP_Enable_And_Configure(
    const USBD_IO_DOWN_Common_Handlers_XT *down_handlers;
 #endif
    USBD_IO_Pipe_Params_XT                *pipe;
-   const USBD_IO_UP_EP_Handlers_XT       *ep_handlers;
 #ifdef USBD_USE_IOCMD
    const char                            *dir_desc;
 #endif
@@ -81,24 +108,7 @@ void USBD_IO_EP_Enable_And_Configure(
        */
       USBD_IO_CORE_CLEAR_PIPE_ACTIVITY_MARKER(pipe);
 
-      ep_handlers = pipe->up_link.handlers.handlers;
-      /**
-      * there is needed to enable upper layer before enabling port to prevent from situation
-      * when hardware will call IRQ when upper layer was not initialized yet
-      */
-      if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-      {
-         if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
-         {
-            USBD_IO_CALL_UP_REINIT(
-               pipe->up_link.data.tp_params,
-               pipe->up_link.data.tp_owner,
-               ep_handlers,
-               USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
-               USBD_TRUE,
-               USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
-         }
-      }
+      USBD_IO_up_call_reinit(pipe, USBD_TRUE);
 
       /**
        * EP activity - used during TP setting
@@ -139,7 +149,6 @@ void USBD_IO_EP_Disable(
    const USBD_IO_DOWN_Common_Handlers_XT *down_handlers;
 #endif
    USBD_IO_Pipe_Params_XT                *pipe;
-   const USBD_IO_UP_EP_Handlers_XT       *ep_handlers;
 #ifdef USBD_USE_IOCMD
    const char                            *dir_desc;
 #endif
@@ -186,21 +195,7 @@ void USBD_IO_EP_Disable(
             }
          }
 #endif
-         ep_handlers = pipe->up_link.handlers.handlers;
-
-         if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-         {
-            if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
-            {
-               USBD_IO_CALL_UP_REINIT(
-                  pipe->up_link.data.tp_params,
-                  pipe->up_link.data.tp_owner,
-                  ep_handlers,
-                  USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
-                  USBD_FALSE,
-                  USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
-            }
-         }
+         USBD_IO_up_call_reinit(pipe, USBD_FALSE);
       }
 
       /**
@@ -246,7 +241,6 @@ void USBD_IO_Perform_Halt(
 {
    USBD_IO_Pipe_Params_XT *pipe;
    const USBD_IO_DOWN_Common_Handlers_XT *common_handlers;
-   const USBD_IO_UP_EP_Handlers_XT *ep_handlers;
 #ifdef USBD_USE_IOCMD
    const char *dir_desc;
 #endif
@@ -292,21 +286,7 @@ void USBD_IO_Perform_Halt(
          USBD_IO_CALL_DOWN_HALT(usbd, common_handlers, ep_num, dir, USBD_TRUE);
       }
 
-      ep_handlers = pipe->up_link.handlers.handlers;
-
-      if(USBD_CHECK_PTR(const USBD_IO_UP_EP_Handlers_XT, ep_handlers))
-      {
-         if(USBD_IO_UP_CHECK_REINIT_HANDLER(ep_handlers))
-         {
-            USBD_IO_CALL_UP_REINIT(
-               pipe->up_link.data.tp_params,
-               pipe->up_link.data.tp_owner,
-               ep_handlers,
-               USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),
-               state,
-               USBD_IO_UP_PIPE_GET_RECURSIVE_FLAGS(pipe));
-         }
-      }
+      USBD_IO_up_call_reinit(pipe, state);
 
       /**
       * if state is false (halt shall be cleared) then "DOWN_CALL" shall be called
@@ -636,12 +616,18 @@ void *USBD_IO_UP_Get_IN_TP_Owner(
    return result;
 } /* USBD_IO_UP_Get_IN_TP_Owner */
 
-USBD_Bool_DT USBD_IO_UP_Trigger_IN(
+USBD_Bool_DT USBD_IO_UP_Trigger_INOUT(
       USBD_Params_XT *usbd,
-      uint8_t ep_num)
+      uint8_t ep_num,
+      USB_EP_Direction_ET dir,
+      USBD_Bool_DT dont_wait)
 {
    const USBD_IO_DOWN_Common_Handlers_XT *common_handlers;
-   USBD_Bool_DT result;
+   USBD_IO_Pipe_Params_XT                *pipe;
+#ifdef USBD_USE_IOCMD
+   const char                            *dir_desc;
+#endif
+   USBD_Bool_DT                           result;
 
    USBD_ENTER_FUNC(USBD_DBG_IO_PROCESSING);
 
@@ -649,26 +635,41 @@ USBD_Bool_DT USBD_IO_UP_Trigger_IN(
 
    if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
    {
+      if(USB_EP_DIRECTION_OUT == dir)
+      {
+#ifdef USBD_USE_IOCMD
+         dir_desc = "OUT";
+#endif
+         pipe = USBD_IO_GET_OUT_PIPE_PARAMS(usbd, ep_num);
+      }
+      else
+      {
+#ifdef USBD_USE_IOCMD
+         dir_desc = "IN";
+#endif
+         pipe = USBD_IO_GET_IN_PIPE_PARAMS(usbd, ep_num);
+      }
+
       if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd)
-         && USBD_BOOL_IS_TRUE(USBD_IO_CORE_GET_IN_EP_ACTIVITY_MARKER(usbd, ep_num)))
+         && USBD_BOOL_IS_TRUE(USBD_IO_CORE_GET_PIPE_ACTIVITY_MARKER(pipe)))
       {
          common_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
 
          if(USBD_IO_DOWN_CHECK_TRIGGER_HANDLER(common_handlers))
          {
-            USBD_INFO_LO_2(USBD_DBG_IO_PROCESSING, "%s on EP: %d", "trigger IN", ep_num);
+            USBD_INFO_LO_3(USBD_DBG_IO_PROCESSING, "%s %s on EP: %d", "trigger", dir_desc, ep_num);
 
-            result = USBD_IO_CALL_DOWN_TRIGGER(usbd, common_handlers, ep_num, USB_EP_DIRECTION_IN, USBD_FALSE);
+            result = USBD_IO_CALL_DOWN_TRIGGER(usbd, common_handlers, ep_num, dir, dont_wait);
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!", "trigger IN", ep_num, "no port handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!", "trigger", dir_desc, ep_num, "no port handler");
          }
       }
       else
       {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "trigger IN", ep_num, "ep not active/no port handlers");
+         USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+            "trigger", dir_desc, ep_num, "ep not active/no port handlers");
       }
    }
    else
@@ -679,7 +680,7 @@ USBD_Bool_DT USBD_IO_UP_Trigger_IN(
    USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
 
    return result;
-} /* USBD_IO_UP_Trigger_IN */
+} /* USBD_IO_UP_Trigger_INOUT */
 
 USBD_IO_Inout_Data_Size_DT USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(
       USBD_Params_XT *usbd,
@@ -707,14 +708,14 @@ USBD_IO_Inout_Data_Size_DT USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS,
-               "%s on EP: %d FAILED! %s!", "get_ep_buffered_size IN", ep_num, "no port handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+               "get_ep_buffered_size", "IN", ep_num, "no port handler");
          }
       }
       else
       {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "get_ep_buffered_size IN", ep_num, "ep not active/no port handlers");
+         USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+            "get_ep_buffered_size", "IN", ep_num, "ep not active/no port handlers");
       }
    }
    else
@@ -728,52 +729,6 @@ USBD_IO_Inout_Data_Size_DT USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(
 
    return result;
 } /* USBD_IO_UP_EP_IN_Get_Buffered_Data_Size */
-
-USBD_Bool_DT USBD_IO_UP_Trigger_OUT(
-      USBD_Params_XT *usbd,
-      uint8_t ep_num,
-      USBD_Bool_DT dont_wait)
-{
-   const USBD_IO_DOWN_Common_Handlers_XT *common_handlers;
-   USBD_Bool_DT result;
-
-   USBD_ENTER_FUNC(USBD_DBG_IO_PROCESSING);
-
-   result = USBD_FALSE;
-
-   if((ep_num < USBD_MAX_NUM_ENDPOINTS) && (USBD_CHECK_PTR(USBD_Params_XT, usbd)))
-   {
-      if(USBD_IO_DOWN_CHECK_COMMON_HANDLERS_PTR(usbd)
-         && USBD_BOOL_IS_TRUE(USBD_IO_CORE_GET_OUT_EP_ACTIVITY_MARKER(usbd, ep_num)))
-      {
-         common_handlers = USBD_IO_DOWN_GET_COMMON_HANDLERS_PTR(usbd);
-
-         if(USBD_IO_DOWN_CHECK_TRIGGER_HANDLER(common_handlers))
-         {
-            USBD_INFO_LO_2(USBD_DBG_IO_PROCESSING, "%s on EP: %d", "trigger OUT", ep_num);
-
-            result = USBD_IO_CALL_DOWN_TRIGGER(usbd, common_handlers, ep_num, USB_EP_DIRECTION_OUT, dont_wait);
-         }
-         else
-         {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!", "trigger OUT", ep_num, "no port handler");
-         }
-      }
-      else
-      {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "trigger OUT", ep_num, "ep not active/no port handlers");
-      }
-   }
-   else
-   {
-      USBD_WARN_2(USBD_DBG_IO_INVALID_PARAMS, "function invalid parameters! ep_num: %d, usbd: %p", ep_num, usbd);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_IO_PROCESSING);
-
-   return result;
-} /* USBD_IO_UP_Trigger_OUT */
 
 USBD_IO_Inout_Data_Size_DT USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(
       USBD_Params_XT *usbd,
@@ -802,14 +757,14 @@ USBD_IO_Inout_Data_Size_DT USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS,
-               "%s on EP: %d FAILED! %s!", "get_ep_waiting_size OUT", ep_num, "no port handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+               "get_ep_waiting_size", "OUT", ep_num, "no port handler");
          }
       }
       else
       {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "get_ep_waiting_size OUT", ep_num, "ep not active/no port handlers");
+         USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+            "get_ep_waiting_size", "OUT", ep_num, "ep not active/no port handlers");
       }
    }
    else
@@ -859,11 +814,11 @@ void USBD_IO_UP_Respond_Stall(
          {
             if(USB_EP_DIRECTION_OUT == dir)
             {
-               USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!", "stall OUT", ep_num, &"ep not active/no port handler"[14]);
+               USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!", "stall", "OUT", ep_num, &"ep not active/no port handler"[14]);
             }
             else
             {
-               USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!", "stall IN",  ep_num, &"ep not active/no port handler"[14]);
+               USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!", "stall", "IN",  ep_num, &"ep not active/no port handler"[14]);
             }
          }
       }
@@ -871,13 +826,13 @@ void USBD_IO_UP_Respond_Stall(
       {
          if(USB_EP_DIRECTION_OUT == dir)
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-               "stall OUT", ep_num, "ep not active/no port handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+               "stall", "OUT", ep_num, "ep not active/no port handler");
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-               "stall IN", ep_num, "ep not active/no port handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+               "stall", "IN", ep_num, "ep not active/no port handler");
 
          }
       }
@@ -1077,14 +1032,14 @@ void USBD_IO_DOWN_Process_IN_Data_Event(
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-               "up data event IN", ep_num, "no handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+               "up data event", "IN", ep_num, "no handler");
          }
       }
       else
       {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "up ack IN", ep_num, "no handlers collection");
+         USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+            "up ack", "IN", ep_num, "no handlers collection");
       }
    }
    else
@@ -1127,14 +1082,14 @@ void USBD_IO_DOWN_Process_OUT_Data_Event(
          }
          else
          {
-            USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-               "up data event OUT", ep_num, "no handler");
+            USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+               "up data event", "OUT", ep_num, "no handler");
          }
       }
       else
       {
-         USBD_NOTICE_3(USBD_DBG_IO_INVALID_PARAMS, "%s on EP: %d FAILED! %s!",
-            "up ack OUT", ep_num, "no handlers collection");
+         USBD_NOTICE_4(USBD_DBG_IO_INVALID_PARAMS, "%s %s on EP: %d FAILED! %s!",
+            "up ack", "OUT", ep_num, "no handlers collection");
       }
    }
    else

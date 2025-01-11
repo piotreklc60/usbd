@@ -216,7 +216,7 @@ static void set_dummy_cfg(USB_Configuration_Desc_DT *desc)
    desc->bMaxPower = 50;
 }
 
-static void test_attached(USBD_Params_XT *usbd)
+static void test_powered(USBD_Params_XT *usbd)
 {
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
@@ -253,26 +253,26 @@ static void test_attached(USBD_Params_XT *usbd)
    }
    activity = 0;
 
-   USBD_DEV_Attached(usbd, false);
+   USBD_DEV_Powered(usbd, false);
 
    if(USBD_DEV_STATE_OFF != USBD_DEV_Get_State(usbd))
    {
-      printf("incorrect state after USBD_DEV_Attached(usbd, false)!\n\r");
+      printf("incorrect state after USBD_DEV_Powered(usbd, false)!\n\r");
       REPORT_ERROR();
    }
 
-   USBD_DEV_Attached(usbd, true);
+   USBD_DEV_Powered(usbd, true);
 
-   if(USBD_DEV_STATE_ATTACHED != USBD_DEV_Get_State(usbd))
+   if(USBD_DEV_STATE_POWERED != USBD_DEV_Get_State(usbd))
    {
-      printf("incorrect state after USBD_DEV_Attached(usbd, true)!\n\r");
+      printf("incorrect state after USBD_DEV_Powered(usbd, true)!\n\r");
       REPORT_ERROR();
    }
 
    activity = 0;
    USBD_DEV_Activate(usbd, &port);
 
-   if(USBD_DEV_STATE_ATTACHED != USBD_DEV_Get_State(usbd))
+   if(USBD_DEV_STATE_POWERED != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Activate(usbd)!\n\r");
       REPORT_ERROR();
@@ -285,34 +285,9 @@ static void test_attached(USBD_Params_XT *usbd)
    }
    activity = 0;
 
-   USBD_DEV_Attached(usbd, false);
-
-   if(USBD_DEV_STATE_OFF != USBD_DEV_Get_State(usbd))
-   {
-      printf("incorrect state after USBD_DEV_Attached(usbd, false)!\n\r");
-      REPORT_ERROR();
-   }
-
-   USBD_DEV_Attached(usbd, true);
-
-   if(USBD_DEV_STATE_ATTACHED != USBD_DEV_Get_State(usbd))
-   {
-      printf("incorrect state after USBD_DEV_Attached(usbd, true)!\n\r");
-      REPORT_ERROR();
-   }
-
-   USBD_EXIT_FUNC(MAIN_APP_TEST);
-}
-
-static void test_powered(USBD_Params_XT *usbd)
-{
-   USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-   test_attached(usbd);
-
    USBD_DEV_Powered(usbd, false);
 
-   if(USBD_DEV_STATE_ATTACHED != USBD_DEV_Get_State(usbd))
+   if(USBD_DEV_STATE_OFF != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Powered(usbd, false)!\n\r");
       REPORT_ERROR();
@@ -320,7 +295,7 @@ static void test_powered(USBD_Params_XT *usbd)
 
    USBD_DEV_Powered(usbd, true);
 
-   if((USBD_DEV_STATE_ATTACHED | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
+   if(USBD_DEV_STATE_POWERED != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Powered(usbd, true)!\n\r");
       REPORT_ERROR();
@@ -371,7 +346,7 @@ static void test_reset(USBD_Params_XT *usbd)
    test_compose_configs(usbd);
    USBD_DEV_Reset(usbd);
 
-   if((USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Reset(usbd)!\n\r");
       REPORT_ERROR();
@@ -388,7 +363,7 @@ static void test_addressed(USBD_Params_XT *usbd)
 
    USBD_DEV_Addressed(usbd, 2);
 
-   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Addressed(usbd)!\n\r");
       REPORT_ERROR();
@@ -405,7 +380,7 @@ static void test_configured(USBD_Params_XT *usbd)
 
    USBD_DEV_Configured(usbd, 0, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
 
-   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Configured(usbd, 0, NULL)!\n\r");
       REPORT_ERROR();
@@ -413,7 +388,7 @@ static void test_configured(USBD_Params_XT *usbd)
 
    USBD_DEV_Configured(usbd, 1, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
 
-   if((USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Configured(usbd, 1, NULL)!\n\r");
       REPORT_ERROR();
@@ -421,7 +396,7 @@ static void test_configured(USBD_Params_XT *usbd)
 
    USBD_DEV_Configured(usbd, 0, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
 
-   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Configured(usbd, 0, NULL)!\n\r");
       REPORT_ERROR();
@@ -429,7 +404,7 @@ static void test_configured(USBD_Params_XT *usbd)
 
    USBD_DEV_Configured(usbd, 1, USBD_MAKE_INVALID_HANDLER(USBD_DEV_Set_Configuration_Respond_HT));
 
-   if((USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Configured(usbd, 1, NULL)!\n\r");
       REPORT_ERROR();
@@ -446,7 +421,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_Suspended(usbd);
 
-   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Suspended(usbd)!\n\r");
       REPORT_ERROR();
@@ -454,7 +429,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_SOF_Received(usbd);
 
-   if((USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_SOF_Received(usbd)!\n\r");
       REPORT_ERROR();
@@ -462,7 +437,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_Suspended(usbd);
 
-   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Suspended(usbd)!\n\r");
       REPORT_ERROR();
@@ -470,7 +445,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_SOF_Received(usbd);
 
-   if((USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_SOF_Received(usbd)!\n\r");
       REPORT_ERROR();
@@ -482,7 +457,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_Suspended(usbd);
 
-   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Suspended(usbd)!\n\r");
       REPORT_ERROR();
@@ -490,7 +465,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_SOF_Received(usbd);
 
-   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_SOF_Received(usbd)!\n\r");
       REPORT_ERROR();
@@ -498,7 +473,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_Suspended(usbd);
 
-   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Suspended(usbd)!\n\r");
       REPORT_ERROR();
@@ -506,7 +481,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_SOF_Received(usbd);
 
-   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_SOF_Received(usbd)!\n\r");
       REPORT_ERROR();
@@ -518,7 +493,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_Suspended(usbd);
 
-   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Suspended(usbd)!\n\r");
       REPORT_ERROR();
@@ -526,7 +501,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_SOF_Received(usbd);
 
-   if((USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_SOF_Received(usbd)!\n\r");
       REPORT_ERROR();
@@ -534,7 +509,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_Suspended(usbd);
 
-   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_SUSPENDED | USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_Suspended(usbd)!\n\r");
       REPORT_ERROR();
@@ -542,7 +517,7 @@ static void test_suspended(USBD_Params_XT *usbd)
 
    USBD_DEV_SOF_Received(usbd);
 
-   if((USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED) != USBD_DEV_Get_State(usbd))
+   if((USBD_DEV_STATE_CONFIGURED | USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED) != USBD_DEV_Get_State(usbd))
    {
       printf("incorrect state after USBD_DEV_SOF_Received(usbd)!\n\r");
       REPORT_ERROR();

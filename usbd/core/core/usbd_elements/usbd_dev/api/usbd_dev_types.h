@@ -56,7 +56,7 @@
 typedef enum USBD_DEV_States_Enum_Tag
 {
    USBD_DEV_STATE_OFF            = 0,
-   USBD_DEV_STATE_ATTACHED       = (1 << 7),
+   /* USBD_DEV_STATE_ATTACHED is not recognizable electrically so no need to define it */
    USBD_DEV_STATE_POWERED        = (1 << 6),
    USBD_DEV_STATE_DEFAULT        = (1 << 5),
    USBD_DEV_STATE_ADDRESSED      = (1 << 4),

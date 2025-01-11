@@ -252,10 +252,6 @@ static void print_usbd_state(USBD_Params_XT *usbd)
 
    printf("usbd state: ");
 
-   if(USBD_DEV_STATE_ATTACHED == (USBD_DEV_STATE_ATTACHED & state))
-   {
-      printf("USBD_DEV_STATE_ATTACHED");
-   }
    if(USBD_DEV_STATE_POWERED == (USBD_DEV_STATE_POWERED & state))
    {
       printf(" | USBD_DEV_STATE_POWERED");

@@ -511,21 +511,6 @@ USBD_DEV_Speed_ET USBD_DEV_Get_Current_Speed(
 
 
 /**
- * Sets device to attached/detached state.
- * Shall be called by port layer when hardware detects that device has been attached/detached.
- * If hardware doesn't support attached/detached detection then this function doesn't
- * need to be used.
- *
- * Called only by low level layer (port)
- *
- * \param usbd pointer to usb device
- * \param state USBD_TRUE if device has been attached, USBD_FALSE otherwise
- */
-void USBD_DEV_Attached(
-      USBD_Params_XT *usbd,
-      USBD_Bool_DT state);
-
-/**
  * Sets device to powered/not powered state.
  * Shall be called by port layer when hardware detects 5V on VBUS line
  * If hardware doesn't support powered/unpowered detection then this function

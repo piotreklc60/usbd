@@ -34,8 +34,6 @@
  * USBD DEV part
  ********************************************************************************************************************************/
 
-void port_test_attached(void);
-void port_test_detached(void);
 void port_test_powered(void);
 void port_test_unpowered(void);
 void port_test_reset(void);

@@ -129,17 +129,15 @@ static void USBD_DEV_state_change(USBD_Params_XT *usbd, uint8_t new_state, uint1
 #endif
 #define IOCMD__LINE__LOCAL      line
 #endif
-      USBD_INFO_HI_6(USBD_DBG_DEV_STATE, "DEV state changed before: %s%s%s%s%s%s",
-         (0 == old_state) ? "OFF        " : ((0 != (old_state & USBD_DEV_STATE_ATTACHED))   ? "ATTACHED   " : "           "),
-         (0 != (old_state & USBD_DEV_STATE_POWERED))    ? "POWERED    " : "           ",
+      USBD_INFO_HI_5(USBD_DBG_DEV_STATE, "DEV state changed before: %s%s%s%s%s",
+         (0 == old_state) ? "OFF        " : (0 != (old_state & USBD_DEV_STATE_POWERED))    ? "POWERED    " : "           ",
          (0 != (old_state & USBD_DEV_STATE_DEFAULT))    ? "DEFAULT    " : "           ",
          (0 != (old_state & USBD_DEV_STATE_ADDRESSED))  ? "ADDRESSED  " : "           ",
          (0 != (old_state & USBD_DEV_STATE_CONFIGURED)) ? "CONFIGURED " : "           ",
          (0 != (old_state & USBD_DEV_STATE_SUSPENDED))  ? "SUSPENDED  " : "           "
          );
-      USBD_INFO_HI_6(USBD_DBG_DEV_STATE, "DEV state changed after : %s%s%s%s%s%s",
-         (0 == new_state) ? "OFF        " : ((0 != (new_state & USBD_DEV_STATE_ATTACHED))   ? "ATTACHED   " : "           "),
-         (0 != (new_state & USBD_DEV_STATE_POWERED))    ? "POWERED    " : "           ",
+      USBD_INFO_HI_5(USBD_DBG_DEV_STATE, "DEV state changed after : %s%s%s%s%s",
+         (0 == new_state) ? "OFF        " : (0 != (new_state & USBD_DEV_STATE_POWERED))    ? "POWERED    " : "           ",
          (0 != (new_state & USBD_DEV_STATE_DEFAULT))    ? "DEFAULT    " : "           ",
          (0 != (new_state & USBD_DEV_STATE_ADDRESSED))  ? "ADDRESSED  " : "           ",
          (0 != (new_state & USBD_DEV_STATE_CONFIGURED)) ? "CONFIGURED " : "           ",
@@ -1780,7 +1778,7 @@ USBD_Bool_DT USBD_DEV_Deactivate(
             if(USBD_BOOL_IS_TRUE(usbd->dev.core.data.active))
             {
 #if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_DETACHED_SUPPORTED))
-               USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_DETACHED);
+               USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_UNPOWERED);
 #endif
             }
 
@@ -1907,46 +1905,6 @@ USBD_DEV_Speed_ET USBD_DEV_Get_Current_Speed(
 
 
 
-void USBD_DEV_Attached(
-      USBD_Params_XT *usbd,
-      USBD_Bool_DT state)
-{
-   USBD_ENTER_FUNC(USBD_DBG_DEV_ONOFF);
-
-   USBD_NOTICE_1(USBD_DBG_DEV_ONOFF, "DEV %s", USBD_BOOL_IS_TRUE(state) ? "attached" : "detached");
-
-   if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
-   {
-      USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, 0);
-
-      if(USBD_BOOL_IS_TRUE(state))
-      {
-         USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_FALSE);
-
-#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_ATTACHED_SUPPORTED))
-         USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_ATTACHED);
-#endif
-         USBD_DEV_state_change(usbd, USBD_DEV_STATE_ATTACHED, __LINE__);
-      }
-      else
-      {
-#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_DETACHED_SUPPORTED))
-         /**
-         * check if any configuration is currently active. In this situation
-         * previously used configuration must be turned off at first
-         */
-         USBD_DEV_unconfigure(usbd);
-         USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_DETACHED);
-#endif
-         USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_FALSE);
-
-         USBD_DEV_state_change(usbd, USBD_DEV_STATE_OFF, __LINE__);
-      }
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_DEV_ONOFF);
-} /* USBD_DEV_Attached */
-
 void USBD_DEV_Powered(
       USBD_Params_XT *usbd,
       USBD_Bool_DT state)
@@ -1964,7 +1922,7 @@ void USBD_DEV_Powered(
 #if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_POWERED_SUPPORTED))
          USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_POWERED);
 #endif
-         USBD_DEV_state_change(usbd, USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED, __LINE__);
+         USBD_DEV_state_change(usbd, USBD_DEV_STATE_POWERED, __LINE__);
       }
       else
       {
@@ -1978,7 +1936,7 @@ void USBD_DEV_Powered(
 #endif
          USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_TRUE);
 
-         USBD_DEV_state_change(usbd, USBD_DEV_STATE_ATTACHED, __LINE__);
+         USBD_DEV_state_change(usbd, USBD_DEV_STATE_OFF, __LINE__);
       }
    }
 
@@ -2014,11 +1972,11 @@ void USBD_DEV_Reset(
          */
          USBD_DEV_unconfigure(usbd);
 
-         USBD_DEV_state_change(usbd, USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED, __LINE__);
+         USBD_DEV_state_change(usbd, USBD_DEV_STATE_POWERED, __LINE__);
          USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_RESET);
 #endif
 
-         USBD_DEV_state_change(usbd, USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED, __LINE__);
+         USBD_DEV_state_change(usbd, USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED, __LINE__);
 
          usbd->dev.core.data.dev_desc.iManufacturer = 0;
          usbd->dev.core.data.dev_desc.iProduct      = 0;
@@ -2149,7 +2107,7 @@ void USBD_DEV_Addressed(
       USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, 1);
 
       USBD_DEV_state_change(
-         usbd, USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED, __LINE__);
+         usbd, USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED, __LINE__);
    }
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_ONOFF);
@@ -2319,7 +2277,7 @@ USBD_Bool_DT USBD_DEV_Configured(
 
             USBD_DEV_state_change(
                usbd,
-               USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED | USBD_DEV_STATE_ATTACHED,
+               USBD_DEV_STATE_ADDRESSED | USBD_DEV_STATE_DEFAULT | USBD_DEV_STATE_POWERED,
                __LINE__);
 
             /** set new configuration */
@@ -2343,8 +2301,7 @@ USBD_Bool_DT USBD_DEV_Configured(
                      USBD_DEV_STATE_CONFIGURED
                         | USBD_DEV_STATE_ADDRESSED
                         | USBD_DEV_STATE_DEFAULT
-                        | USBD_DEV_STATE_POWERED
-                        | USBD_DEV_STATE_ATTACHED,
+                        | USBD_DEV_STATE_POWERED,
                      __LINE__);
                }
                else

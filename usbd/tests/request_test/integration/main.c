@@ -441,10 +441,6 @@ void prepare_device(USBD_Params_XT *usbd, uint8_t step)
       REPORT_ERROR();
    }
 
-   if(step > 0)
-   {
-      port_test_attached();
-   }
    if(step > 1)
    {
       port_test_powered();

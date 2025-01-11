@@ -522,14 +522,6 @@ static void report_event_type(USBD_EVENT_Reason_ET reason)
 {
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-   if(USBD_EVENT_REASON_DETACHED == reason)
-   {
-      printf("testing \"USBD_EVENT_REASON_DETACHED\" event failed!\n\r");
-   }
-   if(USBD_EVENT_REASON_ATTACHED == reason)
-   {
-      printf("testing \"USBD_EVENT_REASON_ATTACHED\" event failed!\n\r");
-   }
    if(USBD_EVENT_REASON_UNPOWERED == reason)
    {
       printf("testing \"USBD_EVENT_REASON_UNPOWERED\" event failed!\n\r");
@@ -802,16 +794,6 @@ void test_events_states(USBD_Params_XT *usbd)
    test_compose_events(usbd);
 
    activate_and_test(usbd);
-
-   clear_event_markers();
-   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Attached", "false");
-   USBD_DEV_Attached(usbd, USBD_FALSE);
-   check_event_markers_cold(USBD_EVENT_REASON_DETACHED);
-
-   clear_event_markers();
-   USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Attached", "true");
-   USBD_DEV_Attached(usbd, USBD_TRUE);
-   check_event_markers_cold(USBD_EVENT_REASON_ATTACHED);
 
    clear_event_markers();
    USBD_NOTICE_2(MAIN_APP_TEST, "test %s %s", "USBD_DEV_Powered", "false");

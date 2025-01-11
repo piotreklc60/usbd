@@ -603,10 +603,6 @@ void prepare_device(USBD_Params_XT *usbd, uint8_t step)
 
    activity = 0;
 
-   if(step > 0)
-   {
-      USBD_DEV_Attached(usbd, true);
-   }
    if(step > 1)
    {
       USBD_DEV_Powered(usbd, true);

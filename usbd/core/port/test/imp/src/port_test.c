@@ -357,38 +357,6 @@ const USBD_DEV_Port_Handler_XT *USBD_Port_Test_Get_Port(void)
  * ADDDITIONAL EXTERNAL INTERFACE USED FOR TESTING
  */
 
-void port_test_attached(void)
-{
-   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
-
-   if(USBD_CHECK_PTR(USBD_Params_XT, port_test_usbd))
-   {
-      USBD_DEV_Attached(port_test_usbd, USBD_TRUE);
-   }
-   else
-   {
-      USBD_WARN_1(USBD_DBG_PORT_INVALID_PARAMS, "function invalid parameter! usbd: %p", port_test_usbd);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
-} /* port_test_attached */
-
-void port_test_detached(void)
-{
-   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
-
-   if(USBD_CHECK_PTR(USBD_Params_XT, port_test_usbd))
-   {
-      USBD_DEV_Attached(port_test_usbd, USBD_FALSE);
-   }
-   else
-   {
-      USBD_WARN_1(USBD_DBG_PORT_INVALID_PARAMS, "function invalid parameter! usbd: %p", port_test_usbd);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
-} /* port_test_detached */
-
 void port_test_powered(void)
 {
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);

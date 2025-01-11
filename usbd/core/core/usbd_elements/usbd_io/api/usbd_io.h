@@ -199,6 +199,8 @@ void *USBD_IO_UP_Get_IN_TP_Owner(
 
 
 /**
+ * For IN:
+ *
  * Starts IN transaction over specified IN endpoint.
  * Also used to send STATUS to HOST (STATUS is DATA IN frame with no data - zero length data).
  * Direction parameter is not needed because "IN" transaction can be performed only on IN endpoint type.
@@ -210,28 +212,12 @@ void *USBD_IO_UP_Get_IN_TP_Owner(
  *
  * \param usbd pointer to usb device
  * \param ep_num endpoint number
+ * \param dir direction. USB_EP_DIRECTION_IN shall be provided.
+ * \param dont_wait NOT USED
  * \return USBD_TRUE if triggering was possible, USBD_FALSE otherwise
- */
-USBD_Bool_DT USBD_IO_UP_Trigger_IN(
-      USBD_Params_XT *usbd,
-      uint8_t ep_num);
-
-/**
- * Gets size of data which has been loaded to tx buffers but has not yet been send to HOST.
- * Returns buffered data size or -1 if there is no IN data in tx buffers.
  *
- * Called by upper level layer
  *
- * \param usbd pointer to usb device
- * \param ep_num endpoint number
- */
-USBD_IO_Inout_Data_Size_DT USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(
-      USBD_Params_XT *usbd,
-      uint8_t ep_num);
-
-
-
-/**
+ * For OUT:
  * Triggers receiving next OUT packets through specific endpoint.
  * Direction parameter is not needed because "read" can be performed only on OUT endpoint.
  *
@@ -239,6 +225,7 @@ USBD_IO_Inout_Data_Size_DT USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(
  *
  * \param usbd pointer to usb device
  * \param ep_num endpoint number
+ * \param dir direction. USB_EP_DIRECTION_OUT shall be provided.
  * \param dont_wait if USBD_TRUE then receiving next packets shall be allowed even "wait" condition is met,
  *      if USBD_FALSE then endpoint will lock receiving next packets if "wait" condtion is met. Not used for IN transactions.
  *      Wait condition occurs mandatorily, when:
@@ -257,10 +244,24 @@ USBD_IO_Inout_Data_Size_DT USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(
  *         for receiving next packets and data event is called.
  * \return USBD_TRUE if triggering was possible, USBD_FALSE otherwise
  */
-USBD_Bool_DT USBD_IO_UP_Trigger_OUT(
+USBD_Bool_DT USBD_IO_UP_Trigger_INOUT(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
+      USB_EP_Direction_ET dir,
       USBD_Bool_DT dont_wait);
+
+/**
+ * Gets size of data which has been loaded to tx buffers but has not yet been send to HOST.
+ * Returns buffered data size or -1 if there is no IN data in tx buffers.
+ *
+ * Called by upper level layer
+ *
+ * \param usbd pointer to usb device
+ * \param ep_num endpoint number
+ */
+USBD_IO_Inout_Data_Size_DT USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(
+      USBD_Params_XT *usbd,
+      uint8_t ep_num);
 
 /**
  * Gets endpoint OUT waiting data size or -1 if there is no OUT packet waiting.

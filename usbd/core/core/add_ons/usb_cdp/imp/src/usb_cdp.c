@@ -32,7 +32,7 @@
 #endif
 
 
-//#if((USBD_MAX_NUM_ENDPOINTS > 1) || (USBD_ALTERNATE_SETTING_SUPPORT == USBD_FEATURE_ON) || (USBD_UPPER_LAYER_SUPPORT == USBD_FEATURE_ON) || (!USBD_CDP_USED_JUST_BY_USBD_CORE))
+
 uint16_t USB_CDP_Get_Config_Desc_Total_Length(const uint8_t *desc)
 {
    uint16_t result = 0;
@@ -116,7 +116,7 @@ uint16_t USB_CDP_Find_Next_Interface (
    USB_EXIT_FUNC(USB_DBG_CDP);
 
    return result;
-} /* USB_CDP_Find_Next_Interface */
+} /* USB_CDP_Find_Interface */
 
 uint16_t USB_CDP_Find_Endpoint (
       const uint8_t *desc,
@@ -127,19 +127,16 @@ uint16_t USB_CDP_Find_Endpoint (
 {
    uint16_t result = desc_size;
    uint16_t pos;
-   uint8_t direction;
 
    USB_ENTER_FUNC(USB_DBG_CDP);
 
-   direction = (USB_EP_DIRECTION_OUT == dir) ? USB_EP_DESC_DIR_OUT : USB_EP_DESC_DIR_IN;
-
-   if((USBD_CHECK_PTR(uint8_t, desc)) && (ep_num < USBD_MAX_NUM_ENDPOINTS) && (start_address < desc_size))
+   if((USBD_CHECK_PTR(uint8_t, desc)) && (start_address < desc_size))
    {
       for(pos = start_address + desc[start_address]; pos < desc_size; pos += desc[pos])
       {
          if(USB_DESC_TYPE_ENDPOINT == desc[pos + 1])
          {
-            if((ep_num == (desc[pos + 2] & 0x0F)) && (direction == (desc[pos + 2] & USB_EP_DESC_DIR_MASK)))
+            if((ep_num == (desc[pos + 2] & 0x0F)) && ((uint8_t)dir == (desc[pos + 2] & USB_EP_DESC_DIR_MASK)))
             {
                result = pos;
                break;
@@ -157,7 +154,6 @@ uint16_t USB_CDP_Find_Endpoint (
    return result;
 } /* USB_CDP_Find_Endpoint */
 
-//#if((USBD_MAX_NUM_ENDPOINTS > 1) || (!USBD_CDP_USED_JUST_BY_USBD_CORE))
 uint16_t USB_CDP_Find_Next_Endpoint (
       const uint8_t *desc,
       uint16_t desc_size,
@@ -188,50 +184,6 @@ uint16_t USB_CDP_Find_Next_Endpoint (
 
    return result;
 } /* USB_CDP_Find_Next_Endpoint */
-
-void USB_CDP_Create_EP_Max_Used_Packet_Size_Table (uint8_t *descriptor, uint16_t *table) {
-   union {
-      uint16_t uint16;
-      struct {
-         uint8_t L;
-         uint8_t H;
-      }elems;
-   }total_length, max_packet_size;
-   uint16_t position = 0;
-   uint8_t ep_number;
-
-   USB_ENTER_FUNC(USB_DBG_CDP);
-
-   total_length.elems.L = descriptor[2];
-   total_length.elems.H = descriptor[3];
-
-   for(ep_number = 0; ep_number < USBD_MAX_NUM_ENDPOINTS; ep_number++) {
-      table[ep_number] = 0;
-   }
-
-   do {
-      if(descriptor[position + 1] == USB_DESC_TYPE_ENDPOINT) {
-         ep_number = descriptor[position + 2] & 0x0F;
-         if(ep_number < USBD_MAX_NUM_ENDPOINTS) {
-            max_packet_size.elems.L = descriptor[position + 4];
-            max_packet_size.elems.H = descriptor[position + 5] & 0x07;
-            if(table[ep_number] < max_packet_size.uint16) {
-               table[ep_number] = max_packet_size.uint16;
-            }
-         }
-      }
-      position += descriptor[position];
-      if(0 == descriptor[position])
-      {
-         break;
-      }
-   } while (position < total_length.uint16);
-
-   USB_EXIT_FUNC(USB_DBG_CDP);
-} /* USB_CDP_Create_EP_Max_Used_Packet_Size_Table */
-//#endif
-//#endif
-
 #ifdef USB_CDP_POST_IMP_INCLUDE
 #include "usb_cdp_post_imp.h"
 #endif

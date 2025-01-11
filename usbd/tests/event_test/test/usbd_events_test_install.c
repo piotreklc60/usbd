@@ -266,8 +266,8 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
       REPORT_ERROR();
    }
 
-   event_params[0] = USBD_EVENT_Install(usbd, event_1, USBD_EVENT_REASON_DETACHED);
-   event_params[1] = USBD_EVENT_Install(usbd, event_2, (USBD_EVENT_REASON_ATTACHED | USBD_EVENT_REASON_UNPOWERED | USBD_EVENT_REASON_POWERED));
+   event_params[0] = USBD_EVENT_Install(usbd, event_1, USBD_EVENT_REASON_UNPOWERED);
+   event_params[1] = USBD_EVENT_Install(usbd, event_2, (USBD_EVENT_REASON_POWERED | USBD_EVENT_REASON_UNPOWERED | USBD_EVENT_REASON_POWERED));
    event_params[2] = USBD_EVENT_Install(usbd, event_3, (USBD_EVENT_REASON_RESET | USBD_EVENT_REASON_ADDRESSED));
    event_params[3] = USBD_EVENT_Install(usbd, event_4, (USBD_EVENT_REASON_UNCONFIGURED | USBD_EVENT_REASON_SUSPENDED));
    event_params[4] = USBD_EVENT_Install(usbd, event_5, (USBD_EVENT_REASON_CONFIGURED | USBD_EVENT_REASON_SOF_RECEIVED));
@@ -281,7 +281,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    if((event_params[0] != (&(event_table[0])))
      || (event_table[0].event != event_1)
-     || (USBD_EVENT_REASON_DETACHED != event_table[0].mask))
+     || (USBD_EVENT_REASON_UNPOWERED != event_table[0].mask))
    {
       printf("event_1 not installed correctly\n\r");
       REPORT_ERROR();
@@ -289,7 +289,7 @@ void test_usbd_events_install(USBD_Params_XT *usbd)
 
    if((event_params[1] != (&(event_table[1])))
      || (event_table[1].event != event_2)
-     || ((USBD_EVENT_REASON_ATTACHED | USBD_EVENT_REASON_UNPOWERED | USBD_EVENT_REASON_POWERED) != event_table[1].mask))
+     || ((USBD_EVENT_REASON_POWERED | USBD_EVENT_REASON_UNPOWERED | USBD_EVENT_REASON_POWERED) != event_table[1].mask))
    {
       printf("event_2 not installed correctly\n\r");
       REPORT_ERROR();

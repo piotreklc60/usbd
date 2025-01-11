@@ -678,7 +678,7 @@ USBD_Bool_DT USBD_IOTP_BUFF_Send_Status(
             USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_data_memcpy_in);
          }
 
-         result = USBD_IO_UP_Trigger_IN(usbd, ep_num);
+         result = USBD_IO_UP_Trigger_INOUT(usbd, ep_num, USB_EP_DIRECTION_IN, USBD_FALSE);
 
          if(USBD_CHECK_PTR(USBD_IO_Inout_Data_Size_DT, size_left))
          {
@@ -1902,7 +1902,7 @@ static USBD_Bool_DT USBD_IOTP_BUFF_trigger_in(
    }
    if(USBD_BOOL_IS_TRUE(call_trigger))
    {
-      (void)USBD_IO_UP_Trigger_IN(usbd, ep_num);
+      (void)USBD_IO_UP_Trigger_INOUT(usbd, ep_num, USB_EP_DIRECTION_IN, USBD_FALSE);
    }
 
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_BUFF_USE_UP_LINK)
@@ -1950,7 +1950,7 @@ static USBD_Bool_DT USBD_IOTP_BUFF_trigger_out(
    else
 #endif
    {
-      USBD_IO_UP_Trigger_OUT(usbd, ep_num, USBD_TRUE);
+      USBD_IO_UP_Trigger_INOUT(usbd, ep_num, USB_EP_DIRECTION_OUT, USBD_TRUE);
 
       if((!BUFF_RING_IS_FULL(tp->core.buff)) && ((-1) == USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_FALSE)))
       {

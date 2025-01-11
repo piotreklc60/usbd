@@ -374,7 +374,6 @@ static void port_stm32_cat_a_dev_activate_deactivate(USBD_Params_XT* usbd, USBD_
 #endif
 
 #if (USBD_FEATURE_PRESENT != USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE)
-      USBD_DEV_Attached(usbd, USBD_TRUE);
       USBD_DEV_Powered(usbd, USBD_TRUE);
 
       USBD_STM32_CAT_A_RESET_AND_ENABLE_PERIPH();
@@ -2812,7 +2811,6 @@ void USBD_Port_STM32_CAT_A_Vbus_Detection(USBD_Bool_DT vbus_5V_present)
    {
       if(USBD_BOOL_IS_TRUE(vbus_5V_present))
       {
-         USBD_DEV_Attached(port_stm32_cat_a_usbd, USBD_TRUE);
          USBD_DEV_Powered(port_stm32_cat_a_usbd, USBD_TRUE);
 
          USBD_STM32_CAT_A_RESET_AND_ENABLE_PERIPH();
@@ -2832,7 +2830,6 @@ void USBD_Port_STM32_CAT_A_Vbus_Detection(USBD_Bool_DT vbus_5V_present)
          USBD_STM32_CAT_A_DISABLE();
 
          USBD_DEV_Powered(port_stm32_cat_a_usbd, USBD_FALSE);
-         USBD_DEV_Attached(port_stm32_cat_a_usbd, USBD_FALSE);
       }
    }
    else

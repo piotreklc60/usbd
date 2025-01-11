@@ -997,7 +997,7 @@ void test_events_call(USBD_Params_XT *usbd)
    activate_and_test(usbd);
 
    clear_event_markers();
-   USBD_DEV_Attached(usbd, USBD_TRUE);
+   USBD_DEV_Powered(usbd, USBD_TRUE);
    check_event_markers_cold();
 
    clear_event_markers();

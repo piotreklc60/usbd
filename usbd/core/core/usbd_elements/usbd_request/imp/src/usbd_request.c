@@ -1018,6 +1018,7 @@ static void USBD_REQUEST_set_interface(
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
 } /* USBD_REQUEST_set_interface */
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
 static void USBD_REQUEST_synch_frame(
       USBD_Params_XT *usbd,
       USBDC_Params_XT *usbdc,
@@ -1049,6 +1050,7 @@ static void USBD_REQUEST_synch_frame(
 
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
 } /* USBD_REQUEST_synch_frame */
+#endif
 
 void USBD_REQUEST_Process_Req(
       USBD_Params_XT *usbd,
@@ -1093,14 +1095,13 @@ void USBD_REQUEST_Process_Req(
             )
          ));
 
+#ifdef USBD_USE_IOCMD
       if(USBD_COMPILATION_SWITCH_LOG(USBD_DBG_REQ_PROCESSING, IOCMD_LOG_LEVEL_DEBUG_HI))
       {
          if(req->bRequest <= USBD_BREQUEST_SYNCH_FRAME)
          {
-#ifdef USBD_USE_IOCMD
             name = (req->bRequest < Num_Elems(USBD_REQUEST_standard_req_desc)) ?
                USBD_REQUEST_standard_req_desc[req->bRequest] : USBD_REQUEST_standard_req_desc[2];
-#endif
             USBD_DEBUG_HI_3(USBD_DBG_REQ_PROCESSING, "bRequest: 0x%02X(%d) => %s", req->bRequest, req->bRequest, name);
          }
          else
@@ -1108,6 +1109,7 @@ void USBD_REQUEST_Process_Req(
             USBD_DEBUG_HI_2(USBD_DBG_REQ_PROCESSING, "bRequest: 0x%02X(%d)", req->bRequest, req->bRequest);
          }
       }
+#endif
 
       USBD_DEBUG_HI_6(USBD_DBG_REQ_PROCESSING,
          "wValue: 0x%04X(%d), wIndex: 0x%04X(%d), wLength: 0x%04X(%d)",
@@ -1194,9 +1196,11 @@ void USBD_REQUEST_Process_Req(
                USBD_REQUEST_set_interface(usbd, usbdc, req, destination);
                break;
 
+#if(USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED)
             case USBD_BREQUEST_SYNCH_FRAME:
                USBD_REQUEST_synch_frame(usbd, usbdc, req, destination);
                break;
+#endif
 
             default:
                (void)USBD_REQUEST_process_other_standard_requests(usbd, usbdc, 0, req);
