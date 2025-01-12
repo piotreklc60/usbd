@@ -35,6 +35,71 @@
  * - USBD_IOTP_EVENT
  */
 
+#ifndef USBD_REQ_VENDOR_SUPPORTED
+#define USBD_REQ_VENDOR_SUPPORTED                              USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_REQ_SET_DESCRIPTOR_SUPPORTED
+#define USBD_REQ_SET_DESCRIPTOR_SUPPORTED                      USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED
+/**
+ * WARNING!!!
+ * Be careful when changing this definition. This is only for agressively reducing image side,
+ * for example for DFU bootloader.
+ * SET / CLEAR FEATURE requests are mandatory, however HOST doesn't
+ * send it on standard enumeration, only when some specific action is executed, like EP HALT/UNHALT.
+ * Be sure HOST will not use these requests in your application before turning OFF these requests.
+ */
+#define USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED                   USBD_FEATURE_PRESENT
+#endif
+
+
+
+#ifndef USBD_REQ_PORT_GUARD_GET_STATUS_SUPPORTED
+#define USBD_REQ_PORT_GUARD_GET_STATUS_SUPPORTED               USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_REQ_PORT_GUARD_SET_CLEAR_FEATURE_SUPPORTED
+#define USBD_REQ_PORT_GUARD_SET_CLEAR_FEATURE_SUPPORTED        USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED
+#endif
+
+#ifndef USBD_REQ_PORT_GUARD_SET_ADDRESS_SUPPORTED
+#define USBD_REQ_PORT_GUARD_SET_ADDRESS_SUPPORTED              USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_REQ_PORT_GUARD_GET_DESCRIPTOR_SUPPORTED
+#define USBD_REQ_PORT_GUARD_GET_DESCRIPTOR_SUPPORTED           USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_REQ_PORT_GUARD_SET_DESCRIPTOR_SUPPORTED
+#define USBD_REQ_PORT_GUARD_SET_DESCRIPTOR_SUPPORTED           USBD_REQ_SET_DESCRIPTOR_SUPPORTED
+#endif
+
+#ifndef USBD_REQ_PORT_GUARD_GET_CONFIGURATION_SUPPORTED
+#define USBD_REQ_PORT_GUARD_GET_CONFIGURATION_SUPPORTED        USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_REQ_PORT_GUARD_SET_CONFIGURATION_SUPPORTED
+#define USBD_REQ_PORT_GUARD_SET_CONFIGURATION_SUPPORTED        USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_REQ_PORT_GUARD_GET_INTERFACE_SUPPORTED
+#define USBD_REQ_PORT_GUARD_GET_INTERFACE_SUPPORTED            USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_REQ_PORT_GUARD_SET_INTERFACE_SUPPORTED
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
+#define USBD_REQ_PORT_GUARD_SET_INTERFACE_SUPPORTED            USBD_FEATURE_PRESENT
+#else
+#define USBD_REQ_PORT_GUARD_SET_INTERFACE_SUPPORTED            USBD_FEATURE_NOT_PRESENT
+#endif
+#endif
+
+#ifndef USBD_REQ_PORT_GUARD_SYNCH_FRAME_SUPPORTED
+#define USBD_REQ_PORT_GUARD_SYNCH_FRAME_SUPPORTED              USBD_FEATURE_PRESENT
+#endif
 
 /** @defgroup USBD_REQUEST_TYPES
  * @{
@@ -181,19 +246,39 @@ typedef USBD_Bool_DT (*USBD_REQUEST_Port_Callback_HT) (struct USBD_params_eXtend
 
 typedef struct USBD_REQUEST_Port_Callbacks_eXtended_Tag
 {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_STATUS_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT get_status;
+#endif
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_CLEAR_FEATURE_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT clear_feature;
    USBD_REQUEST_Port_Callback_HT set_feature;
+#endif
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_ADDRESS_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT set_address;
+#endif
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_DESCRIPTOR_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT get_descriptor;
+#endif
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_DESCRIPTOR_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT set_descriptor;
+#endif
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_CONFIGURATION_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT get_configuration;
+#endif
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_CONFIGURATION_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT set_configuration;
+#endif
 #if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_INTERFACE_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT get_interface;
+#endif
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_INTERFACE_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT set_interface;
 #endif
+#endif
+#if((USBD_FEATURE_PRESENT == USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED) && (USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SYNCH_FRAME_SUPPORTED))
    USBD_REQUEST_Port_Callback_HT synch_frame;
+#endif
 }USBD_REQUEST_Port_Callbacks_XT;
 
 
@@ -215,7 +300,9 @@ typedef struct USBD_REQUEST_Params_eXtended_Tag
          {
             uint8_t u8;
             uint16_t u16;
+#if(USBD_DEV_SUPPORTED_SPEED >= USBD_DEV_HIGH_SPEED_SUPPORTED)
             USB_Device_Qualifier_Desc_DT qual;
+#endif
          }req_data;
       }data;
    }core;
@@ -240,14 +327,18 @@ typedef struct USBDC_REQUEST_Params_eXtended_Tag
    {
       struct
       {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_VENDOR_SUPPORTED)
          USBD_REQUEST_Vendor_HT     vendor_irq;
+#endif
          USBD_REQUEST_Interface_HT  interface_irq_tab[USBD_MAX_NUM_INTERFACES];
       }handlers;
+#if(USBD_FEATURE_PRESENT == USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED)
       struct
       {
          uint16_t                   ep_in_halt_mask;
          uint16_t                   ep_out_halt_mask;
       }data;
+#endif
    }core;
 }USBDC_REQUEST_Params_XT;
 

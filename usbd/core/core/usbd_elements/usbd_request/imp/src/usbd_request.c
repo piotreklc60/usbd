@@ -167,6 +167,7 @@ static USBD_Bool_DT USBD_REQUEST_process_other_standard_requests(
          }
       }
 #endif
+#if(USBD_FEATURE_PRESENT == USBD_REQ_VENDOR_SUPPORTED)
       /* All other request types are processed by vendor irq */
       else
       {
@@ -175,6 +176,7 @@ static USBD_Bool_DT USBD_REQUEST_process_other_standard_requests(
             result = USBDC_REQUEST_CALL_VENDOR_IRQ(usbd, usbdc, ep_num, req);
          }
       }
+#endif
    }
 
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
@@ -185,7 +187,9 @@ static USBD_Bool_DT USBD_REQUEST_process_other_standard_requests(
 static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    USBD_Params_XT *usbd;
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_ADDRESS_SUPPORTED)
    USBD_REQUEST_Req_DT req;
+#endif
    uint8_t addr;
 
    USBD_UNUSED_PARAM(dir);
@@ -199,6 +203,9 @@ static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_D
 
       if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
       {
+         addr = usbd->request.core.data.req_data.u8;
+
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_ADDRESS_SUPPORTED)
          if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
          {
             if(USBD_REQUEST_CHECK_PORT_SET_ADDRESS_HANDLER(usbd))
@@ -209,19 +216,19 @@ static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_D
                req.wIndex = 0;
                req.wLength = 0;
                USBD_REQUEST_fill_request(&req);
-               addr = usbd->request.core.data.req_data.u8;
 
                (void)USBD_REQUEST_CALL_PORT_SET_ADDRESS_HANDLER(usbd, USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp), &req);
-
-               if(0 != addr)
-               {
-                  USBD_DEV_Addressed(usbd, addr);
-               }
-               else
-               {
-                  USBD_DEV_Reset(usbd);
-               }
             }
+         }
+#endif
+
+         if(0 != addr)
+         {
+            USBD_DEV_Addressed(usbd, addr);
+         }
+         else
+         {
+            USBD_DEV_Reset(usbd);
          }
       }
       else
@@ -268,7 +275,9 @@ static void USBD_REQUEST_get_status(
       uint8_t destination)
 {
    uint8_t ep_num;
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_STATUS_SUPPORTED)
    USBD_Bool_DT result   = USBD_TRUE;
+#endif
    USBD_Bool_DT send_ack = USBD_FALSE;
 
    USBD_ENTER_FUNC(USBD_DBG_REQ_PROCESSING);
@@ -280,12 +289,14 @@ static void USBD_REQUEST_get_status(
          {
             usbd->request.core.data.req_data.u16 = 0;
 
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_STATUS_SUPPORTED)
             if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
             {
                result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_GET_STATUS_HANDLER(usbd), req);
             }
 
             if(USBD_BOOL_IS_TRUE(result))
+#endif
             {
                if(USBD_CHECK_PORT_PTR(usbd))
                {
@@ -303,12 +314,14 @@ static void USBD_REQUEST_get_status(
       case USBD_BMREQUESTTYPE_INTERFACE:
          if(USBD_DEV_STATE_CONFIGURED == (USBD_DEV_STATE_CONFIGURED & USBD_DEV_Get_State(usbd)))
          {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_STATUS_SUPPORTED)
             if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
             {
                result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_GET_STATUS_HANDLER(usbd), req);
             }
 
             if(USBD_BOOL_IS_TRUE(result))
+#endif
             {
                if(req->wIndex < USBD_DEV_Get_Num_Interfaces_In_Active_Config(usbd))
                {
@@ -327,12 +340,14 @@ static void USBD_REQUEST_get_status(
                (USBD_DEV_STATE_ADDRESSED == (USBD_DEV_STATE_ADDRESSED & USBD_DEV_Get_State(usbd)))
                && (0 == ep_num) ))
          {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_STATUS_SUPPORTED)
             if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
             {
                result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_GET_STATUS_HANDLER(usbd), req);
             }
 
             if(USBD_BOOL_IS_TRUE(result))
+#endif
             {
                if(USBD_DEV_EP_OFF != USBD_DEV_Get_EP_State(usbd, ep_num, dir))
                {
@@ -367,6 +382,7 @@ static void USBD_REQUEST_get_status(
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
 } /* USBD_REQUEST_get_status */
 
+#if(USBD_FEATURE_PRESENT == USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED)
 static void USBD_REQUEST_set_clear_feature(
       USBD_Params_XT *usbd,
       USBDC_Params_XT *usbdc,
@@ -375,7 +391,9 @@ static void USBD_REQUEST_set_clear_feature(
       USBD_Bool_DT is_set,
       uint8_t destination)
 {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_CLEAR_FEATURE_SUPPORTED)
    USBD_REQUEST_Port_Callback_HT port_cbk;
+#endif
    uint8_t ep_num;
    USBD_Bool_DT result = USBD_TRUE;
    USBD_Bool_DT is_allowed = USBD_FALSE;
@@ -403,6 +421,7 @@ static void USBD_REQUEST_set_clear_feature(
          }
          if(USBD_BOOL_IS_TRUE(is_allowed))
          {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_CLEAR_FEATURE_SUPPORTED)
             if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
             {
                if(USBD_BOOL_IS_TRUE(is_set))
@@ -426,6 +445,7 @@ static void USBD_REQUEST_set_clear_feature(
                   }
                }
             }
+#endif
 
             if(USBD_BOOL_IS_FALSE(result))
             {
@@ -437,6 +457,7 @@ static void USBD_REQUEST_set_clear_feature(
       case USBD_BMREQUESTTYPE_INTERFACE:
          if(USBD_DEV_STATE_CONFIGURED == (USBD_DEV_STATE_CONFIGURED & USBD_DEV_Get_State(usbd)))
          {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_CLEAR_FEATURE_SUPPORTED)
             if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
             {
                if(USBD_BOOL_IS_TRUE(is_set))
@@ -449,6 +470,7 @@ static void USBD_REQUEST_set_clear_feature(
                }
                result = USBD_REQUEST_port_guard(usbd, port_cbk, req);
             }
+#endif
 
             if(USBD_BOOL_IS_TRUE(result))
             {
@@ -465,6 +487,7 @@ static void USBD_REQUEST_set_clear_feature(
                (USBD_DEV_STATE_ADDRESSED == (USBD_DEV_STATE_ADDRESSED & USBD_DEV_Get_State(usbd)))
                && (0 == ep_num) ))
          {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_CLEAR_FEATURE_SUPPORTED)
             if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
             {
                if(USBD_BOOL_IS_TRUE(is_set))
@@ -477,6 +500,7 @@ static void USBD_REQUEST_set_clear_feature(
                }
                result = USBD_REQUEST_port_guard(usbd, port_cbk, req);
             }
+#endif
 
             if(USBD_BOOL_IS_TRUE(result))
             {
@@ -521,6 +545,7 @@ static void USBD_REQUEST_set_clear_feature(
 
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
 } /* USBD_REQUEST_set_clear_feature */
+#endif
 
 static void USBD_REQUEST_set_address(
       USBD_Params_XT *usbd,
@@ -573,10 +598,12 @@ static void USBD_REQUEST_get_descrptor(
    if((USBD_BMREQUESTTYPE_DEVICE == destination)
       && (USBD_DEV_STATE_DEFAULT == (USBD_DEV_STATE_DEFAULT & USBD_DEV_Get_State(usbd))))
    {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_DESCRIPTOR_SUPPORTED)
       if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
       {
          result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_GET_DESCRIPTOR_HANDLER(usbd), req);
       }
+#endif
 
       if(USBD_BOOL_IS_TRUE(result))
       {
@@ -699,9 +726,9 @@ static void USBD_REQUEST_get_descrptor(
 
             case USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION:
             case USB_DESC_TYPE_CONFIGURATION:
+#ifdef USBD_USE_IOCMD
                if(USBD_COMPILATION_SWITCH_LOG(USBD_DBG_REQ_PROCESSING, IOCMD_LOG_LEVEL_DEBUG_LO))
                {
-#ifdef USBD_USE_IOCMD
                   if(USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION == ((req->wValue >> 8) & 0x00FF))
                   {
                      name = "OTHER_SPEED_CONFIGURATION";
@@ -710,10 +737,10 @@ static void USBD_REQUEST_get_descrptor(
                   {
                      name = "CONFIGURATION";
                   }
-#endif
 
                   USBD_DEBUG_HI_1(USBD_DBG_REQ_PROCESSING, "value_H => desc type: %s", name);
                }
+#endif
                /* set "number" to requested configuration number */
                number = req->wValue & 0x00FF;
                USBD_DEBUG_HI_1(USBD_DBG_REQ_PROCESSING, "value_L => config num: %d", number);
@@ -787,10 +814,12 @@ static void USBD_REQUEST_get_descrptor(
    else if( ( (USBD_BMREQUESTTYPE_INTERFACE == destination) || (USBD_BMREQUESTTYPE_ENDPOINT == destination) )
       && (USBD_DEV_STATE_CONFIGURED == (USBD_DEV_STATE_CONFIGURED & USBD_DEV_Get_State(usbd))))
    {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_DESCRIPTOR_SUPPORTED)
       if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
       {
          result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_GET_DESCRIPTOR_HANDLER(usbd), req);
       }
+#endif
 
       if(USBD_BOOL_IS_TRUE(result) && (USBD_DEV_CHECK_ACTIVE_CONFIG_PTR(usbd)))
       {
@@ -818,10 +847,12 @@ static void USBD_REQUEST_get_configuration(
    if((USBD_BMREQUESTTYPE_DEVICE == destination)
       && (USBD_DEV_STATE_ADDRESSED == (USBD_DEV_STATE_ADDRESSED & USBD_DEV_Get_State(usbd))))
    {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_CONFIGURATION_SUPPORTED)
       if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
       {
          result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_GET_CONFIGURATION_HANDLER(usbd), req);
       }
+#endif
 
       if(USBD_BOOL_IS_TRUE(result))
       {
@@ -869,10 +900,12 @@ static void USBD_REQUEST_set_configuration(
    if((USBD_BMREQUESTTYPE_DEVICE == destination)
       && (USBD_DEV_STATE_ADDRESSED == (USBD_DEV_STATE_ADDRESSED & USBD_DEV_Get_State(usbd))))
    {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_CONFIGURATION_SUPPORTED)
       if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
       {
          result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_SET_CONFIGURATION_HANDLER(usbd), req);
       }
+#endif
 
       if(USBD_BOOL_IS_TRUE(result))
       {
@@ -912,10 +945,12 @@ static void USBD_REQUEST_get_interface(
    if((USBD_BMREQUESTTYPE_INTERFACE == destination)
       && (USBD_DEV_STATE_CONFIGURED == (USBD_DEV_STATE_CONFIGURED & USBD_DEV_Get_State(usbd))))
    {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_INTERFACE_SUPPORTED)
       if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
       {
          result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_GET_INTERFACE_HANDLER(usbd), req);
       }
+#endif
 
       if(USBD_BOOL_IS_TRUE(result))
       {
@@ -974,10 +1009,12 @@ static void USBD_REQUEST_set_interface(
    if((USBD_BMREQUESTTYPE_INTERFACE == destination)
       && (USBD_DEV_STATE_CONFIGURED == (USBD_DEV_STATE_CONFIGURED & USBD_DEV_Get_State(usbd))))
    {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_INTERFACE_SUPPORTED)
       if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
       {
          result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_SET_INTERFACE_HANDLER(usbd), req);
       }
+#endif
 
       if(USBD_BOOL_IS_TRUE(result))
       {
@@ -1033,10 +1070,12 @@ static void USBD_REQUEST_synch_frame(
    if((USBD_BMREQUESTTYPE_ENDPOINT == destination)
       && (USBD_DEV_STATE_CONFIGURED == (USBD_DEV_STATE_CONFIGURED & USBD_DEV_Get_State(usbd))))
    {
+#if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SYNCH_FRAME_SUPPORTED)
       if(USBD_REQUEST_CHECK_PORT_CBK_TAB_PTR(usbd))
       {
          result = USBD_REQUEST_port_guard(usbd, USBD_REQUEST_GET_PORT_SYNCH_FRAME_HANDLER(usbd), req);
       }
+#endif
 
       if(USBD_BOOL_IS_TRUE(result))
       {
@@ -1157,6 +1196,7 @@ void USBD_REQUEST_Process_Req(
                USBD_REQUEST_get_status(usbd, usbdc, req, dir, destination);
                break;
 
+#if(USBD_FEATURE_PRESENT == USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED)
             case USBD_BREQUEST_CLEAR_FEATURE:
                USBD_REQUEST_set_clear_feature(usbd, usbdc, req, dir, USBD_FALSE, destination);
                break;
@@ -1164,6 +1204,7 @@ void USBD_REQUEST_Process_Req(
             case USBD_BREQUEST_SET_FEATURE:
                USBD_REQUEST_set_clear_feature(usbd, usbdc, req, dir, USBD_TRUE, destination);
                break;
+#endif
 
             case USBD_BREQUEST_SET_ADDRESS:
                USBD_REQUEST_set_address(usbd, usbdc, req, destination);
@@ -1173,13 +1214,14 @@ void USBD_REQUEST_Process_Req(
                USBD_REQUEST_get_descrptor(usbd, usbdc, req, destination);
                break;
 
+#if(USBD_FEATURE_PRESENT == USBD_REQ_SET_DESCRIPTOR_SUPPORTED)
             case USBD_BREQUEST_SET_DESCRIPTOR:
                if(USBD_DEV_STATE_ADDRESSED == (USBD_DEV_STATE_ADDRESSED & USBD_DEV_Get_State(usbd)))
                {
                   (void)USBD_REQUEST_process_other_standard_requests(usbd, usbdc, 0, req);
                }
                break;
-
+#endif
             case USBD_BREQUEST_GET_CONFIGURATION:
                USBD_REQUEST_get_configuration(usbd, usbdc, req, destination);
                break;
@@ -1229,6 +1271,7 @@ void USBD_REQUEST_Process_Req(
                   }
                }
             }
+#if(USBD_FEATURE_PRESENT == USBD_REQ_VENDOR_SUPPORTED)
             /* All other request types are processed by vendor irq */
             else
             {
@@ -1237,6 +1280,7 @@ void USBD_REQUEST_Process_Req(
                   (void)USBDC_REQUEST_CALL_VENDOR_IRQ(usbd, usbdc, ep_num, req);
                }
             }
+#endif
          }
       }
    }
@@ -1244,6 +1288,7 @@ void USBD_REQUEST_Process_Req(
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
 } /* USBD_REQUEST_Process_Req */
 
+#if(USBD_FEATURE_PRESENT == USBD_REQ_VENDOR_SUPPORTED)
 void USBDC_REQUEST_Vendor_Irq_Install(
       USBDC_Params_XT *usbdc,
       USBD_REQUEST_Vendor_HT irq)
@@ -1257,6 +1302,7 @@ void USBDC_REQUEST_Vendor_Irq_Install(
 
    USBD_EXIT_FUNC(USBD_DBG_REQ_INIT);
 } /* USBDC_REQUEST_Vendor_Irq_Install */
+#endif
 
 void USBDC_REQUEST_Interface_Irq_Install(
       USBDC_Params_XT *usbdc,
@@ -1278,6 +1324,7 @@ void USBDC_REQUEST_Interface_Irq_Install(
    USBD_EXIT_FUNC(USBD_DBG_REQ_INIT);
 } /* USBDC_REQUEST_Interface_Irq_Install */
 
+#if(USBD_FEATURE_PRESENT == USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED)
 void USBDC_REQUEST_Set_EP_Halt_Mask(
       USBDC_Params_XT *usbdc,
       uint8_t ep_num,
@@ -1314,6 +1361,7 @@ void USBDC_REQUEST_Set_EP_Halt_Mask(
 
    USBD_EXIT_FUNC(USBD_DBG_REQ_INIT);
 } /* USBDC_REQUEST_Set_EP_Halt_Mask */
+#endif
 
 #ifdef USBD_REQUEST_POST_IMP_INCLUDE
 #include "usbd_request_post_imp.h"

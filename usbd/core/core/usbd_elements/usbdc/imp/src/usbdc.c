@@ -59,7 +59,7 @@ void USBDC_Init(
       memset(usbdc, 0, sizeof(USBDC_Params_XT));
 
 #if (USBD_FEATURE_NOT_PRESENT != USBD_USE_INVALIDATION_ON_INIT)
-#if (defined(USBD_REQUEST_PRESENT))
+#if (defined(USBD_REQUEST_PRESENT) && (USBD_FEATURE_PRESENT == USBD_REQ_VENDOR_SUPPORTED))
       USBD_INVALIDATE_HANDLER_ON_INIT(USBD_REQUEST_Vendor_HT, usbdc->request.core.handlers.vendor_irq);
 #endif
 

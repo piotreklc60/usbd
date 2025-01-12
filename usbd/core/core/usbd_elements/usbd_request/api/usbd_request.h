@@ -61,6 +61,7 @@ void USBD_REQUEST_Process_Req(
  * @{
  */
 
+#if(USBD_FEATURE_PRESENT == USBD_REQ_VENDOR_SUPPORTED)
 /**
  * Installs handler to function used to process vendor requests
  *
@@ -70,6 +71,7 @@ void USBD_REQUEST_Process_Req(
 void USBDC_REQUEST_Vendor_Irq_Install(
       USBDC_Params_XT *usbdc,
       USBD_REQUEST_Vendor_HT irq);
+#endif
 
 /**
  * Installs handler to function used to process interface requests
@@ -85,6 +87,7 @@ void USBDC_REQUEST_Interface_Irq_Install(
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED)
 /**
  * Locks or unlocks processing SET/CLEAR FEATURE requests by USBD layer
  *
@@ -99,6 +102,7 @@ void USBDC_REQUEST_Set_EP_Halt_Mask(
       uint8_t ep_num,
       USB_EP_Direction_ET dir,
       USBD_Bool_DT state);
+#endif
 
 /** @} */ /* USBDC_REQUEST */
 

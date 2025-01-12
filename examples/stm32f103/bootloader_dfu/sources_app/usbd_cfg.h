@@ -59,6 +59,18 @@
 
 #define USBD_DEV_SUPPORT_CONFIG_VALIDATION            USBD_FEATURE_NOT_PRESENT
 
+#define USBD_REQ_VENDOR_SUPPORTED                     USBD_FEATURE_NOT_PRESENT
+/**
+ * WARNING!!!
+ * Be careful when changing this definition. This is only for agressively reducing image side,
+ * for example for DFU bootloader.
+ * SET / CLEAR FEATURE requests are mandatory, however HOST doesn't
+ * send it on standard enumeration, only when some specific action is executed, like EP HALT/UNHALT.
+ * Be sure HOST will not use these requests in your application before turning OFF these requests.
+ */
+#define USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED          USBD_FEATURE_NOT_PRESENT
+
+
 #define DFU_MULTIPLE_MEMORIES_SUPPORT                 USBD_FEATURE_NOT_PRESENT
 #define DFU_UPLOAD_SUPPORT                            USBD_FEATURE_NOT_PRESENT
 #define DFU_APP_MODE_SUPPORT                          USBD_FEATURE_NOT_PRESENT
