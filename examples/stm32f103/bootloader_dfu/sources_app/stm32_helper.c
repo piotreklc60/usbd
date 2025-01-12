@@ -26,6 +26,9 @@
 #include "std_libs.h"
 #include "stm32_helper.h"
 
+#define STM32_HELPER_USE_EXTI          1
+#define STM32_HELPER_USE_EXTI_ON_GPIO  0
+
 #define GPIO_CR_MODE_INPUT          0x00
 #define GPIO_CR_MODE_OUTPUT_10MHZ   0x01
 #define GPIO_CR_MODE_OUTPUT_2MHZ    0x02
@@ -86,6 +89,7 @@ void GPIO_Init_Output_Push_Pull(GPIO_TypeDef *gpio, uint8_t pin_id)
    gpio_set_cr_regs(gpio, GPIO_CR_MODE_OUTPUT_10MHZ | GPIO_CR_CNF_OUT_GENERAL_PP, pin_id);
 } /* GPIO_Init_Output_Push_Pull */
 
+#if(STM32_HELPER_USE_EXTI)
 void GPIO_Init_EXTI(uint8_t pin_id, uint32_t exti_type)
 {
    uint32_t mask = 1 << pin_id;
@@ -110,14 +114,19 @@ void GPIO_Init_EXTI(uint8_t pin_id, uint32_t exti_type)
       EXTI->IMR |= mask;
    }
 } /* GPIO_Init_EXTI */
+#endif
 
 void GPIO_Init_Input_With_EXTI(GPIO_TypeDef  *gpio, uint8_t pin_id, uint32_t pull_type, uint32_t exti_type)
 {
    uint32_t cr;
+#if(STM32_HELPER_USE_EXTI_ON_GPIO)
    uint32_t port_id;
    uint32_t mask;
-   uint8_t reg_id;
-   uint8_t pos;
+   uint8_t  reg_id;
+   uint8_t  pos;
+#else
+   (void)(exti_type);
+#endif
 
    if(GPIO_NOPULL != pull_type)
    {
@@ -131,6 +140,7 @@ void GPIO_Init_Input_With_EXTI(GPIO_TypeDef  *gpio, uint8_t pin_id, uint32_t pul
    pull_type &= 0x1;
    gpio->ODR = pull_type << pin_id;
 
+#if(STM32_HELPER_USE_EXTI_ON_GPIO)
    __HAL_RCC_AFIO_CLK_ENABLE();
 
    port_id  = (uint32_t)gpio - (uint32_t)GPIOA_BASE;
@@ -143,4 +153,5 @@ void GPIO_Init_Input_With_EXTI(GPIO_TypeDef  *gpio, uint8_t pin_id, uint32_t pul
    AFIO->EXTICR[reg_id] = (AFIO->EXTICR[reg_id] & mask) | (port_id << pos);
 
    GPIO_Init_EXTI(pin_id, exti_type);
+#endif
 } /* GPIO_Init_Input_With_EXTI */

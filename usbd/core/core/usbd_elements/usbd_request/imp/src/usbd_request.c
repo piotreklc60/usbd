@@ -244,6 +244,14 @@ static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_D
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
 } /* USBD_REQUEST_set_addr_finish */
 
+#if((USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_STATUS_SUPPORTED) \
+   || (USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_CLEAR_FEATURE_SUPPORTED) \
+   || (USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_DESCRIPTOR_SUPPORTED) \
+   || (USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_CONFIGURATION_SUPPORTED) \
+   || (USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_CONFIGURATION_SUPPORTED) \
+   || (USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_GET_INTERFACE_SUPPORTED) \
+   || (USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_INTERFACE_SUPPORTED) \
+   || (USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SYNCH_FRAME_SUPPORTED))
 static USBD_Bool_DT USBD_REQUEST_port_guard(USBD_Params_XT *usbd, USBD_REQUEST_Port_Callback_HT callback, USBD_REQUEST_Req_DT *req)
 {
    USBD_Bool_DT result;
@@ -266,6 +274,7 @@ static USBD_Bool_DT USBD_REQUEST_port_guard(USBD_Params_XT *usbd, USBD_REQUEST_P
 
    return result;
 } /* USBD_REQUEST_port_guard */
+#endif
 
 static void USBD_REQUEST_get_status(
       USBD_Params_XT *usbd,
@@ -351,11 +360,13 @@ static void USBD_REQUEST_get_status(
             {
                if(USBD_DEV_EP_OFF != USBD_DEV_Get_EP_State(usbd, ep_num, dir))
                {
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
                   if(USBD_DEV_Get_EP_Halt(usbd, ep_num, dir))
                   {
                      usbd->request.core.data.req_data.u16 = 1;
                   }
                   else
+#endif
                   {
                      usbd->request.core.data.req_data.u16 = 0;
                   }
@@ -528,7 +539,9 @@ static void USBD_REQUEST_set_clear_feature(
 
                   if(USBD_BOOL_IS_FALSE(result))
                   {
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
                      USBD_DEV_Set_EP_Halt(usbd, (uint8_t)(ep_num), dir, is_set);
+#endif
                      USBD_IOTP_EVENT_Send_Status(
                         USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
                         USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));

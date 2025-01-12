@@ -46,6 +46,21 @@
 #error "USBD_MAX_NUM_ENDPOINTS too big!!! max possible is 16 endpoints!"
 #endif
 
+#ifndef USBD_EP_HALT_SUPPORTED
+/**
+ * WARNING!!!
+ * Be careful when changing this definition. This is only for agressively reducing image size,
+ * for example for DFU bootloader.
+ * EP HALT function is mandatory when some error happen, to block endpoint.
+ * However, if there is used only endpoint 0, blocking it causes device is no more usable.
+ * Only when USBD_MAX_NUM_ENDPOINTS = 1 there is possible to remove HALT function, however it is not recommended!
+ */
+#define USBD_EP_HALT_SUPPORTED                        USBD_FEATURE_PRESENT
+#elif((USBD_FEATURE_PRESENT != USBD_EP_HALT_SUPPORTED) && (USBD_MAX_NUM_ENDPOINTS > 1))
+#error "when more than EP0 is used HALT must be supported!"
+#endif
+
+
 #ifndef USBD_MAX_NUM_INTERFACES
 #define USBD_MAX_NUM_INTERFACES                       255
 #elif(USBD_MAX_NUM_INTERFACES > 255)

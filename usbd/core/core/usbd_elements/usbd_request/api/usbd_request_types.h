@@ -46,7 +46,7 @@
 #ifndef USBD_REQ_SET_CLEAR_FEATURE_SUPPORTED
 /**
  * WARNING!!!
- * Be careful when changing this definition. This is only for agressively reducing image side,
+ * Be careful when changing this definition. This is only for agressively reducing image size,
  * for example for DFU bootloader.
  * SET / CLEAR FEATURE requests are mandatory, however HOST doesn't
  * send it on standard enumeration, only when some specific action is executed, like EP HALT/UNHALT.

@@ -101,7 +101,9 @@ typedef struct port_stm32_cat_a_dev_params_eXtended_Tag
 
 typedef struct port_stm32_cat_a_req_params_eXtended_Tag
 {
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    USBD_Bool_DT set_configuration_ongoing;
+#endif
 #if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    uint8_t interface_set_ongoing;
 #endif
@@ -236,7 +238,9 @@ static USBD_IO_Inout_Data_Size_DT   port_stm32_cat_a_io_get_ep_out_waiting_size 
 static USBD_IO_Inout_Data_Size_DT   port_stm32_cat_a_io_get_ep_in_buffered_size (USBD_Params_XT *usbd, uint8_t ep_num);
 static void                         port_stm32_cat_a_io_stall                   (USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir);
 static void                         port_stm32_cat_a_io_abort                   (USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, USBD_Bool_DT flush_hw_bufs);
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
 static void                         port_stm32_cat_a_io_halt                    (USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, const USB_Endpoint_Desc_DT *ep_desc, USBD_Bool_DT state);
+#endif
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
 static void                         port_stm32_cat_a_io_configure               (USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, const USB_Endpoint_Desc_DT *ep_desc, USBD_Bool_DT state);
 static void                         port_stm32_cat_a_io_disable_ep_ctrl_int_in  (uint8_t ep_reg_num, volatile uint32_t *ep_reg);
@@ -256,7 +260,9 @@ static const USBD_IO_DOWN_Common_Handlers_XT   port_stm32_cat_a_io_common =
    .get_ep_in_buffered_size   = port_stm32_cat_a_io_get_ep_in_buffered_size,
    .abort                     = port_stm32_cat_a_io_abort,
    .stall                     = port_stm32_cat_a_io_stall,
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
    .halt                      = port_stm32_cat_a_io_halt,
+#endif
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
    .configure                 = port_stm32_cat_a_io_configure
 #endif
@@ -295,14 +301,18 @@ static const char * const port_stm32_cat_a_io_transfer_status_string[4] = {"DISA
 static void port_stm32_cat_a_req_process_incomming_setup(uint8_t ep_num, uint8_t ep_reg_num);
 
 static USBD_Bool_DT port_stm32_cat_a_req_set_address       (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req);
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
 static USBD_Bool_DT port_stm32_cat_a_req_set_configuration (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req);
+#endif
 #if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
 static USBD_Bool_DT port_stm32_cat_a_req_set_interface     (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req);
 #endif
 static const USBD_REQUEST_Port_Callbacks_XT port_stm32_cat_a_req_handlers =
 {
    .set_address = port_stm32_cat_a_req_set_address,
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    .set_configuration = port_stm32_cat_a_req_set_configuration,
+#endif
 #if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    .set_interface = port_stm32_cat_a_req_set_interface,
 #endif
@@ -319,7 +329,9 @@ static void port_stm32_cat_a_dev_reset_internal_structures(void)
    port_stm32_cat_a_io_ep_XT *ep;
    uint8_t ep_num;
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    port_stm32_cat_a_req_params.set_configuration_ongoing   = USBD_FALSE;
+#endif
 #if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    port_stm32_cat_a_req_params.interface_set_ongoing       = USBD_MAX_NUM_INTERFACES;
 #endif
@@ -412,6 +424,7 @@ static void port_stm32_cat_a_dev_activate_deactivate(USBD_Params_XT* usbd, USBD_
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
 } /* port_stm32_cat_a_dev_activate_deactivate */
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
 USBD_Bool_DT port_stm32_cat_a_does_estimation_fit_hw(port_stm32_cat_a_dev_if_estimation_DT *estimation)
 {
    uint_fast8_t if_num;
@@ -454,7 +467,6 @@ USBD_Bool_DT port_stm32_cat_a_does_estimation_fit_hw(port_stm32_cat_a_dev_if_est
    return result;
 } /* port_stm32_cat_a_does_estimation_fit_hw */
 
-#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
 static USBD_Bool_DT port_stm32_cat_a_dev_parse_cfg_internal(
    port_stm32_cat_a_dev_if_estimation_DT *if_estimation,
    port_stm32_cat_a_dev_ep_estimation_DT *ep_estimation,
@@ -1962,6 +1974,7 @@ static void port_stm32_cat_a_io_abort(USBD_Params_XT *usbd, uint8_t ep_num, USB_
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
 } /* port_stm32_cat_a_io_stall */
 
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
 static void port_stm32_cat_a_io_halt(
    USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir, const USB_Endpoint_Desc_DT *ep_desc, USBD_Bool_DT state)
 {
@@ -2114,6 +2127,7 @@ static void port_stm32_cat_a_io_halt(
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO_ONOFF);
 } /* port_stm32_cat_a_io_halt */
+#endif
 
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
 
@@ -2722,7 +2736,9 @@ static void port_stm32_cat_a_req_process_incomming_setup(uint8_t ep_num, uint8_t
 
    port_stm32_cat_a_req_params.ep_setup_ongoing = 0xFF;
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    port_stm32_cat_a_req_params.set_configuration_ongoing   = USBD_FALSE;
+#endif
 #if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
    port_stm32_cat_a_req_params.interface_set_ongoing       = USBD_MAX_NUM_INTERFACES;
 #endif
@@ -2745,6 +2761,7 @@ static USBD_Bool_DT port_stm32_cat_a_req_set_address (USBD_Params_XT *usbd, uint
    return USBD_TRUE;
 }
 
+#if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
 static USBD_Bool_DT port_stm32_cat_a_req_set_configuration (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req)
 {
    USBD_UNUSED_PARAM(usbd);
@@ -2759,6 +2776,7 @@ static USBD_Bool_DT port_stm32_cat_a_req_set_configuration (USBD_Params_XT *usbd
 
    return USBD_TRUE;
 } /* port_stm32_cat_a_req_set_configuration */
+#endif
 
 #if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
 static USBD_Bool_DT port_stm32_cat_a_req_set_interface (USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req)

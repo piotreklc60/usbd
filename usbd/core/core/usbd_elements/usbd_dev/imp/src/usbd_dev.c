@@ -1567,6 +1567,7 @@ uint8_t USBD_DEV_Get_EP_Interface_Num(
 } /* USBD_DEV_Get_EP_Interface_Num */
 #endif
 
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
 void USBD_DEV_Set_EP_Halt(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
@@ -1666,6 +1667,7 @@ USBD_Bool_DT USBD_DEV_Get_EP_Halt(
 
    return result;
 } /* USBD_DEV_Get_EP_Halt */
+#endif
 
 
 
@@ -1777,7 +1779,7 @@ USBD_Bool_DT USBD_DEV_Deactivate(
 
             if(USBD_BOOL_IS_TRUE(usbd->dev.core.data.active))
             {
-#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_DETACHED_SUPPORTED))
+#if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_UNPOWERED_SUPPORTED))
                USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_UNPOWERED);
 #endif
             }

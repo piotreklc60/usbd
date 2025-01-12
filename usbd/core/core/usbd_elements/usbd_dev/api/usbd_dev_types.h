@@ -68,7 +68,9 @@ typedef enum USBD_DEV_EP_States_Enum_Tag
 {
    USBD_DEV_EP_OFF  = 0,
    USBD_DEV_EP_ON   = 1,
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
    USBD_DEV_EP_HALT = 2
+#endif
 }USBD_DEV_EP_States_ET;
 
 /**

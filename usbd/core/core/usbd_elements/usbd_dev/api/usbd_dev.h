@@ -405,6 +405,7 @@ uint8_t USBD_DEV_Get_EP_Interface_Num(
 #define USBD_DEV_Get_EP_Interface_Num(usbd, ep_num, dir)       0xFF
 #endif
 
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
 /**
  * Sets/resets HALT condition for specified endpoint and disables/enables it.
  *
@@ -431,6 +432,7 @@ USBD_Bool_DT USBD_DEV_Get_EP_Halt(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
       USB_EP_Direction_ET dir);
+#endif
 
 
 

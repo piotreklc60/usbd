@@ -233,6 +233,7 @@ void USBD_IO_EP_Disable(
    USBD_EXIT_FUNC(USBD_DBG_IO_ONOFF);
 } /* USBD_IO_EP_Disable */
 
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
 void USBD_IO_Perform_Halt(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
@@ -309,6 +310,7 @@ void USBD_IO_Perform_Halt(
 
    USBD_EXIT_FUNC(USBD_DBG_IO_ONOFF);
 } /* USBD_IO_Perform_Halt */
+#endif
 
 void USBD_IO_UP_Lock_TP_Params(
       USBD_Params_XT *usbd,
@@ -1130,7 +1132,9 @@ void USBD_IO_DOWN_Process_Error_CBI(
          pipe = USBD_IO_GET_IN_PIPE_PARAMS(usbd, ep_num);
       }
 
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
       USBD_DEV_Set_EP_Halt(usbd, ep_num, dir, USBD_TRUE);
+#endif
 
       ep_handlers = pipe->up_link.handlers.handlers;
 

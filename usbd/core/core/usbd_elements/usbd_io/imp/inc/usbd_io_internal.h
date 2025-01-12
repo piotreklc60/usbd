@@ -285,6 +285,7 @@ void USBD_IO_EP_Disable(
       USBD_Bool_DT force_tp_remove,
       USBD_Bool_DT force_hw_disabling);
 
+#if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
 /**
  * Performs HALT condition for specified endpoint to IO module and disables/enables endpoint.
  * This function shall be called from DEV module only;
@@ -299,5 +300,6 @@ void USBD_IO_Perform_Halt(
       uint8_t ep_num,
       USB_EP_Direction_ET dir,
       USBD_Bool_DT state);
+#endif
 
 #endif
