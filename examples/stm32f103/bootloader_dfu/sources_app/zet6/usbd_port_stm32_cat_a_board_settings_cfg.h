@@ -36,20 +36,8 @@
 #define USBD_DP_PULL_UP_PIN                     5
 #define USBD_DP_PULL_UP_MODE                    GPIO_MODE_OUTPUT_PP
 #define USBD_DP_PULL_UP_PULL                    GPIO_PULLUP
-#define USBD_DP_PULL_UP_PORT_CLK_ENABLE()       __HAL_RCC_GPIOC_CLK_ENABLE()
 #define USBD_DP_PULL_UP_ACTIVE_STATE            0
 
-
-
-#define USBD_VBUS_PORT                          GPIOC
-#define USBD_VBUS_PIN                           4
-#define USBD_VBUS_MODE                          GPIO_MODE_IT_RISING_FALLING
-#define USBD_VBUS_PULL                          GPIO_PULLUP
-#define USBD_VBUS_PORT_CLK_ENABLE()             __HAL_RCC_GPIOC_CLK_ENABLE()
-#define USBD_VBUS_ACTIVE_STATE                  1
-// EXTI: VBUS
-#define USBD_VBUS_EXTI_IRQChannel               EXTI4_IRQn
-#define USBD_Port_STM32_CAT_A_Vbus_IrqHandler   EXTI4_IRQHandler
 
 /* USB clock source */
 #ifndef RCC_USBCLKSource_PLLCLK_1Div5

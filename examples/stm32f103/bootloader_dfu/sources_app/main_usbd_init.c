@@ -41,10 +41,10 @@ static uint32_t dfu_prog_addr;
 static uint16_t dfu_page_size;
 static uint8_t dfu_buf[DFU_W_TRANSFER_SIZE];
 
-static uint8_t config_desc_dfu[] =
+static uint8_t config_desc_dfu[USB_DESC_TYPE_CONFIGURATION_SIZE + DFU_CONFIG_DESC_PART_SIZE] =
 {
    USB_CONFIGURATION_DESC_TABLE_FILL(
-      /* _wTotalLength */        0,
+      /* _wTotalLength */        USB_DESC_TYPE_CONFIGURATION_SIZE + DFU_CONFIG_DESC_PART_SIZE,
       /* _bNumInterfaces */      1,
       /* _bConfigurationValue */ 1,
       /* _iConfiguration */      0,
@@ -56,61 +56,6 @@ static uint8_t config_desc_dfu[] =
    DFU_DFU_MODE_DESC_PART(0, 0)
 
 }; /* config_desc */
-/*
-const uint16_t manuf_string[] =
-{
-   0x0320,
-   'P',
-   'i',
-   'o',
-   't',
-   'r',
-   ' ',
-   'W',
-   'o',
-   'j',
-   't',
-   'o',
-   'w',
-   'i',
-   'c',
-   'z'
-};
-
-const uint16_t product_string[] =
-{
-   0x032A,
-   't',
-   'r',
-   'i',
-   'p',
-   'p',
-   'l',
-   'e',
-   ' ',
-   'v',
-   'c',
-   'o',
-   'm',
-   ' ',
-   'e',
-   'x',
-   'a',
-   'm',
-   'p',
-   'l',
-   'e'
-};
-
-const uint16_t serial_string[] =
-{
-   0x030C,
-   '1',
-   '2',
-   '3',
-   '4',
-   '5'
-};*/
 
 static DFU_bStatus_ET main_usbd_download(DFU_Params_XT *dfu, uint8_t **buffer, uint16_t length, uint16_t packet_number)
 {
@@ -212,8 +157,6 @@ void main_usbd_init(void)
 
    USBD_Init(&usbd);
    USBDC_Init(&usbdc);
-
-   USB_SET_CONFIGURATION_DESC_W_TOTAL_LENGTH(config_desc_dfu, sizeof(config_desc_dfu));
 
 #if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    check_result = USBD_DEV_Check_Config_Desc(&usbd, USBD_PORT_STM32_CAT_A, (uint8_t*)(&config_desc_dfu), sizeof(config_desc_dfu));

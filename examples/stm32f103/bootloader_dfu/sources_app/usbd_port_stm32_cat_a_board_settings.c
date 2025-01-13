@@ -44,85 +44,6 @@
 extern USBD_Atomic_Bool_DT port_stm32_cat_a_irq_active;
 USBD_Atomic_Bool_DT port_stm32f103_irq_enabled;
 
-#if (USBD_FEATURE_PRESENT == USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE)
-
-static USBD_Bool_DT usbd_port_stm32f103_vbus_irq_state = USBD_FALSE;
-
-void USBD_Port_STM32_CAT_A_Configure_Vbus_Detection_Irq(USBD_Bool_DT configure)
-{
-   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
-
-   USBD_DEBUG_HI_1(USBD_DBG_PORT_DEV, "configure Vbus to %s", USBD_BOOL_IS_TRUE(configure) ? "ON" : "OFF");
-
-   if(USBD_BOOL_IS_TRUE(configure))
-   {
-      USBD_VBUS_PORT_CLK_ENABLE();
-      /* initialize GPIO line */
-      GPIO_Init_Input_With_EXTI(USBD_VBUS_PORT, USBD_VBUS_PIN, USBD_VBUS_PULL, USBD_VBUS_MODE);
-
-      /* configure IRQ in NVIC controller */
-      HAL_NVIC_SetPriority(USBD_VBUS_EXTI_IRQChannel, 4, 0);
-      HAL_NVIC_EnableIRQ(USBD_VBUS_EXTI_IRQChannel);
-
-      /* check if VBUS is already active */
-#if(USBD_VBUS_ACTIVE_STATE)
-      if(0 != (USBD_VBUS_PORT->IDR & (1 << USBD_VBUS_PIN)))
-#else
-      if(0 == (USBD_VBUS_PORT->IDR & (1 << USBD_VBUS_PIN)))
-#endif
-      {
-         usbd_port_stm32f103_vbus_irq_state = USBD_TRUE;
-
-         USBD_Port_STM32_CAT_A_Vbus_Detection(USBD_TRUE);
-      }
-   }
-   else
-   {
-      /* initialize GPIO line */
-      GPIO_Deinit(USBD_VBUS_PORT, USBD_VBUS_PIN);
-
-      /* configure IRQ in NVIC controller */
-      HAL_NVIC_DisableIRQ(USBD_VBUS_EXTI_IRQChannel);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
-}
-
-
-
-void USBD_Port_STM32_CAT_A_Vbus_IrqHandler(void)
-{
-   USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
-
-   /* clear IRQ flag */
-   STM32_CAT_A_CLEAR_EXTI_PENDING(USBD_VBUS_PIN);
-
-#if(USBD_VBUS_ACTIVE_STATE)
-   if(0 != (USBD_VBUS_PORT->IDR & (1 << USBD_VBUS_PIN)))
-#else
-   if(0 == (USBD_VBUS_PORT->IDR & (1 << USBD_VBUS_PIN)))
-#endif
-   {
-      if(USBD_BOOL_IS_FALSE(usbd_port_stm32f103_vbus_irq_state))
-      {
-         usbd_port_stm32f103_vbus_irq_state = USBD_TRUE;
-         USBD_Port_STM32_CAT_A_Vbus_Detection(USBD_TRUE);
-      }
-   }
-   else
-   {
-      if(USBD_BOOL_IS_TRUE(usbd_port_stm32f103_vbus_irq_state))
-      {
-         usbd_port_stm32f103_vbus_irq_state = USBD_FALSE;
-         USBD_Port_STM32_CAT_A_Vbus_Detection(USBD_FALSE);
-      }
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
-}
-
-#endif
-
 
 
 #if (USBD_FEATURE_PRESENT == USBD_PORT_STM32_CAT_A_USE_PULL_UP)
@@ -135,7 +56,6 @@ void USBD_Port_STM32_CAT_A_Configure_Pull_Up(USBD_Bool_DT configure)
 
    if(USBD_BOOL_IS_TRUE(configure))
    {
-      USBD_DP_PULL_UP_PORT_CLK_ENABLE();
       GPIO_Init_Output_Push_Pull(USBD_DP_PULL_UP_PORT, USBD_DP_PULL_UP_PIN);
 
       /* disable pin */

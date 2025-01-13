@@ -158,6 +158,14 @@
    (uint8_t)(DFU_BCD_DFU_VERSION & 0xFF),       /* USBDC_DFU_bcdDFUVersion_L */  \
    (uint8_t)((DFU_BCD_DFU_VERSION>>8) & 0xFF)   /* USBDC_DFU_bcdDFUVersion_H */
 
+#define DFU_FUNCTIONAL_DESCRIPTOR_SIZE       9
+
+/**
+ * @brief defines how many bytes are needed in configuration descriptor for DFU APP-mode descriptor
+ *
+ * @return value 18 which says how many bytes of configuration descriptor are needed to describe DFU feature
+ */
+#define DFU_CONFIG_DESC_PART_SIZE            (USB_DESC_TYPE_INTERFACE_SIZE + DFU_FUNCTIONAL_DESCRIPTOR_SIZE)
 
 
 #define DFU_SET_PART_DOWNLOAD_READY_HANDLER(_dfu, _handler)    (_dfu)->user_data.handlers.part_download_ready = (_handler)

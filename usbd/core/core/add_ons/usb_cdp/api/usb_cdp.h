@@ -147,8 +147,8 @@
 #define USB_CONFIGURATION_DESC_TABLE_FILL(_wTotalLength, _bNumInterfaces, _bConfigurationValue, _iConfiguration, _self_powered, _remote_wakeup, _max_current_mA) \
    (uint8_t)(USB_DESC_TYPE_CONFIGURATION_SIZE),\
    (uint8_t)(USB_DESC_TYPE_CONFIGURATION),     \
-   (uint8_t)(_wTotalLength & 0xFF), \
-   (uint8_t)(_wTotalLength / 256),  \
+   (uint8_t)((_wTotalLength) & 0xFF), \
+   (uint8_t)((_wTotalLength) / 256),  \
    (uint8_t)(_bNumInterfaces),      \
    (uint8_t)(_bConfigurationValue), \
    (uint8_t)(_iConfiguration),      \
@@ -160,8 +160,8 @@
    (uint8_t)(USB_DESC_TYPE_CONFIGURATION_SIZE),\
    (uint8_t)(USB_DESC_TYPE_CONFIGURATION),     \
    { \
-      (uint8_t)(_wTotalLength & 0xFF), \
-      (uint8_t)(_wTotalLength / 256)  \
+      (uint8_t)((_wTotalLength) & 0xFF), \
+      (uint8_t)((_wTotalLength) / 256)  \
    }, \
    (uint8_t)(_bNumInterfaces),      \
    (uint8_t)(_bConfigurationValue), \

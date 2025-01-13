@@ -38,75 +38,117 @@
 #define __RCC_APB1Periph_ALL               ((uint32_t)0xFFFFFFFF)
 #define __RCC_APB2Periph_ALL               ((uint32_t)0xFFFFFFFF)
 
-
+static void main_rcc_deinit_all(void);
 
 void SystemClock_Config(void)
 {
-   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+   /*-------------------------------- PLL Configuration -----------------------*/
 
-   /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
-   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
-   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
-   (void)HAL_RCC_OscConfig(&RCC_OscInitStruct);
+   /* Configure the main PLL clock source and multiplication factors. */
+   __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSI_DIV2, RCC_PLL_MUL12);
+   /* Enable the main PLL. */
+   __HAL_RCC_PLL_ENABLE();
 
-   /** Initializes the CPU, AHB and APB buses clocks
-   */
-   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+   /* Wait till PLL is ready */
+   while (RCC_CR_PLLRDY != (RCC->CR & RCC_CR_PLLRDY))
+   {
+   }
 
-   (void)HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1);
+   /* To correctly read data from FLASH memory, the number of wait states (LATENCY)
+   must be correctly programmed according to the frequency of the CPU clock
+   (HCLK) of the device. */
+
+#if defined(FLASH_ACR_LATENCY)
+   /* Increasing the number of wait states because of higher CPU frequency */
+   if (FLASH_LATENCY_1 > __HAL_FLASH_GET_LATENCY())
+   {
+      /* Program the new number of wait states to the LATENCY bits in the FLASH_ACR register */
+      __HAL_FLASH_SET_LATENCY(FLASH_LATENCY_1);
+   }
+
+#endif /* FLASH_ACR_LATENCY */
+   /*-------------------------- HCLK Configuration --------------------------*/
+   /* Set the highest APBx dividers in order to ensure that we do not go through
+   a non-spec phase whatever we decrease or increase HCLK. */
+   /* Set the new HCLK clock divider */
+   MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1 | RCC_CFGR_PPRE2 | RCC_CFGR_HPRE, RCC_HCLK_DIV16 | (RCC_HCLK_DIV16 << 3) | RCC_SYSCLK_DIV1);
+
+   /*------------------------- SYSCLK Configuration ---------------------------*/
+   __HAL_RCC_SYSCLK_CONFIG(RCC_SYSCLKSOURCE_PLLCLK);
+
+   while (__HAL_RCC_GET_SYSCLK_SOURCE() != (RCC_SYSCLKSOURCE_PLLCLK << RCC_CFGR_SWS_Pos))
+   {
+   }
+
+#if defined(FLASH_ACR_LATENCY)
+   /* Decreasing the number of wait states because of lower CPU frequency */
+   if (FLASH_LATENCY_1 < __HAL_FLASH_GET_LATENCY())
+   {
+      /* Program the new number of wait states to the LATENCY bits in the FLASH_ACR register */
+      __HAL_FLASH_SET_LATENCY(FLASH_LATENCY_1);
+   }
+#endif /* FLASH_ACR_LATENCY */
+
+   /*-------------------------- PCLK1 & PCLK2 Configuration ---------------------------*/
+   MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1 | RCC_CFGR_PPRE2, RCC_HCLK_DIV2 | ((RCC_HCLK_DIV1) << 3));
 }
+
 
 
 void SystemInit(void)
 {
 }
 
-void main_rcc_deinit_all(void)
+static void main_rcc_deinit_all(void)
 {
-   // Full peripheral reset
+   /* Full peripheral reset */
    RCC->APB1RSTR |= __RCC_APB1Periph_ALL;
    RCC->APB2RSTR |= __RCC_APB2Periph_ALL;
-   // Disable APB2 Peripheral Reset
+   /* Disable APB2 Peripheral Reset */
    RCC->APB2RSTR = 0x00000000;
 
-   // Disable APB1 Peripheral Reset
+   /* Disable APB1 Peripheral Reset */
    RCC->APB1RSTR = 0x00000000;
 
-   // FLITF and SRAM Clock ON
+   /* FLITF and SRAM Clock ON */
    RCC->AHBENR = 0x00000014;
 
-   // Disable APB2 Peripheral Clock
+   /* Disable APB2 Peripheral Clock */
    RCC->APB2ENR = 0x00000000;
 
-   // Disable APB1 Peripheral Clock
+   /* Disable APB1 Peripheral Clock */
    RCC->APB1ENR = 0x00000000;
 
-   // Set HSI as system clock
-    RCC->CFGR &= ~((uint32_t)0x3);
+   /* Set HSI as system clock */
+   RCC->CFGR &= ~((uint32_t)RCC_CFGR_SW_Msk);
 
-    // Disable PLL
-    *(volatile uint32_t *) CR_PLLON_BB = (uint32_t)0;
+   while(RCC_CFGR_SWS_HSI != (RCC->CFGR & RCC_CFGR_SWS))
+   {
+   }
 
-    // Reset all PLL and other parameters
-    RCC->CFGR = 0;
+   /* Disable the main PLL. */
+   __HAL_RCC_PLL_DISABLE();
 
-    // Reset all RCC parameters
-    RCC->CR = 0x83;
+   while(RCC_CR_PLLRDY == (RCC->CR & RCC_CR_PLLRDY))
+   {
+   }
 
-    // Disable all interrupts
-    RCC->CIR = 0x00000000;
+   /* Reset all PLL and other parameters */
+   RCC->CFGR = 0;
+
+   /* Reset all RCC parameters */
+   RCC->CR = 0x83;
+
+   /* Disable all interrupts */
+   RCC->CIR = 0x00000000;
+
+   while(0x83 != (RCC->CR & 0xFFFF00FF))
+   {
+   }
+
+   while(0 != RCC->CFGR)
+   {
+   }
 }
 
 // -----------------------------------------------------------------------------
@@ -114,6 +156,7 @@ void main_rcc_deinit_all(void)
 // -----------------------------------------------------------------------------
 int main(void)
 {
+   main_rcc_deinit_all();
 #if (PREFETCH_ENABLE != 0)
 #if defined(STM32F101x6) || defined(STM32F101xB) || defined(STM32F101xE) || defined(STM32F101xG) || \
     defined(STM32F102x6) || defined(STM32F102xB) || \
@@ -127,12 +170,8 @@ int main(void)
 
    NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
-   __HAL_RCC_GPIOA_CLK_ENABLE();
-   __HAL_RCC_GPIOB_CLK_ENABLE();
-   __HAL_RCC_GPIOC_CLK_ENABLE();
-   __HAL_RCC_AFIO_CLK_ENABLE();
-   __HAL_RCC_PWR_CLK_ENABLE();
-   __HAL_AFIO_REMAP_SWJ_ENABLE();
+   RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+   RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_AFIOEN;
 
    /* Configure the system clock */
    SystemClock_Config();
