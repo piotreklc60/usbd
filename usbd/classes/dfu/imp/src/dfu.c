@@ -40,6 +40,7 @@
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
 static void DFU_on_timeout(DFU_Params_XT *dfu)
 {
    USBD_ENTER_FUNC(DFU_EVENT);
@@ -73,10 +74,13 @@ static void DFU_on_timeout(DFU_Params_XT *dfu)
 
    USBD_EXIT_FUNC(DFU_EVENT);
 } /* DFU_on_timeout */
+#endif
 
 static void DFU_get_status(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
 {
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
    uint32_t timeout;
+#endif
    USBD_Bool_DT send_status = USBD_TRUE;
 
    USBD_ENTER_FUNC(DFU_REQ);
@@ -85,11 +89,13 @@ static void DFU_get_status(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
    switch(dfu->core.status.bState)
    {
       case DFU_BSTATE_DFU_DNLOAD_SYNC:
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
          if(0 != dfu->core.bwPollTimeout)
          {
             DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_DNBUSY);
          }
          else
+#endif
          {
             DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_DNLOAD_IDLE);
          }
@@ -106,7 +112,9 @@ static void DFU_get_status(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
                USBD_CALL_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event)(dfu, DFU_USER_EVENT_MANIFEST_IMAGE);
             }
 
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
             if(0 == dfu->core.bwPollTimeout)
+#endif
             {
                DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_MANIFEST_SYNC);
                dfu->core.manifestation_done = USBD_TRUE;
@@ -133,12 +141,14 @@ static void DFU_get_status(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
 
    if(USBD_BOOL_IS_TRUE(send_status))
    {
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
       timeout = dfu->core.bwPollTimeout;
       dfu->core.status.bwPollTimeout_L = (uint8_t)timeout;
       timeout /= 256;
       dfu->core.status.bwPollTimeout_M = (uint8_t)timeout;
       timeout /= 256;
       dfu->core.status.bwPollTimeout_H = (uint8_t)timeout;
+#endif
       USBD_IOTP_EVENT_Send(
          tp_in, (uint8_t*)(&(dfu->core.status)), sizeof(dfu->core.status), USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
    }
@@ -216,6 +226,10 @@ static void DFU_detach(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in, uin
    USBD_Vendor_Data_XT *tp_vendor_data;
    USBD_Bool_DT send_status = USBD_FALSE;
 
+#if(USBD_FEATURE_PRESENT != USBD_SOF_TICKS_SUPPORTED)
+   USBD_UNUSED_PARAM(timeout);
+#endif
+
    USBD_ENTER_FUNC(DFU_REQ);
 
    switch(dfu->core.status.bState)
@@ -245,7 +259,9 @@ static void DFU_detach(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in, uin
       tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp_in);
       tp_vendor_data->pvoid =  dfu;
 #endif
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
       dfu->core.bwPollTimeout = timeout;
+#endif
 
       USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
    }
@@ -533,7 +549,9 @@ static USBD_Bool_DT DFU_DFU_on_request(
                {
                   DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_IDLE);
                   dfu->core.status.bStatus = DFU_BSTATUS_OK;
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
                   dfu->core.bwPollTimeout  = 0;
+#endif
                }
                break;
 
@@ -609,11 +627,14 @@ static void DFU_on_event(
 
          case USBD_EVENT_REASON_UNCONFIGURED:
             USBD_DEBUG_HI_2(DFU_EVENT, "DFU state: %2d; USBD_EVENT_REASON_%s", dfu->core.status.bState, "UNCONFIGURED");
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
             dfu->core.bwPollTimeout = 0;
+#endif
             DFU_STATE_CHANGE(dfu, (dfu->core.status.bState >= DFU_BSTATE_DFU_IDLE) ? DFU_BSTATE_DFU_IDLE : DFU_BSTATE_APP_IDLE);
             dfu->core.status.bStatus= DFU_BSTATUS_OK;
             break;
 
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
          case USBD_EVENT_REASON_SOF_RECEIVED:
             if(dfu->core.bwPollTimeout > 0)
             {
@@ -627,8 +648,9 @@ static void DFU_on_event(
                }
             }
             break;
+#endif
 
-#if(USBD_FEATURE_PRESENT == DFU_MULTIPLE_MEMORIES_SUPPORT)
+#if((USBD_FEATURE_PRESENT == DFU_MULTIPLE_MEMORIES_SUPPORT) && (USBD_FEATURE_PRESENT == DFU_DFU_MODE_SUPPORT))
          case USBD_EVENT_REASON_INTERFACE_SET:
             USBD_DEBUG_HI_2(DFU_EVENT, "DFU state: %2d; USBD_EVENT_REASON_%s", dfu->core.status.bState, "INTERFACE_SET");
             if_desc = USBD_DEV_Get_Interface_Desc(usbd, dfu->core.interface_num);
@@ -693,7 +715,9 @@ static void DFU_init(USBDC_Params_XT *usbdc, DFU_Params_XT *dfu, uint8_t interfa
 #if(USBD_FEATURE_PRESENT != DFU_WILL_DETACH_SUPPORT)
       | USBD_EVENT_REASON_RESET
 #endif
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
       | USBD_EVENT_REASON_SOF_RECEIVED
+#endif
 #if(USBD_FEATURE_PRESENT == DFU_MULTIPLE_MEMORIES_SUPPORT)
       | USBD_EVENT_REASON_INTERFACE_SET
 #endif
@@ -748,6 +772,7 @@ void DFU_DFU_Install_In_Config(USBDC_Params_XT *usbdc, DFU_Params_XT *dfu, uint8
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
 void DFU_set_bwPollTimeout(DFU_Params_XT *dfu, uint32_t timeout)
 {
    if(USBD_CHECK_PTR(DFU_Params_XT, dfu))
@@ -755,4 +780,5 @@ void DFU_set_bwPollTimeout(DFU_Params_XT *dfu, uint32_t timeout)
       dfu->core.bwPollTimeout = timeout;
    }
 }
+#endif
 

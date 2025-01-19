@@ -30,10 +30,10 @@
 /****************** USER APPLICATION ADDRESS SETTINGS *****************
  * Here we can change location of the user application.
  * By default USER APPLICATION is followed by the bootloader,
- * so this address is bootloader address + 8kB
- * (0x08000000 - bootloader address, 0x00002000 - 8kB relocation).
+ * so this address is bootloader address + 10kB
+ * (0x08000000 - bootloader address, 0x00002800 - 10kB relocation).
  */
-#define DEF_APP_ADDRESS                0x08002000
+#define DEF_APP_ADDRESS                0x08002800
 
 
 
@@ -43,7 +43,6 @@
  * we have to define support for it as 1, otherwise 0
  */
 
-#define BOOT_CALL_BY_JUMP_SUPPORT      1
 #define BOOT_CALL_BY_RESET_SUPPORT     1
 #define BOOT_LED_NOTOFICATION_SUPPORT  1
 

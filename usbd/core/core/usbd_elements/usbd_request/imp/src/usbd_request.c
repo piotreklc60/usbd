@@ -606,6 +606,10 @@ static void USBD_REQUEST_get_descrptor(
    uint16_t number;
    USBD_Bool_DT result = USBD_TRUE;
 
+#if(USBD_FEATURE_PRESENT != USBD_REQ_GET_NOT_STANDARD_DESCRIPTOR_SUPPORTED)
+   USBD_UNUSED_PARAM(usbdc);
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_REQ_PROCESSING);
 
    if((USBD_BMREQUESTTYPE_DEVICE == destination)
@@ -816,14 +820,17 @@ static void USBD_REQUEST_get_descrptor(
 #endif
 
             default:
+#if(USBD_FEATURE_PRESENT == USBD_REQ_GET_NOT_STANDARD_DESCRIPTOR_SUPPORTED)
                if(USBD_DEV_CHECK_ACTIVE_CONFIG_PTR(usbd))
                {
                   (void)USBD_REQUEST_process_other_standard_requests(usbd, usbdc, 0, req);
                }
+#endif
                break;
          }
       }
    }
+#if(USBD_FEATURE_PRESENT == USBD_REQ_GET_NOT_STANDARD_DESCRIPTOR_SUPPORTED)
    else if( ( (USBD_BMREQUESTTYPE_INTERFACE == destination) || (USBD_BMREQUESTTYPE_ENDPOINT == destination) )
       && (USBD_DEV_STATE_CONFIGURED == (USBD_DEV_STATE_CONFIGURED & USBD_DEV_Get_State(usbd))))
    {
@@ -843,6 +850,7 @@ static void USBD_REQUEST_get_descrptor(
    {
       (void)USBD_REQUEST_process_other_standard_requests(usbd, usbdc, 0, req);
    }
+#endif
 
    USBD_EXIT_FUNC(USBD_DBG_REQ_PROCESSING);
 } /* USBD_REQUEST_get_descrptor */

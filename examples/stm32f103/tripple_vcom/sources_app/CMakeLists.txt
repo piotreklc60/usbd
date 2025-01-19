@@ -33,6 +33,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/${VARIANT}/
     ${OS_API_PATH}
     ${OS_IMP_PATH}/inc/
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../helpers/
 )
 
 # Add sources to executable

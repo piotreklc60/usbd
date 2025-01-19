@@ -68,7 +68,11 @@
 
 
 #ifndef DFU_MULTIPLE_MEMORIES_SUPPORT
+#if(USBD_MAX_NUM_ALTERNATE_INTERFACE_SETTINGS > 0)
 #define DFU_MULTIPLE_MEMORIES_SUPPORT        USBD_FEATURE_PRESENT
+#else
+#define DFU_MULTIPLE_MEMORIES_SUPPORT        USBD_FEATURE_NOT_PRESENT
+#endif
 #endif
 
 
@@ -78,6 +82,9 @@
 
 
 #ifndef DFU_W_DETACH_TIMEOUT
+/**
+ * @brief time in miliseconds in which device will switch to DFU/APP mode
+ */
 #define DFU_W_DETACH_TIMEOUT                 100
 #endif
 
@@ -341,7 +348,9 @@ typedef struct DFU_Params_eXtendedTag
       uint16_t packet_number;
 #endif
 
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
       uint32_t bwPollTimeout;
+#endif
 
       DFU_Status_DT status;
 
@@ -437,8 +446,9 @@ void DFU_DFU_Install_In_Config(USBDC_Params_XT *usbdc, DFU_Params_XT *dfu, uint8
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
 void DFU_set_bwPollTimeout(DFU_Params_XT *dfu, uint32_t timeout);
-
+#endif
 
 
 #endif /*DFU_H_*/

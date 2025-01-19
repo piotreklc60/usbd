@@ -109,6 +109,7 @@ USBD_DEV_Installation_Result_XT USBD_DEV_Install_Serial_Number_String(
       const uint8_t *string,
       uint8_t string_size);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 /**
  * Removes previously installed string from list of installed strings.
  *
@@ -128,6 +129,7 @@ USBD_Bool_DT USBD_DEV_Remove_String(
  */
 USBD_Bool_DT USBD_DEV_Remove_All_Strings(
       USBD_Params_XT *usbd);
+#endif
 
 /**
  * Checks how many strings are installed
@@ -241,6 +243,7 @@ USBD_DEV_Installation_Result_XT USBD_DEV_Install_Config(
       const USBD_DEV_Port_Handler_XT *port,
       USBDC_Params_XT *usbdc);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 /**
  * Removes previously installed configuration from list of installed configurations.
  *
@@ -260,6 +263,7 @@ USBD_Bool_DT USBD_DEV_Remove_Config(
  */
 USBD_Bool_DT USBD_DEV_Remove_All_Configs(
       USBD_Params_XT *usbd);
+#endif
 
 /**
  * Checks how many configurations are installed
@@ -448,6 +452,7 @@ USBD_Bool_DT  USBD_DEV_Activate(
       USBD_Params_XT *usbd,
       const USBD_DEV_Port_Handler_XT *port);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 /**
  * Deactivates device. If usb was running then this function disconnects
  * it from HOST and deinitializes hardware.
@@ -457,6 +462,7 @@ USBD_Bool_DT  USBD_DEV_Activate(
  */
 USBD_Bool_DT USBD_DEV_Deactivate(
       USBD_Params_XT *usbd);
+#endif
 
 
 
@@ -593,6 +599,9 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(
       uint8_t alternative_setting);
 #endif
 
+
+
+#if(USBD_FEATURE_PRESENT == USBD_SUSPEND_RESUME_SUPPORTED)
 /**
  * Sets device to suspended state.
  * Shall be called by port layer when low level software/hardware detects
@@ -619,7 +628,11 @@ void USBD_DEV_Suspended(
  */
 void USBD_DEV_Resumed(
       USBD_Params_XT *usbd);
+#endif
 
+
+
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
 /**
  * Informs USBD_DEV module that Start Of Frame (SOF) message has been received
  *
@@ -630,6 +643,7 @@ void USBD_DEV_Resumed(
  */
 void USBD_DEV_SOF_Received(
       USBD_Params_XT *usbd);
+#endif
 
 
 

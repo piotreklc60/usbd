@@ -85,6 +85,18 @@
 #error "USBD_MAX_NUM_STRINGS too big!!! max possible is 255 endpoints!"
 #endif
 
+#ifndef USBD_MULTI_SESSION_SUPPORTED
+#define USBD_MULTI_SESSION_SUPPORTED                  USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_SUSPEND_RESUME_SUPPORTED
+#define USBD_SUSPEND_RESUME_SUPPORTED                 USBD_FEATURE_PRESENT
+#endif
+
+#ifndef USBD_SOF_TICKS_SUPPORTED
+#define USBD_SOF_TICKS_SUPPORTED                      USBD_FEATURE_PRESENT
+#endif
+
 
 #ifndef USBD_DBG_H_
 #include "usbd_dbg.h"
@@ -214,6 +226,20 @@ typedef struct USBD_params_eXtended_Tag
 
 #if (!defined(USBD_IOTP_EVENT_PRESENT))
 #error "USBD IOTP EVENT module required for USBD REQUEST module is missing!"
+#endif
+#endif
+
+
+#ifdef USBD_DFU_PRESENT
+#ifndef DFU_H_
+#include "dfu.h"
+#endif
+#endif
+
+
+#ifdef USBD_CDC_VCOM_PRESENT
+#ifndef CDC_VCOM_H_
+#include "cdc_vcom.h"
 #endif
 #endif
 

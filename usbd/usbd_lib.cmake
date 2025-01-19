@@ -178,6 +178,9 @@ target_include_directories(usbd_lib INTERFACE
     ${CDC_VCOM_PATH}/api/
     ${CDC_VCOM_PATH}/imp/inc/
 )
+target_compile_definitions(usbd_lib INTERFACE
+    USBD_CDC_VCOM_PRESENT
+)
 endif()
 
 if(DEFINED USBD_USE_DFU AND USBD_USE_DFU MATCHES ON)
@@ -187,6 +190,9 @@ target_sources(usbd_lib INTERFACE
 target_include_directories(usbd_lib INTERFACE
     ${DFU_PATH}/api/
     ${DFU_PATH}/imp/inc/
+)
+target_compile_definitions(usbd_lib INTERFACE
+    USBD_DFU_PRESENT
 )
 endif()
 

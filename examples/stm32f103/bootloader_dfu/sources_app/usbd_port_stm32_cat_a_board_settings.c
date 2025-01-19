@@ -50,11 +50,17 @@ USBD_Atomic_Bool_DT port_stm32f103_irq_enabled;
 
 void USBD_Port_STM32_CAT_A_Configure_Pull_Up(USBD_Bool_DT configure)
 {
+#if(USBD_FEATURE_PRESENT != USBD_MULTI_SESSION_SUPPORTED)
+   USBD_UNUSED_PARAM(configure);
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
    USBD_DEBUG_HI_1(USBD_DBG_PORT_DEV, "%sconfigure Pull-UP", USBD_BOOL_IS_TRUE(configure) ? "" : "de");
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
    if(USBD_BOOL_IS_TRUE(configure))
+#endif
    {
       GPIO_Init_Output_Push_Pull(USBD_DP_PULL_UP_PORT, USBD_DP_PULL_UP_PIN);
 
@@ -65,11 +71,13 @@ void USBD_Port_STM32_CAT_A_Configure_Pull_Up(USBD_Bool_DT configure)
       USBD_DP_PULL_UP_PORT->BSRR = 1 << USBD_DP_PULL_UP_PIN;
 #endif
    }
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
    else
    {
       /* disable */
       GPIO_Deinit(USBD_DP_PULL_UP_PORT, USBD_DP_PULL_UP_PIN);
    }
+#endif
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
 }
@@ -125,14 +133,18 @@ void USBD_Port_STM32_CAT_A_Configure_USB_Irqs(USBD_Bool_DT configure)
 
    USBD_ATOMIC_BOOL_SET(port_stm32f103_irq_enabled, configure);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
    if(USBD_BOOL_IS_TRUE(configure))
+#endif
    {
       USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
+#if(USBD_FEATURE_PRESENT == USBD_SUSPEND_RESUME_SUPPORTED)
       /* configure USB WakeUp IRQ */
       HAL_NVIC_SetPriority(USBWakeUp_IRQn, 4, 0);
       HAL_NVIC_EnableIRQ(USBWakeUp_IRQn);
 
       GPIO_Init_EXTI(18, EXTI_TRIGGER_RISING);
+#endif
 
       /* configure lower priority USB Dev IRQ */
       HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 3, 0);
@@ -144,11 +156,13 @@ void USBD_Port_STM32_CAT_A_Configure_USB_Irqs(USBD_Bool_DT configure)
       HAL_NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
 #endif
    }
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
    else
    {
+#if(USBD_FEATURE_PRESENT == USBD_SUSPEND_RESUME_SUPPORTED)
       /* deconfigure USB WakeUp IRQ */
       HAL_NVIC_DisableIRQ(USBWakeUp_IRQn);
-
+#endif
       /* deconfigure lower priority USB Dev IRQ */
       HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
 
@@ -157,6 +171,7 @@ void USBD_Port_STM32_CAT_A_Configure_USB_Irqs(USBD_Bool_DT configure)
       HAL_NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
 #endif
    }
+#endif
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
 }

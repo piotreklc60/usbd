@@ -138,6 +138,7 @@ void USBD_IO_EP_Enable_And_Configure(
    USBD_EXIT_FUNC(USBD_DBG_IO_ONOFF);
 } /* USBD_IO_EP_Enable_And_Configure */
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 void USBD_IO_EP_Disable(
       USBD_Params_XT *usbd,
       uint8_t ep_num,
@@ -232,6 +233,7 @@ void USBD_IO_EP_Disable(
 
    USBD_EXIT_FUNC(USBD_DBG_IO_ONOFF);
 } /* USBD_IO_EP_Disable */
+#endif
 
 #if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
 void USBD_IO_Perform_Halt(

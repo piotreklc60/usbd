@@ -44,6 +44,7 @@ USBD_EVENT_Event_Header_XT *USBD_EVENT_Install(
       USBD_EVENT_Event_HT event,
       USBD_EVENT_Reason_ET mask);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 /**
  * Removes previously installed event from list of installed events.
  *
@@ -63,6 +64,7 @@ USBD_Bool_DT USBD_EVENT_Remove_Event(
  */
 USBD_Bool_DT USBD_EVENT_Remove_All_Events(
       USBD_Params_XT *usbd);
+#endif
 
 /**
  * Checks how many events are installed
@@ -96,6 +98,7 @@ USBD_EVENT_Event_Header_XT *USBDC_EVENT_Install(
       USBD_EVENT_Event_HT event,
       USBD_EVENT_Reason_ET mask);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 /**
  * Removes previously installed event from list of installed events.
  *
@@ -115,6 +118,7 @@ USBD_Bool_DT USBDC_EVENT_Remove_Event(
  */
 USBD_Bool_DT USBDC_EVENT_Remove_All_Events(
       USBDC_Params_XT *usbdc);
+#endif
 
 /**
  * Checks how many events are installed

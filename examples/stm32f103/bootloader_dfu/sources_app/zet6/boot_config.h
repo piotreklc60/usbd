@@ -30,10 +30,10 @@
 /****************** USER APPLICATION ADDRESS SETTINGS *****************
  * Here we can change location of the user application.
  * By default USER APPLICATION is followed by the bootloader,
- * so this address is bootloader address + 8kB
- * (0x08000000 - bootloader address, 0x00002000 - 8kB relocation).
+ * so this address is bootloader address + 10kB
+ * (0x08000000 - bootloader address, 0x00002800 - 10kB relocation).
  */
-#define DEF_APP_ADDRESS                0x08020000
+#define DEF_APP_ADDRESS                0x08002800
 
 
 
@@ -43,7 +43,6 @@
  * we have to define support for it as 1, otherwise 0
  */
 
-#define BOOT_CALL_BY_JUMP_SUPPORT      1
 #define BOOT_CALL_BY_RESET_SUPPORT     1
 #define BOOT_LED_NOTOFICATION_SUPPORT  1
 
@@ -63,10 +62,10 @@
  */
 
 #define FORCE_PORT                     GPIOA
-#define FORCE_PIN                      7
+#define FORCE_PIN                      0
 #define FORCE_PIN_MODE                 GPIO_MODE_INPUT
-#define FORCE_PIN_PULL                 GPIO_PULLUP
-#define FORCE_ACTIVE_STATE             0
+#define FORCE_PIN_PULL                 GPIO_PULLDOWN
+#define FORCE_ACTIVE_STATE             1
 
 
 /********************** USBD PULL_UP PIN SETTINGS *********************

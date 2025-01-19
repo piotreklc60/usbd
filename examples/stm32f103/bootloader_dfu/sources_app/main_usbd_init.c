@@ -31,6 +31,7 @@
 
 #define FLASH_SIZE_REG     ((uint16_t*)0x1FFFF7E0)
 
+uint32_t force_dfu = 0;
 
 static USBD_Params_XT  usbd;
 static USBDC_Params_XT usbdc;
@@ -124,10 +125,15 @@ static void dfu_user_event(DFU_Params_XT *dfu, DFU_Event_ET event)
 
    switch(event)
    {
+#if(USBD_FEATURE_PRESENT == DFU_WILL_DETACH_SUPPORT)
       case DFU_USER_EVENT_DETACH_GO_TO_APP:
       case DFU_USER_EVENT_DETACH_GO_TO_DFU:
+#else
+      case DFU_USER_EVENT_RESET_GO_TO_APP:
+      case DFU_USER_EVENT_RESET_GO_TO_DFU:
+#endif
 
-         USBD_DEV_Deactivate(&usbd);
+//         USBD_DEV_Deactivate(&usbd);
 
          NVIC_SystemReset();
          break;
@@ -189,44 +195,6 @@ void main_usbd_init(void)
    else
    {
       USBD_DEBUG_LO_1(MAIN_APP, "configuration install ok - index: %d", install_result.index);
-   }
-/*
-   install_result = USBD_DEV_Install_Manufacturer_String(&usbd, (const uint8_t*)manuf_string, sizeof(manuf_string));
-
-   if(USBD_DEV_INSTALLATION_OK != install_result.result)
-   {
-      USBD_ERROR_1(MAIN_APP, "string install error - result: %d", install_result.result);
-   }
-   else
-   {
-      USBD_DEBUG_LO_1(MAIN_APP, "string install ok - index: %d", install_result.index);
-   }
-
-   install_result = USBD_DEV_Install_Product_String(&usbd, (const uint8_t*)product_string, sizeof(product_string));
-
-   if(USBD_DEV_INSTALLATION_OK != install_result.result)
-   {
-      USBD_ERROR_1(MAIN_APP, "string install error - result: %d", install_result.result);
-   }
-   else
-   {
-      USBD_DEBUG_LO_1(MAIN_APP, "string install ok - index: %d", install_result.index);
-   }
-
-   install_result = USBD_DEV_Install_Serial_Number_String(&usbd, (const uint8_t*)serial_string, sizeof(serial_string));
-
-   if(USBD_DEV_INSTALLATION_OK != install_result.result)
-   {
-      USBD_ERROR_1(MAIN_APP, "string install error - result: %d", install_result.result);
-   }
-   else
-   {
-      USBD_DEBUG_LO_1(MAIN_APP, "string install ok - index: %d", install_result.index);
-   }*/
-
-   if(USBD_BOOL_IS_FALSE(USBD_DEV_Get_Dev_Desc(&usbd, &dev)))
-   {
-      USBD_ERROR(MAIN_APP, "get device desc error!");
    }
 
    dev.bcdUSB           = 0x0110;

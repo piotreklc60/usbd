@@ -698,7 +698,7 @@ void test_dev_desc(USBD_Params_XT *usbd)
       REPORT_ERROR();
    }
 
-   if((64) == dev_desc.bMaxPacketSize0)
+   if((64) != dev_desc.bMaxPacketSize0)
    {
       printf("Device Descriptor param bMaxPacketSize0 invalid: %d!", dev_desc.bMaxPacketSize0);
       REPORT_ERROR();
@@ -762,7 +762,7 @@ void test_dev_desc(USBD_Params_XT *usbd)
    dev_desc.bDeviceClass         = 0x01;
    dev_desc.bDeviceSubclass      = 0x02;
    dev_desc.bDeviceProtocol      = 0x03;
-   dev_desc.bMaxPacketSize0      = 8;
+   dev_desc.bMaxPacketSize0      = 32;
    dev_desc.idVendor             = 0x1234;
    dev_desc.idProduct            = 0x5678;
    dev_desc.bcdDevice            = 0x0124;
@@ -823,7 +823,7 @@ void test_dev_desc(USBD_Params_XT *usbd)
       REPORT_ERROR();
    }
 
-   if((64) == dev_desc.bMaxPacketSize0)
+   if(TEST_EP0_MPS != dev_desc.bMaxPacketSize0)
    {
       printf("Device Descriptor param bMaxPacketSize0 invalid: %d!", dev_desc.bMaxPacketSize0);
       REPORT_ERROR();

@@ -364,10 +364,15 @@ static void port_stm32_cat_a_dev_reset_internal_structures(void)
 
 static void port_stm32_cat_a_dev_activate_deactivate(USBD_Params_XT* usbd, USBD_Bool_DT state)
 {
+#if(USBD_FEATURE_PRESENT != USBD_MULTI_SESSION_SUPPORTED)
+   USBD_UNUSED_PARAM(state);
+#endif
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
    if(USBD_BOOL_IS_TRUE(state))
+#endif
    {
       USBD_IO_DOWN_Set_Common_Handlers(usbd, &port_stm32_cat_a_io_common);
 
@@ -395,6 +400,7 @@ static void port_stm32_cat_a_dev_activate_deactivate(USBD_Params_XT* usbd, USBD_
 #endif
 #endif
    }
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
    else
    {
       USBD_ENTER_CRITICAL();
@@ -420,6 +426,7 @@ static void port_stm32_cat_a_dev_activate_deactivate(USBD_Params_XT* usbd, USBD_
 
       USBD_EXIT_CRITICAL();
    }
+#endif
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
 } /* port_stm32_cat_a_dev_activate_deactivate */
@@ -3145,10 +3152,19 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
          if(USBD_CHECK_PTR(void, port_stm32_cat_a_usbd))
          {
             /* enable interruptions - data reception, HOST reset, SUSPEND req, SOF reception */
-            USBD_STM32_REG->CNTR = USBD_STM32_CAT_A_CNTR_CTRM | USBD_STM32_CAT_A_CNTR_RESETM | USBD_STM32_CAT_A_CNTR_SUSPM
-               | USBD_STM32_CAT_A_CNTR_SOFM | USBD_STM32_CAT_A_CNTR_ESOFM;
+            USBD_STM32_REG->CNTR =
+               USBD_STM32_CAT_A_CNTR_CTRM
+#if(USBD_FEATURE_PRESENT == USBD_SUSPEND_RESUME_SUPPORTED)
+               | USBD_STM32_CAT_A_CNTR_SUSPM
+#endif
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
+               | USBD_STM32_CAT_A_CNTR_SOFM | USBD_STM32_CAT_A_CNTR_ESOFM
+#endif
+                | USBD_STM32_CAT_A_CNTR_RESETM;
          }
       }
+
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
       /* SOF received/expected */
       if(USBD_STM32_REG->ISTR & (USBD_STM32_CAT_A_ISTR_SOF | USBD_STM32_CAT_A_ISTR_ESOF))
       {
@@ -3156,6 +3172,9 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 
          USBD_DEV_SOF_Received(port_stm32_cat_a_usbd);
       }
+#endif
+
+#if(USBD_FEATURE_PRESENT == USBD_SUSPEND_RESUME_SUPPORTED)
       /* SUSPEND state has been forced by HOST (no SOF received) */
       if(USBD_STM32_REG->ISTR & USBD_STM32_CAT_A_ISTR_SUSP)
       {
@@ -3168,6 +3187,8 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 
          // TODO: anything else?
       }
+#endif
+
       if(USBD_STM32_REG->ISTR & (USBD_STM32_CAT_A_ISTR_PMAOVR | USBD_STM32_CAT_A_ISTR_ERR))
       {
          static uint8_t dump_limit = 0;
@@ -3278,6 +3299,7 @@ void USB_HP_CAN1_TX_IRQHandler(void)
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_SUSPEND_RESUME_SUPPORTED)
 void USBWakeUp_IRQHandler(void)
 {
    USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_TRUE);
@@ -3304,4 +3326,5 @@ void USBWakeUp_IRQHandler(void)
 
    USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
 } /* USBWakeUp_IRQHandler */
+#endif
 

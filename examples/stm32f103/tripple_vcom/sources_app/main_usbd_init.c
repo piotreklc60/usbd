@@ -26,6 +26,7 @@
 #include "main_usbd_init.h"
 #include "usbd_port_stm32_cat_a.h"
 #include "iocmd.h"
+#include "call_bootloader.h"
 
 #define VCOM_0_NOTIF_IF_NUM        0
 #define VCOM_0_DATA_IF_NUM         1
@@ -33,6 +34,7 @@
 #define VCOM_1_DATA_IF_NUM         3
 #define VCOM_2_NOTIF_IF_NUM        4
 #define VCOM_2_DATA_IF_NUM         5
+#define DFU_APP_IF_NUM             6
 
 static USBD_Params_XT  usbd;
 static USBDC_Params_XT usbdc;
@@ -57,12 +59,14 @@ CDC_VCOM_Params_XT vcom_2;
 static Buff_Ring_XT buf_2;
 static Buff_Ring_Extensions_XT buf_2_ext;
 static uint8_t mem_2[256];
+/* DFU */
+static DFU_Params_XT dfu;
 
 static uint8_t config_desc[] =
 {
    USB_CONFIGURATION_DESC_TABLE_FILL(
       /* _wTotalLength */        0,
-      /* _bNumInterfaces */      6,
+      /* _bNumInterfaces */      7,
       /* _bConfigurationValue */ 1,
       /* _iConfiguration */      0,
       /* _self_powered */        USB_CFG_DESC_SELF_POWERED,
@@ -107,7 +111,9 @@ static uint8_t config_desc[] =
       /* _ep_in */               6,
       /* _ep_in_mps */           64,
       /* _ep_out */              6,
-      /* _ep_out_mps */          64)
+      /* _ep_out_mps */          64),
+
+   DFU_APP_MODE_DESC_PART(DFU_APP_IF_NUM, 0)
 
 }; /* config_desc */
 
@@ -166,6 +172,35 @@ const uint16_t serial_string[] =
    '5'
 };
 
+static void dfu_user_event(DFU_Params_XT *dfu, DFU_Event_ET event)
+{
+   USBD_ENTER_FUNC(MAIN_APP);
+
+   USBD_UNUSED_PARAM(dfu);
+
+   USBD_NOTICE_1(MAIN_APP, "dfu event: %d", event);
+
+   switch(event)
+   {
+#if(USBD_FEATURE_PRESENT == DFU_WILL_DETACH_SUPPORT)
+      case DFU_USER_EVENT_DETACH_GO_TO_APP:
+      case DFU_USER_EVENT_DETACH_GO_TO_DFU:
+
+         USBD_DEV_Deactivate(&usbd);
+#else
+      case DFU_USER_EVENT_RESET_GO_TO_APP:
+      case DFU_USER_EVENT_RESET_GO_TO_DFU:
+#endif
+         CALL_BOOTLOADER();
+         break;
+
+      default:
+         break;
+   }
+
+   USBD_EXIT_FUNC(MAIN_APP);
+} /* dfu_user_event */
+
 void main_usbd_init(void)
 {
    USBD_DEV_Installation_Result_XT install_result;
@@ -218,6 +253,11 @@ void main_usbd_init(void)
 
    CDC_VCOM_Init(&vcom_2, &buf_2, &buf_2, "ECHO");
    CDC_VCOM_Install_In_Config(&usbdc, &vcom_2, VCOM_2_NOTIF_IF_NUM);
+
+   /* DFU */
+   DFU_Init(&dfu);
+   DFU_SET_USER_EVENT_HANDLER(&dfu, dfu_user_event);
+   DFU_APP_Install_In_Config(&usbdc, &dfu, DFU_APP_IF_NUM);
 
    install_result = USBD_DEV_Install_Config(&usbd, USBD_PORT_STM32_CAT_A, &usbdc);
 

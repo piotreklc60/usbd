@@ -55,7 +55,9 @@ static USBD_EVENT_Event_Header_XT *USBD_EVENT_only_once_check_and_install(
    size_t max_num_elems,
    USBD_EVENT_Reason_ET mask);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 static USBD_Bool_DT USBD_EVENT_find_and_remove(USBD_EVENT_Proc_Params_XT *params, USBD_EVENT_Event_HT event);
+#endif
 
 static void USBD_EVENT_process_events(
    USBD_Params_XT *usbd,
@@ -114,6 +116,7 @@ static USBD_EVENT_Event_Header_XT *USBD_EVENT_only_once_check_and_install(
 
 
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 static USBD_Bool_DT USBD_EVENT_find_and_remove(USBD_EVENT_Proc_Params_XT *params, USBD_EVENT_Event_HT event)
 {
    USBD_EVENT_Event_Header_XT *tab = params->event_tab;
@@ -152,6 +155,7 @@ static USBD_Bool_DT USBD_EVENT_find_and_remove(USBD_EVENT_Proc_Params_XT *params
 
    return result;
 } /* USBD_EVENT_find_and_remove */
+#endif
 
 
 
@@ -182,6 +186,7 @@ USBD_EVENT_Event_Header_XT *USBD_EVENT_Install(
    return result;
 } /* USBD_EVENT_Install */
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 USBD_Bool_DT USBD_EVENT_Remove_Event(
       USBD_Params_XT *usbd,
       USBD_EVENT_Event_HT event)
@@ -229,6 +234,7 @@ USBD_Bool_DT USBD_EVENT_Remove_All_Events(
 
    return result;
 } /* USBD_EVENT_Remove_All_Events */
+#endif
 
 size_t USBD_EVENT_Get_Num_Installed_Events(
       USBD_Params_XT *usbd)
@@ -277,6 +283,7 @@ USBD_EVENT_Event_Header_XT *USBDC_EVENT_Install(
    return result;
 } /* USBDC_EVENT_Install */
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 USBD_Bool_DT USBDC_EVENT_Remove_Event(
       USBDC_Params_XT *usbdc,
       USBD_EVENT_Event_HT event)
@@ -324,6 +331,7 @@ USBD_Bool_DT USBDC_EVENT_Remove_All_Events(
 
    return result;
 } /* USBDC_EVENT_Remove_All_Events */
+#endif
 
 size_t USBDC_EVENT_Get_Num_Installed_Events(
       USBDC_Params_XT *usbdc)

@@ -26,9 +26,7 @@
 #ifndef USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
 #define USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
 
-#include <stdint.h>
-
-#include <string.h>
+#include "std_libs.h"
 #include "usbd.h"
 
 

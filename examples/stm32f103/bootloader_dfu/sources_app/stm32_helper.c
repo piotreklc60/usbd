@@ -26,7 +26,7 @@
 #include "std_libs.h"
 #include "stm32_helper.h"
 
-#define STM32_HELPER_USE_EXTI          1
+#define STM32_HELPER_USE_EXTI          0
 #define STM32_HELPER_USE_EXTI_ON_GPIO  0
 
 #define GPIO_CR_MODE_INPUT          0x00
@@ -130,11 +130,11 @@ void GPIO_Init_Input_With_EXTI(GPIO_TypeDef  *gpio, uint8_t pin_id, uint32_t pul
 
    if(GPIO_NOPULL != pull_type)
    {
-      cr = GPIO_CR_MODE_INPUT | GPIO_CR_CNF_IN_PULL;
+      cr = GPIO_CR_MODE_INPUT | (GPIO_CR_CNF_IN_PULL << 2);
    }
    else
    {
-      cr = GPIO_CR_MODE_INPUT | GPIO_CR_CNF_IN_FLOATING;
+      cr = GPIO_CR_MODE_INPUT | (GPIO_CR_CNF_IN_FLOATING << 2);
    }
    gpio_set_cr_regs(gpio, cr, pin_id);
    pull_type &= 0x1;

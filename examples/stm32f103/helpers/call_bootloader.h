@@ -23,19 +23,23 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-#ifndef MEMCONFIG_H_
-#define MEMCONFIG_H_
+#ifndef CALL_BOOTLOADER_H_
+#define CALL_BOOTLOADER_H_
 
-#define INTERNAL_RAM_START    SRAM_BASE
-#define INTERNAL_RAM_SIZE     (20 * 1024)
-#define INTERNAL_FLASH_START  0x08002000
-#define INTERNAL_FLASH_SIZE   ((128 - 8) * 1024)
+#include "stm32f1xx_hal.h"
 
-#define IOCMD_LOG_MAIN_BUF_SIZE                 3000
+#define BOOTLOADER_ACTIVATION_KEY         0x169D
 
-#define HEAP_SIZE             (6 * 1024)
-
-#define STACK_SIZE            (1024)
+#define CALL_BOOTLOADER() \
+{ \
+   /* Enable write access to Backup registers */               \
+   RCC->APB1ENR   |= RCC_APB1ENR_BKPEN | RCC_APB1ENR_PWREN;    \
+   PWR->CR        |= PWR_CR_DBP;                               \
+                                                               \
+   /* Trigger bootloader */                                    \
+   BKP->DR1 = BOOTLOADER_ACTIVATION_KEY;                       \
+                                                               \
+   NVIC_SystemReset();                                         \
+}
 
 #endif
-

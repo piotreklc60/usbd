@@ -27,7 +27,6 @@
 #define MAIN_USBD_INIT_H_
 
 #include "usbd.h"
-#include "cdc_vcom.h"
 
 
 #define VCOM_UART          &vcom_0

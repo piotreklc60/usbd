@@ -34,6 +34,7 @@
 #include "boot_config.h"
 #include "stm32_helper.h"
 #include "user_app_handle.h"
+#include "call_bootloader.h"
 
 #define __RCC_APB1Periph_ALL               ((uint32_t)0xFFFFFFFF)
 #define __RCC_APB2Periph_ALL               ((uint32_t)0xFFFFFFFF)
@@ -156,7 +157,10 @@ static void main_rcc_deinit_all(void)
 // -----------------------------------------------------------------------------
 int main(void)
 {
-   main_rcc_deinit_all();
+#if(BOOT_CALL_BY_RESET_SUPPORT)
+   USBD_Bool_DT is_trigger_from_app;
+#endif
+
 #if (PREFETCH_ENABLE != 0)
 #if defined(STM32F101x6) || defined(STM32F101xB) || defined(STM32F101xE) || defined(STM32F101xG) || \
     defined(STM32F102x6) || defined(STM32F102xB) || \
@@ -170,8 +174,8 @@ int main(void)
 
    NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
-   RCC->APB1ENR |= RCC_APB1ENR_PWREN;
-   RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_AFIOEN;
+   RCC->APB1ENR = RCC_APB1ENR_BKPEN | RCC_APB1ENR_PWREN;
+   RCC->APB2ENR = RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_AFIOEN;
 
    /* Configure the system clock */
    SystemClock_Config();
@@ -185,8 +189,27 @@ int main(void)
    LED_OFF();
 #endif
 
-   if(IS_FORCE_ACTIVE() || USBD_BOOL_IS_FALSE(Is_App_Correct()))
+#if(BOOT_CALL_BY_RESET_SUPPORT)
+   /* APP is triggering go to DFU mode by storing value 0x169D in first backup register and performing CPU reset */
+   is_trigger_from_app = (BKP->DR1 == BOOTLOADER_ACTIVATION_KEY);
+#endif
+
+   if(IS_FORCE_ACTIVE()
+#if(BOOT_CALL_BY_RESET_SUPPORT)
+      || USBD_BOOL_IS_TRUE(is_trigger_from_app)
+#endif
+      || USBD_BOOL_IS_FALSE(Is_App_Correct()))
    {
+#if(BOOT_CALL_BY_RESET_SUPPORT)
+      if(USBD_BOOL_IS_TRUE(is_trigger_from_app))
+      {
+         /* Enable write access to Backup registers */
+         PWR->CR  = PWR_CR_DBP;
+         /* Clear APP trigger */
+         BKP->DR1 = 0;
+      }
+#endif
+
       main_usbd_init();
 
       /* Infinite loop */
@@ -201,9 +224,4 @@ int main(void)
       Call_User_App_Reset_Handler();
    }
 } /* main */
-
-/*! \file main.c
-   \brief Main application's entry point
-
-*/
 

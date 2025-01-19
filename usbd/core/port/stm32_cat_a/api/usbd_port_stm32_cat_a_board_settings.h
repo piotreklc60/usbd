@@ -95,9 +95,11 @@ extern void USBD_Port_STM32_CAT_A_Configure_USBCLKSource(void);
  */
 extern void USBD_Port_STM32_CAT_A_Configure_USB_Irqs(USBD_Bool_DT configure);
 
+#if(USBD_FEATURE_PRESENT == USBD_SUSPEND_RESUME_SUPPORTED)
 /**
  * @brief clears status of USBWakeupIrq status in EXTI controller
  */
 extern void USBD_Port_STM32_CAT_A_Clear_Exti_Line_18_Irq_Status(void);
+#endif
 
 #endif

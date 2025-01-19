@@ -268,6 +268,7 @@ void USBD_IO_EP_Enable_And_Configure(
       uint8_t ep_num,
       USB_EP_Direction_ET dir);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 /**
  * Disables specified endpoint. This function
  * is called by DEV layer when endpoint is deconfigured
@@ -284,6 +285,7 @@ void USBD_IO_EP_Disable(
       USB_EP_Direction_ET dir,
       USBD_Bool_DT force_tp_remove,
       USBD_Bool_DT force_hw_disabling);
+#endif
 
 #if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
 /**

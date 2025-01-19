@@ -304,6 +304,7 @@ USBD_DEV_Installation_Result_XT USBD_DEV_Install_Serial_Number_String(
    return result;
 } /* USBD_DEV_Install_Serial_Number_String */
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 USBD_Bool_DT USBD_DEV_Remove_String(
       USBD_Params_XT *usbd,
       const uint8_t *string)
@@ -388,6 +389,7 @@ USBD_Bool_DT USBD_DEV_Remove_All_Strings(
 
    return result;
 } /* USBD_DEV_Remove_All_Strings */
+#endif
 
 uint8_t USBD_DEV_Get_Num_Installed_Strings(
       USBD_Params_XT *usbd)
@@ -524,8 +526,8 @@ USBD_Bool_DT USBD_DEV_Set_Dev_Desc(
       USBD_Params_XT *usbd,
       USB_Device_Desc_DT *desc)
 {
-   const USBD_DEV_Port_Handler_XT  *port;
-   const USB_Endpoint_Desc_DT     *ep0_desc;
+ /*  const USBD_DEV_Port_Handler_XT  *port;
+   const USB_Endpoint_Desc_DT     *ep0_desc;*/
    USBD_Bool_DT                     result;
 
    USBD_ENTER_FUNC(USBD_DBG_DEV_INIT);
@@ -537,32 +539,17 @@ USBD_Bool_DT USBD_DEV_Set_Dev_Desc(
       /* dev descriptor can be modified only if device is not reset yet */
       if(0 == (usbd->dev.core.data.state & USBD_DEV_STATE_DEFAULT))
       {
-
          usbd->dev.core.data.dev_desc.bLength           = USB_DESC_TYPE_DEVICE_SIZE;
          usbd->dev.core.data.dev_desc.bDescriptorType   = USB_DESC_TYPE_DEVICE;
          usbd->dev.core.data.dev_desc.bcdUSB            = desc->bcdUSB;
          usbd->dev.core.data.dev_desc.bDeviceClass      = desc->bDeviceClass;
          usbd->dev.core.data.dev_desc.bDeviceSubclass   = desc->bDeviceSubclass;
          usbd->dev.core.data.dev_desc.bDeviceProtocol   = desc->bDeviceProtocol;
+         /* bMaxPacketSize0 will be overwritten in USBD_DEV_Reset function if port provides EP0 descriptor */
          usbd->dev.core.data.dev_desc.bMaxPacketSize0   = desc->bMaxPacketSize0;
          usbd->dev.core.data.dev_desc.idVendor          = desc->idVendor;
          usbd->dev.core.data.dev_desc.idProduct         = desc->idProduct;
          usbd->dev.core.data.dev_desc.bcdDevice         = desc->bcdDevice;
-
-         if(USBD_CHECK_PORT_PTR(usbd))
-         {
-            port = USBD_DEV_GET_PORT_PTR(usbd);
-
-            if(USBD_DEV_CHECK_PORT_EP0_LOW_FULL_SPEED_HANDLER(port))
-            {
-               ep0_desc = USBD_DEV_GET_PORT_EP0_LOW_FULL_SPEED_DESC(usbd, port);
-
-               if(USBD_CHECK_PTR(USB_Endpoint_Desc_DT, ep0_desc))
-               {
-                  usbd->dev.core.data.dev_desc.bMaxPacketSize0 = ep0_desc->wMaxPacketSize.L;
-               }
-            }
-         }
 
          result = USBD_TRUE;
       }
@@ -1192,6 +1179,7 @@ USBD_DEV_Installation_Result_XT USBD_DEV_Install_Config(
    return result;
 } /* USBD_DEV_Install_Config */
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 USBD_Bool_DT USBD_DEV_Remove_Config(
       USBD_Params_XT *usbd,
       USBDC_Params_XT *usbdc)
@@ -1267,6 +1255,7 @@ USBD_Bool_DT USBD_DEV_Remove_All_Configs(
 
    return result;
 } /* USBD_DEV_Remove_All_Configs */
+#endif
 
 uint8_t USBD_DEV_Get_Num_Installed_Configs(
       USBD_Params_XT *usbd)
@@ -1671,6 +1660,7 @@ USBD_Bool_DT USBD_DEV_Get_EP_Halt(
 
 
 
+#if((USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED) || (USBD_MAX_NUM_ENDPOINTS > 1))
 static void USBD_DEV_reset_dev_and_disable_endpoints(
    USBD_Params_XT *usbd, uint8_t num_first_endpoints_protected, USBD_Bool_DT force_hw_disabling)
 {
@@ -1684,7 +1674,7 @@ static void USBD_DEV_reset_dev_and_disable_endpoints(
       if((USBD_DEV_EP_OFF != USBD_DEV_GET_EP_OUT_STATE(usbd, num)) || USBD_BOOL_IS_TRUE(force_hw_disabling))
       {
          USBD_DEV_SET_EP_OUT_STATE(usbd, num, USBD_DEV_EP_OFF);
-#ifdef USBD_IO_PRESENT
+#if(defined(USBD_IO_PRESENT) && (USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED))
          USBD_IO_EP_Disable(usbd, num, USB_EP_DIRECTION_OUT, USBD_TRUE, force_hw_disabling);
 #endif
       }
@@ -1694,7 +1684,7 @@ static void USBD_DEV_reset_dev_and_disable_endpoints(
       if((USBD_DEV_EP_OFF != USBD_DEV_GET_EP_IN_STATE(usbd, num)) || USBD_BOOL_IS_TRUE(force_hw_disabling))
       {
          USBD_DEV_SET_EP_IN_STATE(usbd, num, USBD_DEV_EP_OFF);
-#ifdef USBD_IO_PRESENT
+#if(defined(USBD_IO_PRESENT) && (USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED))
          USBD_IO_EP_Disable(usbd, num, USB_EP_DIRECTION_IN, USBD_TRUE, force_hw_disabling);
 #endif
       }
@@ -1716,6 +1706,7 @@ static void USBD_DEV_reset_dev_and_disable_endpoints(
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_ONOFF);
 } /* USBD_DEV_reset_dev_and_disable_endpoints */
+#endif
 
 USBD_Bool_DT USBD_DEV_Activate(
       USBD_Params_XT *usbd,
@@ -1737,8 +1728,9 @@ USBD_Bool_DT USBD_DEV_Activate(
          {
             USBD_DEV_state_change(usbd, USBD_DEV_STATE_OFF, __LINE__);
 
+#if((USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED) || (USBD_MAX_NUM_ENDPOINTS > 1))
             USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_FALSE);
-
+#endif
             usbd->dev.core.data.active = USBD_TRUE;
             USBD_DEV_CALL_PORT_ACTIVATE_HANDLER(usbd, port, USBD_TRUE);
             result = USBD_TRUE;
@@ -1751,6 +1743,7 @@ USBD_Bool_DT USBD_DEV_Activate(
    return result;
 } /* USBD_DEV_Activate */
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
 USBD_Bool_DT USBD_DEV_Deactivate(
       USBD_Params_XT *usbd)
 {
@@ -1798,6 +1791,7 @@ USBD_Bool_DT USBD_DEV_Deactivate(
 
    return result;
 } /* USBD_DEV_Deactivate */
+#endif
 
 
 
@@ -1911,21 +1905,30 @@ void USBD_DEV_Powered(
       USBD_Params_XT *usbd,
       USBD_Bool_DT state)
 {
+#if(USBD_FEATURE_PRESENT != USBD_MULTI_SESSION_SUPPORTED)
+   USBD_UNUSED_PARAM(state);
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_DEV_ONOFF);
 
    USBD_NOTICE_1(USBD_DBG_DEV_ONOFF, "DEV %s", USBD_BOOL_IS_TRUE(state) ? "powered" : "unpowered");
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
       if(USBD_BOOL_IS_TRUE(state))
+#endif
       {
+#if((USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED) || (USBD_MAX_NUM_ENDPOINTS > 1))
          USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_TRUE);
+#endif
 
 #if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_POWERED_SUPPORTED))
          USBD_EVENT_Process_Cold_Event(usbd, USBD_EVENT_REASON_POWERED);
 #endif
          USBD_DEV_state_change(usbd, USBD_DEV_STATE_POWERED, __LINE__);
       }
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
       else
       {
 #if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_UNPOWERED_SUPPORTED))
@@ -1940,6 +1943,7 @@ void USBD_DEV_Powered(
 
          USBD_DEV_state_change(usbd, USBD_DEV_STATE_OFF, __LINE__);
       }
+#endif
    }
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_ONOFF);
@@ -1960,7 +1964,9 @@ void USBD_DEV_Reset(
 
    if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
    {
+#if((USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED) || (USBD_MAX_NUM_ENDPOINTS > 1))
       USBD_DEV_reset_dev_and_disable_endpoints(usbd, 0, USBD_TRUE);
+#endif
 
       USBD_DEV_SET_NUM_USED_ENDPOINTS(usbd, 1);
 
@@ -2062,15 +2068,19 @@ void USBD_DEV_Reset(
             {
                USBD_ERROR(USBD_DBG_DEV_ONOFF, "no EP 0 descriptor provided by port! deactivate!");
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
                (void)USBD_DEV_Deactivate(usbd);
                /// TODO: USBD_panic
+#endif
             }
          }
          else
          {
             USBD_ERROR(USBD_DBG_DEV_ONOFF, "no port handler present! deactivate!");
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
             (void)USBD_DEV_Deactivate(usbd);
+#endif
             /// TODO: USBD_panic
          }
 
@@ -2081,7 +2091,9 @@ void USBD_DEV_Reset(
       {
          USBD_ERROR(USBD_DBG_DEV_ONOFF, "no configuration has been installed! deactivate!");
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
          (void)USBD_DEV_Deactivate(usbd);
+#endif
       }
    }
 
@@ -2416,7 +2428,7 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
                            if(USB_EP_DESC_DIR_OUT == (cfg_desc[pos + 2] & USB_EP_DESC_DIR_MASK))
                            {
                               USBD_DEV_SET_EP_OUT_STATE(usbd, ep_num, USBD_DEV_EP_OFF);
-#if (defined(USBD_IO_PRESENT))
+#if(defined(USBD_IO_PRESENT) && (USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED))
                               USBD_IO_EP_Disable(usbd, ep_num, USB_EP_DIRECTION_OUT, USBD_FALSE, USBD_FALSE);
 #endif
                               USBD_DEV_SET_EP_OUT_INTERFACE(usbd, ep_num, 0xFF);
@@ -2425,7 +2437,7 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
                            else
                            {
                               USBD_DEV_SET_EP_IN_STATE(usbd, ep_num, USBD_DEV_EP_OFF);
-#if (defined(USBD_IO_PRESENT))
+#if(defined(USBD_IO_PRESENT) && (USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED))
                               USBD_IO_EP_Disable(usbd, ep_num, USB_EP_DIRECTION_IN, USBD_FALSE, USBD_FALSE);
 #endif
                               USBD_DEV_SET_EP_IN_INTERFACE(usbd, ep_num, 0xFF);
@@ -2515,6 +2527,9 @@ USBD_DEV_Set_Interface_Result_ET USBD_DEV_Set_Interface(USBD_Params_XT *usbd, ui
 } /* USBD_DEV_Set_Interface */
 #endif
 
+
+
+#if(USBD_FEATURE_PRESENT == USBD_SUSPEND_RESUME_SUPPORTED)
 void USBD_DEV_Suspended(
       USBD_Params_XT *usbd)
 {
@@ -2548,7 +2563,11 @@ void USBD_DEV_Resumed(
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_ONOFF);
 } /* USBD_DEV_Resumed */
+#endif
 
+
+
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
 void USBD_DEV_SOF_Received(
       USBD_Params_XT *usbd)
 {
@@ -2565,6 +2584,7 @@ void USBD_DEV_SOF_Received(
 
    USBD_EXIT_FUNC(USBD_DBG_DEV_ONOFF_SOF_RECEIVED);
 } /* USBD_DEV_SOF_Received */
+#endif
 
 #ifdef USBD_DEV_POST_IMP_INCLUDE
 #include "usbd_dev_post_imp.h"
