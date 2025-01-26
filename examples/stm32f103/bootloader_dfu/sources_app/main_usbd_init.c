@@ -161,8 +161,10 @@ void main_usbd_init(void)
 
    USBD_ENTER_FUNC(MAIN_APP);
 
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
    USBD_Init(&usbd);
    USBDC_Init(&usbdc);
+#endif
 
 #if(USBD_FEATURE_PRESENT == USBD_DEV_SUPPORT_CONFIG_VALIDATION)
    check_result = USBD_DEV_Check_Config_Desc(&usbd, USBD_PORT_STM32_CAT_A, (uint8_t*)(&config_desc_dfu), sizeof(config_desc_dfu));
@@ -181,7 +183,9 @@ void main_usbd_init(void)
    USBD_NOTICE_1(MAIN_APP, "init DFU as %s", "DFU");
 
    /* DFU */
+#if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
    DFU_Init(&dfu);
+#endif
    DFU_SET_USER_EVENT_HANDLER(&dfu, dfu_user_event);
    DFU_SET_PART_DOWNLOAD_READY_HANDLER(&dfu, main_usbd_download);
    DFU_DFU_Install_In_Config(&usbdc, &dfu, dfu_buf);
