@@ -1,6 +1,6 @@
 /** ---------------------------------------- LICENSE SECTION -------------------------------------------------------------------
  *
- * Copyright (c) 2024 Piotr Wojtowicz
+ * Copyright (c) 2025 Piotr Wojtowicz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,12 +38,6 @@
 #define APP_START                (BOOTLOADER_START + (1024 * BOOTLOADER_SIZE_KB))         /* 0x08002800 */
 #define APP_END                  (APP_START        + (1024 * APP_SIZE_KB)        - 1)     /* 0x0807FFFF */
 #define APP_SIZE_KB              (INTERNAL_FLASH_SIZE_KB - BOOTLOADER_SIZE_KB)            /* 502 kB */
-
-#define IOCMD_LOG_MAIN_BUF_SIZE  40000
-
-#define HEAP_SIZE                (8 * 1024)
-
-#define STACK_SIZE               (1024)
 
 #endif
 

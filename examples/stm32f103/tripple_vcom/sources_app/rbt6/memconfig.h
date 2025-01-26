@@ -26,16 +26,24 @@
 #ifndef MEMCONFIG_H_
 #define MEMCONFIG_H_
 
-#define INTERNAL_RAM_START    SRAM_BASE
-#define INTERNAL_RAM_SIZE     (20 * 1024)
-#define INTERNAL_FLASH_START  0x08002800
-#define INTERNAL_FLASH_SIZE   ((128 - 10) * 1024)
+#define INTERNAL_RAM_START       SRAM_BASE
+#define INTERNAL_RAM_SIZE        (20 * 1024)
 
-#define IOCMD_LOG_MAIN_BUF_SIZE                 3000
+#define INTERNAL_FLASH_START     0x08000000
+#define INTERNAL_FLASH_SIZE_KB   128
 
-#define HEAP_SIZE             (6 * 1024)
+#define BOOTLOADER_START         INTERNAL_FLASH_START                                     /* 0x08000000 */
+#define BOOTLOADER_END           (BOOTLOADER_START + (1024 * BOOTLOADER_SIZE_KB) - 1)     /* 0x080027FF */
+#define BOOTLOADER_SIZE_KB       10                                                       /* 10 kB */
+#define APP_START                (BOOTLOADER_START + (1024 * BOOTLOADER_SIZE_KB))         /* 0x08002800 */
+#define APP_END                  (APP_START        + (1024 * APP_SIZE_KB)        - 1)     /* 0x0801FFFF */
+#define APP_SIZE_KB              (INTERNAL_FLASH_SIZE_KB - BOOTLOADER_SIZE_KB)            /* 118 kB */
 
-#define STACK_SIZE            (1024)
+#define IOCMD_LOG_MAIN_BUF_SIZE  3000
+
+#define HEAP_SIZE                (6 * 1024)
+
+#define STACK_SIZE               (1024)
 
 #endif
 

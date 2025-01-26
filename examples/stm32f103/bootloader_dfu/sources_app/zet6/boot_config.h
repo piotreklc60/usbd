@@ -26,6 +26,7 @@
 #ifndef BOOT_CONFIG_H_
 #define BOOT_CONFIG_H_
 
+#include "memconfig.h"
 
 /****************** USER APPLICATION ADDRESS SETTINGS *****************
  * Here we can change location of the user application.
@@ -33,7 +34,7 @@
  * so this address is bootloader address + 10kB
  * (0x08000000 - bootloader address, 0x00002800 - 10kB relocation).
  */
-#define DEF_APP_ADDRESS                0x08002800
+#define DEF_APP_ADDRESS                APP_START
 
 
 
