@@ -101,7 +101,7 @@ void configure_usart(uint8_t usart_num, uint32_t baudrate, uint16_t stop_bits, u
 
       GPIO_InitStructure.Pin   = GPIO_Rx_Pin;
       GPIO_InitStructure.Mode  = GPIO_MODE_INPUT;
-      GPIO_InitStructure.Pull  = GPIO_NOPULL;
+      GPIO_InitStructure.Pull  = GPIO_PULLDOWN;
       HAL_GPIO_Init(GPIO_Rx_Port, &GPIO_InitStructure);
    }
 

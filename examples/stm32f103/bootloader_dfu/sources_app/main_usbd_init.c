@@ -74,7 +74,7 @@ static DFU_bStatus_ET main_usbd_download(DFU_Params_XT *dfu, uint8_t **buffer, u
 
    Program_Flash_Unlock();
 
-   if((dfu_prog_addr + length) > dfu_next_page_addr)
+   while((dfu_prog_addr + length) > dfu_next_page_addr)
    {
       if (Program_Flash_Erase_Page(dfu_next_page_addr))
       // flash erase failed
