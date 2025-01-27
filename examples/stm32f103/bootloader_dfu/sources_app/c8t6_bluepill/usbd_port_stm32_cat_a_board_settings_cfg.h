@@ -1,6 +1,6 @@
 /** ---------------------------------------- LICENSE SECTION -------------------------------------------------------------------
  *
- * Copyright (c) 2024 Piotr Wojtowicz
+ * Copyright (c) 2025 Piotr Wojtowicz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,29 +26,8 @@
 #ifndef USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
 #define USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
 
-#define USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE   USBD_FEATURE_PRESENT
-#define USBD_PORT_STM32_CAT_A_USE_PULL_UP          USBD_FEATURE_PRESENT
+#define USBD_PORT_STM32_CAT_A_USE_PULL_UP       USBD_FEATURE_NOT_PRESENT
 
-#define USBD_USE_IOCMD
-
-#define USBD_DP_PULL_UP_PORT                    GPIOC
-#define USBD_DP_PULL_UP_PIN                     GPIO_PIN_8
-#define USBD_DP_PULL_UP_MODE                    GPIO_MODE_OUTPUT_PP
-#define USBD_DP_PULL_UP_PULL                    GPIO_PULLUP
-#define USBD_DP_PULL_UP_PORT_CLK_ENABLE()       __HAL_RCC_GPIOC_CLK_ENABLE()
-#define USBD_DP_PULL_UP_ACTIVE_STATE            0
-
-
-
-#define USBD_VBUS_PORT                          GPIOC
-#define USBD_VBUS_PIN                           GPIO_PIN_9
-#define USBD_VBUS_MODE                          GPIO_MODE_IT_RISING_FALLING
-#define USBD_VBUS_PULL                          GPIO_PULLUP
-#define USBD_VBUS_PORT_CLK_ENABLE()             __HAL_RCC_GPIOC_CLK_ENABLE()
-#define USBD_VBUS_ACTIVE_STATE                  1
-// EXTI: VBUS
-#define USBD_VBUS_EXTI_IRQChannel               EXTI9_5_IRQn
-#define USBD_Port_STM32_CAT_A_Vbus_IrqHandler   EXTI9_5_IRQHandler
 
 /* USB clock source */
 #ifndef RCC_USBCLKSource_PLLCLK_1Div5
@@ -59,8 +38,8 @@
 #endif
 
 
-//#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_Div1
-#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_1Div5
+#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_Div1
+//#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_1Div5
 
 
 #endif

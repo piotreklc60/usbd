@@ -28,7 +28,7 @@
 
 #include "cfg.h"
 
-#define USBD_USE_IOCMD
+#include "usbd_port_stm32_cat_a_board_settings_cfg.h"
 
 #define USBD_USE_INVALIDATION_ON_INIT              USBD_FEATURE_NOT_PRESENT
 
@@ -41,10 +41,8 @@
 #define USBDC_MAX_NUM_EVENTS                       5
 #define USBD_IOTP_BUFF_USE
 
-
-#define USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE   USBD_FEATURE_PRESENT
-#define USBD_PORT_STM32_CAT_A_USE_PULL_UP          USBD_FEATURE_PRESENT
-
 #define USBD_IO_ISOCHRONOUS_TRANSFER_SUPPORTED     USBD_FEATURE_NOT_PRESENT
+
+#define DFU_WILL_DETACH_SUPPORT                    USBD_PORT_STM32_CAT_A_USE_PULL_UP
 
 #endif

@@ -28,6 +28,8 @@
 
 #include "std_libs.h"
 
+#include "usbd_port_stm32_cat_a_board_settings_cfg.h"
+
 /**
  * -----------------------------------------------------------------------------------------------------------------------------
  * Common core settings
@@ -62,7 +64,8 @@
  */
 #define USBD_PORT_STM32_CAT_A_EP0_MPS                       64
 #define USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE            USBD_FEATURE_NOT_PRESENT
-#define USBD_PORT_STM32_CAT_A_USE_PULL_UP                   USBD_FEATURE_PRESENT
+// defined in usbd_port_stm32_cat_a_board_settings_cfg.h
+//#define USBD_PORT_STM32_CAT_A_USE_PULL_UP                   USBD_FEATURE_PRESENT
 
 /**
  * -----------------------------------------------------------------------------------------------------------------------------
@@ -126,7 +129,7 @@
 #define DFU_MULTIPLE_MEMORIES_SUPPORT                       USBD_FEATURE_NOT_PRESENT
 #define DFU_UPLOAD_SUPPORT                                  USBD_FEATURE_NOT_PRESENT
 #define DFU_APP_MODE_SUPPORT                                USBD_FEATURE_NOT_PRESENT
-#define DFU_WILL_DETACH_SUPPORT                             USBD_FEATURE_PRESENT
+#define DFU_WILL_DETACH_SUPPORT                             USBD_PORT_STM32_CAT_A_USE_PULL_UP
 
 
 #endif

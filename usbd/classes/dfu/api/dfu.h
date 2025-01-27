@@ -359,6 +359,9 @@ typedef struct DFU_Params_eXtendedTag
       uint8_t memory_id;
 
       USBD_Bool_DT manifestation_done;
+#if((USBD_FEATURE_PRESENT != USBD_SOF_TICKS_SUPPORTED) && (USBD_FEATURE_PRESENT != DFU_WILL_DETACH_SUPPORT))
+      USBD_Bool_DT wait_for_reset;
+#endif
    }core;
 }DFU_Params_XT;
 

@@ -26,9 +26,7 @@
 #ifndef USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
 #define USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
 
-#include "std_libs.h"
-#include "usbd.h"
-
+#define USBD_PORT_STM32_CAT_A_USE_PULL_UP       USBD_FEATURE_PRESENT
 
 #define USBD_DP_PULL_UP_PORT                    GPIOC
 #define USBD_DP_PULL_UP_PIN                     5

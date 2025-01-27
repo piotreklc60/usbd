@@ -11,6 +11,17 @@
             }
         },
         {
+            "name": "c8t6_bluepill",
+            "inherits": "default",
+            "toolchainFile": "${sourceDir}/stm32cubemx_generated_stm32f103c8t6_bluepill/cmake/gcc-arm-none-eabi.cmake",
+            "cacheVariables": {
+                "VARIANT": "c8t6_bluepill",
+                "STARTUP_SCRIPT": "startup_stm32f103xb.s",
+                "VENDOR_ID":  "0x????",
+                "PRODUCT_ID": "0x????"
+            }
+        },
+        {
             "name": "rbt6",
             "inherits": "default",
             "toolchainFile": "${sourceDir}/stm32cubemx_generated_stm32f103rbt6/cmake/gcc-arm-none-eabi.cmake",

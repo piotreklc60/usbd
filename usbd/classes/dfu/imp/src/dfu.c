@@ -223,7 +223,9 @@ static void DFU_detach_status_ready(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direct
 
 static void DFU_detach(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in, uint32_t timeout)
 {
+#if(USBD_FEATURE_PRESENT == DFU_WILL_DETACH_SUPPORT)
    USBD_Vendor_Data_XT *tp_vendor_data;
+#endif
    USBD_Bool_DT send_status = USBD_FALSE;
 
 #if(USBD_FEATURE_PRESENT != USBD_SOF_TICKS_SUPPORTED)
@@ -261,6 +263,8 @@ static void DFU_detach(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in, uin
 #endif
 #if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
       dfu->core.bwPollTimeout = timeout;
+#elif(USBD_FEATURE_PRESENT != DFU_WILL_DETACH_SUPPORT)
+      dfu->core.wait_for_reset = USBD_TRUE;
 #endif
 
       USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
@@ -677,7 +681,13 @@ static void DFU_on_event(
 #if(USBD_FEATURE_PRESENT != DFU_WILL_DETACH_SUPPORT)
          case USBD_EVENT_REASON_RESET:
             USBD_DEBUG_HI_2(DFU_EVENT, "DFU state: %2d; USBD_EVENT_REASON_%s", dfu->core.status.bState, "RESET");
-            if(USBD_CHECK_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event))
+            if(
+#if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
+               (0 != dfu->core.bwPollTimeout)
+#else
+               USBD_BOOL_IS_TRUE(dfu->core.wait_for_reset)
+#endif
+               && USBD_CHECK_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event))
             {
                USBD_CALL_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event)(
                   dfu, (dfu->core.status.bState < DFU_BSTATE_DFU_IDLE) ? DFU_USER_EVENT_RESET_GO_TO_DFU : DFU_USER_EVENT_RESET_GO_TO_APP);

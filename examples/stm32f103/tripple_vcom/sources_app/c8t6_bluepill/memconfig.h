@@ -1,6 +1,6 @@
 /** ---------------------------------------- LICENSE SECTION -------------------------------------------------------------------
  *
- * Copyright (c) 2025 Piotr Wojtowicz
+ * Copyright (c) 2024 Piotr Wojtowicz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,29 +23,27 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-#ifndef USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
-#define USBD_PORT_STM32_CAT_A_BOARD_SETTINGS_CFG_H_
+#ifndef MEMCONFIG_H_
+#define MEMCONFIG_H_
 
-#define USBD_PORT_STM32_CAT_A_USE_PULL_UP       USBD_FEATURE_PRESENT
+#define INTERNAL_RAM_START       SRAM_BASE
+#define INTERNAL_RAM_SIZE        (20 * 1024)
 
-#define USBD_DP_PULL_UP_PORT                    GPIOC
-#define USBD_DP_PULL_UP_PIN                     8
-#define USBD_DP_PULL_UP_MODE                    GPIO_MODE_OUTPUT_PP
-#define USBD_DP_PULL_UP_PULL                    GPIO_PULLUP
-#define USBD_DP_PULL_UP_ACTIVE_STATE            0
+#define INTERNAL_FLASH_START     0x08000000
+#define INTERNAL_FLASH_SIZE_KB   64
 
+#define BOOTLOADER_START         INTERNAL_FLASH_START                                     /* 0x08000000 */
+#define BOOTLOADER_END           (BOOTLOADER_START + (1024 * BOOTLOADER_SIZE_KB) - 1)     /* 0x080027FF */
+#define BOOTLOADER_SIZE_KB       10                                                       /* 10 kB */
+#define APP_START                (BOOTLOADER_START + (1024 * BOOTLOADER_SIZE_KB))         /* 0x08002800 */
+#define APP_END                  (APP_START        + (1024 * APP_SIZE_KB)        - 1)     /* 0x0800FFFF */
+#define APP_SIZE_KB              (INTERNAL_FLASH_SIZE_KB - BOOTLOADER_SIZE_KB)            /* 54 kB */
 
-/* USB clock source */
-#ifndef RCC_USBCLKSource_PLLCLK_1Div5
-#define RCC_USBCLKSource_PLLCLK_1Div5   ((uint8_t)0x00)
-#endif
-#ifndef RCC_USBCLKSource_PLLCLK_Div1
-#define RCC_USBCLKSource_PLLCLK_Div1    ((uint8_t)0x01)
-#endif
+#define IOCMD_LOG_MAIN_BUF_SIZE  3000
 
+#define HEAP_SIZE                (6 * 1024)
 
-#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_Div1
-//#define USBD_RCC_USBCLKSource_PLLCLK_presc      RCC_USBCLKSource_PLLCLK_1Div5
-
+#define STACK_SIZE               (1024)
 
 #endif
+
