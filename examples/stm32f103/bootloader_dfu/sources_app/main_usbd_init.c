@@ -202,9 +202,9 @@ void main_usbd_init(void)
    }
 
    dev.bcdUSB           = 0x0110;
-   dev.bDeviceClass     = 0x02;
-   dev.bDeviceSubclass  = 0x02;
-   dev.bDeviceProtocol  = 0x01;
+   dev.bDeviceClass     = USB_CLASS_APPLICATION_SPECIFIC;
+   dev.bDeviceSubclass  = USB_SUBCLASS_APP_SPEC_DEVICE_FIRMWARE_UPGRADE;
+   dev.bDeviceProtocol  = USB_PROTOCOL_APP_SPEC_DFU_DFU_MODE;
    dev.idVendor         = USBD_VENDOR_ID;
    dev.idProduct        = USBD_PRODUCT_ID;
    dev.bcdDevice        = 0x1212;
