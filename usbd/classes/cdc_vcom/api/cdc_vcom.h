@@ -82,9 +82,9 @@
    _notif_if_num,                               /* bInterfaceNumber */ \
    0x00,                                        /* bAlternateSetting */ \
    0x01,                                        /* bNumEndpoints */ \
-   0x02,                                        /* bInterfaceClass   Communication Class Interface */ \
-   0x02,                                        /* bInterfaceSubclass */ \
-   0x01,                                        /* bInterfaceProtocol */ \
+   USB_CLASS_COMMUNICATION,                     /* bInterfaceClass   Communication Class Interface */ \
+   USB_SUBCLASS_COMM_ABSTRACT_CONTROL_MODEL,    /* bInterfaceSubclass */ \
+   USB_PROTOCOL_COMM_COMMON_AT_COMMANDS,        /* bInterfaceProtocol */ \
    _notif_iInterface),                          /* iInterface */ \
    \
    /* Functional Descriptors */ \
@@ -131,9 +131,9 @@
    _data_if_num,                                /* bInterfaceNumber */ \
    0x00,                                        /* bAlternateSetting */ \
    0x02,                                        /* bNumEndpoints */ \
-   0x0A,                                        /* bInterfaceClass   Communication Class Interface */ \
-   0x00,                                        /* bInterfaceSubclass */ \
-   0x00,                                        /* bInterfaceProtocol */ \
+   USB_CLASS_CDC_DATA,                          /* bInterfaceClass   Communication Class Interface */ \
+   USB_SUBCLASS_CDC_DATA,                       /* bInterfaceSubclass */ \
+   USB_PROTOCOL_CDC_DATA_NO_CLASS_SPECIFIC,     /* bInterfaceProtocol */ \
    _data_iInterface),                           /* iInterface */ \
    \
    /* Endpoint 2 descriptor */ \
@@ -185,9 +185,9 @@
    USB_INTERFACE_ASSOCIATION_DESC_TABLE_FILL( \
    _notif_if_num,                               /* bFirstInterface */ \
    0x02,                                        /* bInterfaceCount */ \
-   0x02,                                        /* bFunctionClass - Communication Class Interface */ \
-   0x02,                                        /* bFunctionSubClass */ \
-   0x01,                                        /* bFunctionProtocol */ \
+   USB_CLASS_COMMUNICATION,                     /* bFunctionClass - Communication Class Interface */ \
+   USB_SUBCLASS_COMM_ABSTRACT_CONTROL_MODEL,    /* bFunctionSubClass */ \
+   USB_PROTOCOL_COMM_COMMON_AT_COMMANDS,        /* bFunctionProtocol */ \
    _iFunction),                                 /* iFunction */ \
    /* Communication Class Interface */ \
    CDC_VCOM_CCI_DESC(_notif_if_num, _notif_iInterface, _ep_notif, _ep_notif_mps, _data_if_num), \

@@ -119,9 +119,9 @@
    _dfu_if_num,                                 /* bInterfaceNumber */  \
    0x00,                                        /* bAlternateSetting */ \
    0x00,                                        /* bNumEndpoints */     \
-   0xFE,                                        /* bInterfaceClass   Communication Class Interface */ \
-   0x01,                                        /* bInterfaceSubclass */ \
-   0x01,                                        /* bInterfaceProtocol */ \
+   USB_CLASS_APPLICATION_SPECIFIC,              /* bInterfaceClass   APP Specific Interface */ \
+   USB_SUBCLASS_APP_SPEC_DEVICE_FIRMWARE_UPGRADE,/* bInterfaceSubclass */ \
+   USB_PROTOCOL_APP_SPEC_DFU_APP_MODE,          /* bInterfaceProtocol */ \
    _dfu_iInterface),                            /* iInterface */ \
    \
    /* Run-Time DFU Functional Descriptor */ \
@@ -146,9 +146,9 @@
    0x00,                                        /* bInterfaceNumber */  \
    _dfu_memory_id,                              /* bAlternateSetting */ \
    0x00,                                        /* bNumEndpoints */     \
-   0xFE,                                        /* bInterfaceClass   Communication Class Interface */ \
-   0x01,                                        /* bInterfaceSubclass */ \
-   0x02,                                        /* bInterfaceProtocol */ \
+   USB_CLASS_APPLICATION_SPECIFIC,              /* bInterfaceClass   APP Specific Interface */ \
+   USB_SUBCLASS_APP_SPEC_DEVICE_FIRMWARE_UPGRADE,/* bInterfaceSubclass */ \
+   USB_PROTOCOL_APP_SPEC_DFU_DFU_MODE,          /* bInterfaceProtocol */ \
    _dfu_iInterface),                            /* iInterface */ \
    \
    /* Run-Time DFU Functional Descriptor */ \

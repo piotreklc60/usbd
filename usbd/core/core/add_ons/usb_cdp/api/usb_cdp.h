@@ -121,6 +121,211 @@
 #define USB_EP_DESC_ADDR_MASK    0x0F
 
 /* *****************************************************************************
+            STANDARD CLASS CODES
+            -
+            please see https://www.usb.org/defined-class-codes
+   ***************************************************************************** */
+
+#define USB_CLASS_SPECIFIED_IN_INTERFACES                0x00
+#define USB_CLASS_AUDIO                                  0x01
+#define USB_CLASS_COMMUNICATION                          0x02
+#define USB_CLASS_HID                                    0x03
+#define USB_CLASS_PHYSICAL                               0x05
+#define USB_CLASS_IMAGE                                  0x06
+#define USB_CLASS_PRINTER                                0x07
+#define USB_CLASS_MASS_STORAGE                           0x08
+#define USB_CLASS_HUB                                    0x09
+#define USB_CLASS_CDC_DATA                               0x0A
+#define USB_CLASS_SMART_CARD                             0x0B
+#define USB_CLASS_CONTENT_SECURITY                       0x0D
+#define USB_CLASS_VIDEO                                  0x0E
+#define USB_CLASS_PERSONAL_HEALTHCARE                    0x0F
+#define USB_CLASS_AUDIO_VIDEO                            0x10
+#define USB_CLASS_BILLBOARD                              0x11
+#define USB_CLASS_TYPE_C_BRIDGE                          0x12
+#define USB_CLASS_BULK_DISPLAY                           0x13
+#define USB_CLASS_MCTP_OVER_USB                          0x14
+#define USB_CLASS_I3C                                    0x3C
+#define USB_CLASS_DIAGNOSTIC                             0xDC
+#define USB_CLASS_WIRELESS                               0xE0
+#define USB_CLASS_MISCELLANEOUS                          0xEF
+#define USB_CLASS_APPLICATION_SPECIFIC                   0xFE
+#define USB_CLASS_VENDOR_SPECIFIC                        0xFF
+
+
+
+/* for USB_CLASS_SPECIFIED_IN_INTERFACES */
+#define USB_SUBCLASS_SPECIFIED_IN_INTERFACES             0x00
+/* for USB_CLASS_COMMUNICATION */
+#define USB_SUBCLASS_COMM_DIRECT_LINE_CONTROL_MODEL      0x01
+#define USB_SUBCLASS_COMM_ABSTRACT_CONTROL_MODEL         0x02
+#define USB_SUBCLASS_COMM_TELEPHONE_CONTROL_MODEL        0x03
+#define USB_SUBCLASS_COMM_MULTI_CHANNEL_CONTROL_MODEL    0x04
+#define USB_SUBCLASS_COMM_CAPI_CONTROL_MODEL             0x05
+#define USB_SUBCLASS_COMM_ETHERNET_NET_CONTROL_MODEL     0x06
+#define USB_SUBCLASS_COMM_ATM_NET_CONTROL_MODEL          0x07
+/* for USB_CLASS_IMAGE */
+#define USB_SUBCLASS_IMAGE_STILL_IMAGING                 0x01
+/* for USB_CLASS_HUB */
+#define USB_SUBCLASS_HUB                                 0x00
+/* for USB_CLASS_CDC_DATA */
+#define USB_SUBCLASS_CDC_DATA                            0x00
+/* for USB_CLASS_CONTENT_SECURITY */
+#define USB_SUBCLASS_CONTENT_SECURITY                    0x00
+/* for USB_CLASS_AUDIO_VIDEO */
+#define USB_SUBCLASS_AUDIO_VIDEO_AVCONTROL               0x01
+#define USB_SUBCLASS_AUDIO_VIDEO_AVDATA_VIDEO_STREAMING  0x02
+#define USB_SUBCLASS_AUDIO_VIDEO_AVDATA_AUDIO_STREAMING  0x03
+/* for USB_CLASS_BILLBOARD */
+#define USB_SUBCLASS_BILLBOARD                           0x00
+/* for USB_CLASS_TYPE_C_BRIDGE */
+#define USB_SUBCLASS_TYPE_C_BRIDGE                       0x00
+/* for USB_CLASS_BULK_DISPLAY */
+#define USB_SUBCLASS_BULK_DISPLAY                        0x00
+/* for USB_CLASS_MCTP_OVER_USB */
+#define USB_SUBCLASS_MCTP_CONTROLER_AND_DEVICE           0x00
+#define USB_SUBCLASS_MCTP_HOST                           0x01
+/* for USB_CLASS_I3C */
+#define USB_SUBCLASS_I3C                                 0x00
+/* for USB_CLASS_DIAGNOSTIC */
+#define USB_SUBCLASS_DIAG_USB2_COMPLIANCE_DEVICE         0x01
+#define USB_SUBCLASS_DIAG_DEBUG_TARGET_VENDOR_DEFINED    0x02
+#define USB_SUBCLASS_DIAG_GNU_REMOTE_DEBUG_CMD_SET       0x02
+#define USB_SUBCLASS_DIAG_UNDEFINED_3                    0x03
+#define USB_SUBCLASS_DIAG_VENDOR_TRACE_PROT_DBC          0x03
+#define USB_SUBCLASS_DIAG_UNDEFINED_4                    0x04
+#define USB_SUBCLASS_DIAG_VENDOR_DFX_PROT_DBC            0x04
+#define USB_SUBCLASS_DIAG_VENDOR_TRACE_OVER_GP_ON_DVC    0x05
+#define USB_SUBCLASS_DIAG_GNU_OVER_GP_ON_DVC             0x05
+#define USB_SUBCLASS_DIAG_UNDEFINED_6                    0x06
+#define USB_SUBCLASS_DIAG_VENDOR_DFX_PROT_DVC            0x06
+#define USB_SUBCLASS_DIAG_UNDEFINED_7                    0x07
+#define USB_SUBCLASS_DIAG_VENDOR_TRACE_PROT_DVC          0x07
+#define USB_SUBCLASS_DIAG_UNDEFINED_8                    0x08
+/* for USB_CLASS_WIRELESS */
+#define USB_SUBCLASS_WIRELESS_BT_PROGRAMMING_INTERFACE   0x01
+#define USB_SUBCLASS_WIRELESS_UWB_RADIO_CTRL_INTERFACE   0x01
+#define USB_SUBCLASS_WIRELESS_REMOTE_NDIS                0x01
+#define USB_SUBCLASS_WIRELESS_BT_AMP_CONTROLLER          0x01
+#define USB_SUBCLASS_WIRELESS_HOST_WIRE_CTRL_DATA        0x02
+#define USB_SUBCLASS_WIRELESS_DEVICE_WIRE_CTRL_DATA      0x02
+#define USB_SUBCLASS_WIRELESS_DEVICE_WIRE_ISOCHRONOUS    0x02
+/* for USB_CLASS_MISCELLANEOUS */
+#define USB_SUBCLASS_MISC_ACTIVE_SYNC_DEV                0x01
+#define USB_SUBCLASS_MISC_PALM_SYNC                      0x01
+#define USB_SUBCLASS_MISC_INTERFACE_ASSOCIACION_DESC     0x02
+#define USB_SUBCLASS_MISC_WIRE_ADAPTER_MULTIFUNC         0x02
+#define USB_SUBCLASS_MISC_CABLE_ASSOCIACION_FRAMEWORK    0x03
+#define USB_SUBCLASS_MISC_RNDIS_OVER_ETHERNET            0x04
+#define USB_SUBCLASS_MISC_RNDIS_OVER_WIFI                0x04
+#define USB_SUBCLASS_MISC_RNDIS_OVER_WIMAX               0x04
+#define USB_SUBCLASS_MISC_RNDIS_OVER_WWAN                0x04
+#define USB_SUBCLASS_MISC_RNDIS_FOR_RAW_IPV4             0x04
+#define USB_SUBCLASS_MISC_RNDIS_FOR_RAW_IPV6             0x04
+#define USB_SUBCLASS_MISC_RNDIS_FOR_GPRS                 0x04
+#define USB_SUBCLASS_MISC_USB3_VISION_CONTROL            0x05
+#define USB_SUBCLASS_MISC_USB3_VISION_EVENT              0x05
+#define USB_SUBCLASS_MISC_USB3_VISION_STREAMING          0x05
+#define USB_SUBCLASS_MISC_STEP_STREAM_CONTENT_PROT       0x06
+#define USB_SUBCLASS_MISC_STEP_RAW_STREAM_CONTENT_PROT   0x06
+#define USB_SUBCLASS_MISC_COMMAND_INTERFACE_IN_IAD       0x07
+#define USB_SUBCLASS_MISC_COMMAND_INTERFACE_IN_IF_DESC   0x07
+#define USB_SUBCLASS_MISC_MEDIA_INTERFACE_IN_IF_DESC     0x07
+/* for USB_CLASS_APPLICATION_SPECIFIC */
+#define USB_SUBCLASS_APP_SPEC_DEVICE_FIRMWARE_UPGRADE    0x01
+#define USB_SUBCLASS_APP_SPEC_IRDA_BRIDGE_UPGRADE        0x02
+#define USB_SUBCLASS_APP_SPEC_USB_TEST_AND_MES           0x03
+#define USB_SUBCLASS_APP_SPEC_USB_TEST_AND_MES_USBTMC    0x03
+
+
+
+/* for USB_CLASS_SPECIFIED_IN_INTERFACES */
+#define USB_PROTOCOL_SPECIFIED_IN_INTERFACES             0x00
+/* for USB_CLASS_COMMUNICATION */
+#define USB_PROTOCOL_COMM_NO_CLASSS_SPECIFIC             0x00
+#define USB_PROTOCOL_COMM_COMMON_AT_COMMANDS             0x01
+#define USB_PROTOCOL_COMM_VENDOR_SPECIFIC                0xFF
+/* for USB_CLASS_IMAGE */
+#define USB_PROTOCOL_IMAGE_STILL_IMAGING                 0x01
+/* for USB_CLASS_HUB */
+#define USB_PROTOCOL_HUB_FULL_SPEED_HUB                  0x00
+#define USB_PROTOCOL_HUB_HI_SPEED_HUB_WITH_SINGLE_TT     0x01
+#define USB_PROTOCOL_HUB_HI_SPEED_HUB_WITH_MULTIPLE_TTS  0x02
+/* for USB_CLASS_CDC_DATA */
+#define USB_PROTOCOL_CDC_DATA_NO_CLASS_SPECIFIC          0x00
+#define USB_PROTOCOL_CDC_DATA_PHYSICAL_IF_FOR_ISDN       0x30
+#define USB_PROTOCOL_CDC_DATA_HDLC                       0x31
+#define USB_PROTOCOL_CDC_DATA_TRANSPARENT                0x32
+#define USB_PROTOCOL_CDC_DATA_MAN_FOR_Q921_DATA_LINK     0x50
+#define USB_PROTOCOL_CDC_DATA_DATA_LINK_FOR_931          0x51
+#define USB_PROTOCOL_CDC_DATA_TEI_FOR_Q921_DATA_LINK     0x52
+/* for USB_CLASS_CONTENT_SECURITY */
+#define USB_PROTOCOL_CONTENT_SECURITY                    0x00
+/* for USB_CLASS_AUDIO_VIDEO */
+#define USB_PROTOCOL_AUDIO_VIDEO                         0x00
+/* for USB_CLASS_BILLBOARD */
+#define USB_PROTOCOL_BILLBOARD                           0x00
+/* for USB_CLASS_TYPE_C_BRIDGE */
+#define USB_PROTOCOL_TYPE_C_BRIDGE                       0x00
+/* for USB_CLASS_BULK_DISPLAY */
+#define USB_PROTOCOL_BULK_DISPLAY                        0x00
+/* for USB_CLASS_MCTP_OVER_USB */
+#define USB_PROTOCOL_MCTP_1X                             0x01
+#define USB_PROTOCOL_MCTP_2X                             0x02
+/* for USB_CLASS_I3C */
+#define USB_PROTOCOL_I3C                                 0x00
+/* for USB_CLASS_DIAGNOSTIC */
+#define USB_PROTOCOL_DIAG_USB2_COMPLIANCE_DEVICE         0x01
+#define USB_PROTOCOL_DIAG_DEBUG_TARGET_VENDOR_DEFINED    0x00
+#define USB_PROTOCOL_DIAG_GNU_REMOTE_DEBUG_CMD_SET       0x01
+#define USB_PROTOCOL_DIAG_UNDEFINED_3                    0x00
+#define USB_PROTOCOL_DIAG_VENDOR_TRACE_PROT_DBC          0x01
+#define USB_PROTOCOL_DIAG_UNDEFINED_4                    0x00
+#define USB_PROTOCOL_DIAG_VENDOR_DFX_PROT_DBC            0x01
+#define USB_PROTOCOL_DIAG_VENDOR_TRACE_OVER_GP_ON_DVC    0x00
+#define USB_PROTOCOL_DIAG_GNU_OVER_GP_ON_DVC             0x01
+#define USB_PROTOCOL_DIAG_UNDEFINED_6                    0x00
+#define USB_PROTOCOL_DIAG_VENDOR_DFX_PROT_DVC            0x01
+#define USB_PROTOCOL_DIAG_UNDEFINED_7                    0x00
+#define USB_PROTOCOL_DIAG_VENDOR_TRACE_PROT_DVC          0x01
+#define USB_PROTOCOL_DIAG_UNDEFINED_8                    0x00
+/* for USB_CLASS_WIRELESS */
+#define USB_PROTOCOL_WIRELESS_BT_PROGRAMMING_INTERFACE   0x01
+#define USB_PROTOCOL_WIRELESS_UWB_RADIO_CTRL_INTERFACE   0x02
+#define USB_PROTOCOL_WIRELESS_REMOTE_NDIS                0x03
+#define USB_PROTOCOL_WIRELESS_BT_AMP_CONTROLLER          0x04
+#define USB_PROTOCOL_WIRELESS_HOST_WIRE_CTRL_DATA        0x01
+#define USB_PROTOCOL_WIRELESS_DEVICE_WIRE_CTRL_DATA      0x02
+#define USB_PROTOCOL_WIRELESS_DEVICE_WIRE_ISOCHRONOUS    0x03
+/* for USB_CLASS_MISCELLANEOUS */
+#define USB_PROTOCOL_MISC_ACTIVE_SYNC_DEV                0x01
+#define USB_PROTOCOL_MISC_PALM_SYNC                      0x02
+#define USB_PROTOCOL_MISC_INTERFACE_ASSOCIACION_DESC     0x01
+#define USB_PROTOCOL_MISC_WIRE_ADAPTER_MULTIFUNC         0x02
+#define USB_PROTOCOL_MISC_CABLE_ASSOCIACION_FRAMEWORK    0x01
+#define USB_PROTOCOL_MISC_RNDIS_OVER_ETHERNET            0x01
+#define USB_PROTOCOL_MISC_RNDIS_OVER_WIFI                0x02
+#define USB_PROTOCOL_MISC_RNDIS_OVER_WIMAX               0x03
+#define USB_PROTOCOL_MISC_RNDIS_OVER_WWAN                0x04
+#define USB_PROTOCOL_MISC_RNDIS_FOR_RAW_IPV4             0x05
+#define USB_PROTOCOL_MISC_RNDIS_FOR_RAW_IPV6             0x06
+#define USB_PROTOCOL_MISC_RNDIS_FOR_GPRS                 0x07
+#define USB_PROTOCOL_MISC_USB3_VISION_CONTROL            0x00
+#define USB_PROTOCOL_MISC_USB3_VISION_EVENT              0x01
+#define USB_PROTOCOL_MISC_USB3_VISION_STREAMING          0x02
+#define USB_PROTOCOL_MISC_STEP_STREAM_CONTENT_PROT       0x01
+#define USB_PROTOCOL_MISC_STEP_RAW_STREAM_CONTENT_PROT   0x02
+#define USB_PROTOCOL_MISC_COMMAND_INTERFACE_IN_IAD       0x01
+#define USB_PROTOCOL_MISC_COMMAND_INTERFACE_IN_IF_DESC   0x01
+#define USB_PROTOCOL_MISC_MEDIA_INTERFACE_IN_IF_DESC     0x02
+/* for USB_CLASS_APPLICATION_SPECIFIC */
+#define USB_PROTOCOL_APP_SPEC_DFU_APP_MODE               0x01
+#define USB_PROTOCOL_APP_SPEC_DFU_DFU_MODE               0x02
+#define USB_PROTOCOL_APP_SPEC_IRDA_BRIDGE_UPGRADE        0x00
+#define USB_PROTOCOL_APP_SPEC_USB_TEST_AND_MES           0x00
+#define USB_PROTOCOL_APP_SPEC_USB_TEST_AND_MES_USBTMC    0x01
+
+/* *****************************************************************************
             FILL MACROES
    ***************************************************************************** */
 
