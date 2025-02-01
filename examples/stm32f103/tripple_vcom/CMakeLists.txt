@@ -112,6 +112,16 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined symbols
 )
 
+if(${REMOVE_PATHS_FROM_SYMBOLS})
+    # loop below is to add compilation flags -f*-prefix-map= for each directory of the code
+    get_property(sources_list TARGET ${CMAKE_PROJECT_NAME} PROPERTY SOURCES)
+    foreach(src_file IN LISTS sources_list)
+        get_filename_component(abs_path ${src_file} ABSOLUTE)
+        get_filename_component(file_dir ${abs_path} DIRECTORY)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmacro-prefix-map=${file_dir}=. -fdebug-prefix-map=${file_dir}=. -fprofile-prefix-map=${file_dir}=.")
+    endforeach()
+endif()
+
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx

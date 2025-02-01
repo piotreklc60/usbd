@@ -7,6 +7,7 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
+                "REMOVE_PATHS_FROM_SYMBOLS": "true",
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
