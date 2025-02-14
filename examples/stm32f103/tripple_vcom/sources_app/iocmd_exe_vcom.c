@@ -36,7 +36,7 @@ static void vcom_refresh_line(void *dev);
 
 static const IOCMD_Print_Exe_Params_XT exe_vcom =
 {
-   .dev                 = &buf_1_in,
+   .dev                 = VCOM_CMD_BUFF_IN,
    .print_string        = vcom_print_text,
    .print_string_repeat = vcom_print_text_repeat,
    .print_string_len    = vcom_print_text_len,

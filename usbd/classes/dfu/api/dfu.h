@@ -113,6 +113,15 @@
 
 
 
+/**
+ * @brief defines whole structure of DFU part of configuration descriptor in Application mode.
+ * This macro can be used to fill context of configuration descriptor on initialization.
+ *
+ * @return 18 bytes of configuration descriptor part which describe fully DFU function
+ *
+ * @param _dfu_if_num number of Interface which is used by the HOST to commmunicate with DFU finctionality
+ * @param _dfu_iInterface number of string which describes DFU interface. If not used, 0 shall be provided
+ */
 #define DFU_APP_MODE_DESC_PART(_dfu_if_num, _dfu_iInterface) \
    /* Interface <_dfu_if_num> Descriptor */ \
    USB_INTERFACE_DESC_TABLE_FILL( \
@@ -140,6 +149,15 @@
 
 
 
+/**
+ * @brief defines whole structure of DFU part of configuration descriptor in DFU mode.
+ * This macro can be used to fill context of configuration descriptor on initialization.
+ *
+ * @return 18 bytes of configuration descriptor part which describe fully DFU function
+ *
+ * @param _dfu_if_num number of Interface which is used by the HOST to commmunicate with DFU finctionality
+ * @param _dfu_iInterface number of string which describes DFU interface. If not used, 0 shall be provided
+ */
 #define DFU_DFU_MODE_DESC_PART(_dfu_memory_id, _dfu_iInterface) \
    /* Interface <_dfu_if_num> Descriptor */ \
    USB_INTERFACE_DESC_TABLE_FILL( \

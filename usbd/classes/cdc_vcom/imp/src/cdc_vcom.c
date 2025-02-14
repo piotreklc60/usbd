@@ -458,7 +458,7 @@ static void CDC_VCOM_on_event(
          USBD_IOTP_BUFF_Install(&(cdc_vcom->data.iotp.out));
          USBD_DEBUG_HI_3(CDC_VCOM_EVENT, "init %s %s TP on EP: %d", cdc_vcom->data.name, "EVENT IN", cdc_vcom->data.hw.ep_notif);
          USBD_IOTP_EVENT_Init(usbd, usbdc, cdc_vcom->data.hw.ep_notif, USB_EP_DIRECTION_IN, &(cdc_vcom->data.iotp.notif));
-         USBD_IOTP_EVENT_Install(&(cdc_vcom->data.iotp.notif));
+         (void)USBD_IOTP_EVENT_Install(&(cdc_vcom->data.iotp.notif));
 
          USBDC_REQUEST_Interface_Irq_Install(usbdc, CDC_VCOM_on_request, cdc_vcom->data.hw.if_notif);
       }
