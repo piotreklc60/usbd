@@ -42,34 +42,19 @@
 
 typedef struct
 {
-   USBD_IOTP_BUFF_Params_XT           *tp;
-   USB_EP_Direction_ET               dir;
-   USBD_Bool_DT                     in_progress;
-   USBD_Bool_DT                     is_tp_in;
+   USBD_IOTP_BUFF_Params_XT       *tp;
+   USB_EP_Direction_ET             dir;
+   USBD_Bool_DT                    is_tp_in;
    uint8_t                         ep_num_bufs;
    uint8_t                        *data;
-   USBD_IO_Inout_Data_Size_DT           size;
-   USBD_IO_Inout_Data_Size_DT           size_result;
-   USBD_IO_Inout_Data_Size_DT           abort_after_packets;
+   USBD_IO_Inout_Data_Size_DT      size;
+   USBD_IO_Inout_Data_Size_DT      size_result;
+   USBD_IO_Inout_Data_Size_DT      abort_after_packets;
    uint8_t                         data_result[TEST_MAX_DATA_SIZE];
-   USBD_Bool_DT                     test_aborted;
-   USBD_Bool_DT                     test_failed;
-   USBD_Bool_DT                     flush_hw_bufs;
+   USBD_Bool_DT                    test_failed;
+   USBD_Bool_DT                    flush_hw_bufs;
    uint8_t                         num_used_bufs;
 }test_params_T;
-
-/*
-static USBD_IOTP_BUFF_Params_XT *test_tp;
-static USB_EP_Direction_ET test_dir;
-static USBD_Bool_DT test_in_progress;
-static USBD_Bool_DT test_is_tp_in;
-// static uint8_t ep_num;
-static uint8_t test_ep_num_bufs;
-static uint8_t *test_data;
-static USBD_IO_Inout_Data_Size_DT test_size;
-static USBD_IO_Inout_Data_Size_DT test_size_result;
-static uint8_t test_data_result[TEST_MAX_DATA_SIZE];
-*/
 
 static test_params_T test_params[2 * (USBD_MAX_NUM_ENDPOINTS + 1)];
 
@@ -90,56 +75,6 @@ static void report_error(void)
 }
 
 
-static void test_ready(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
-{
-   USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-   USBD_DEBUG_HI_2(MAIN_APP_TEST, "%s; size = %d", __FUNCTION__, size);
-
-   USBD_EXIT_FUNC(MAIN_APP_TEST);
-}
-
-static void test_buf_empty(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
-{
-   uint8_t ep_num = USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP((USBD_IOTP_BUFF_Params_XT*)tp_params);
-   uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
-   test_params_T *test = &test_params[ep_index];
-
-   USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-   USBD_DEBUG_HI_2(MAIN_APP_TEST, "%s; size = %d", __FUNCTION__, size);
-
-   test->in_progress = USBD_FALSE;
-
-   USBD_EXIT_FUNC(MAIN_APP_TEST);
-}
-
-static void test_error(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
-{
-   uint8_t ep_num = USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP((USBD_IOTP_BUFF_Params_XT*)tp_params);
-   uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
-   test_params_T *test = &test_params[ep_index];
-
-   USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-//   test_printf("%s; size = %d\n\r", __FUNCTION__, size);
-   REPORT_ERROR();
-
-   USBD_EXIT_FUNC(MAIN_APP_TEST);
-}
-
-static void test_abort(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
-{
-   uint8_t ep_num = USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP((USBD_IOTP_BUFF_Params_XT*)tp_params);
-   uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
-   test_params_T *test = &test_params[ep_index];
-
-   USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-   test->test_aborted = USBD_TRUE;
-
-   USBD_EXIT_FUNC(MAIN_APP_TEST);
-}
 
 static void prepare_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 {
@@ -147,17 +82,9 @@ static void prepare_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-   USBD_IOTP_BUFF_Set_Handlers(
-      test->tp,
-      test_ready,
-      test_buf_empty,
-      test_error,
-      test_abort);
-
    port_test_set_data(ep_num, test->dir, test->data_result, test->size, &test->size_result);
    port_test_set_num_buffers(ep_num, test->dir, test->ep_num_bufs);
    test->size_result = 0;
-   test->in_progress = USBD_TRUE;
 
    USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* prepare_test */
@@ -176,6 +103,8 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
    USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
 
    result = Buff_Ring_Write(test->tp->core.buff, test->data, test->size, false, true);
+
+   num_packets = port_test_get_num_transactions_passed(ep_num, test->dir);
 
    if(USBD_BOOL_IS_TRUE(result))
    {
@@ -207,7 +136,12 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 #endif
 
          num_packets++;
-      }while(USBD_BOOL_IS_TRUE(test->in_progress/*port_test_is_transfer_active(ep_num, test->dir)*/));
+      }while(BUFF_BOOL_IS_FALSE(Buff_Ring_Is_Empty(test->tp->core.buff, BUFF_FALSE)));
+
+      if(num_packets <= test->abort_after_packets)
+      {
+         test->num_used_bufs = port_test_get_num_used_bufs(ep_num, USB_EP_DIRECTION_IN);
+      }
    }
 
    USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
@@ -244,21 +178,12 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
             {
                num_expected_packets = 1;
             }
-            else if(USB_EP_DESC_TRANSFER_TYPE_CONTROL == (ep_desc->bmAttributes & USB_EP_DESC_TRANSFER_TYPE_MASK))
-            {
-               num_expected_packets = (test->size / mps) + 1;
-            }
             else
             {
                num_expected_packets = (test->size / mps) + ((0 == (test->size % mps)) ? 0 : 1);
             }
 
-            if((num_expected_packets > (test->abort_after_packets + 2)) && USBD_BOOL_IS_FALSE(test->test_aborted))
-            {
-               USBD_WARN_2(MAIN_APP_TEST_ERROR, "Transfer with expected packets %d aborted after %d packets but no \"abort\" handler called!", num_expected_packets, test->abort_after_packets);
-               REPORT_ERROR();
-            }
-            else if(test->num_used_bufs != port_test_get_num_used_bufs(ep_num, test->dir))
+            if(test->num_used_bufs != port_test_get_num_used_bufs(ep_num, test->dir))
             {
                USBD_WARN_2(MAIN_APP_TEST_ERROR, "num_used_bufs = %d invalid!!! should be: %d", port_test_get_num_used_bufs(ep_num, test->dir), test->num_used_bufs);
                REPORT_ERROR();
@@ -266,17 +191,6 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
             else if(test->size_result > (num_expected_packets * mps))
             {
                USBD_WARN_2(MAIN_APP_TEST_ERROR, "data transferred size incorrect! test->size_result = %d > num_expected_packets * mps = %d", test->size_result, num_expected_packets * mps);
-               REPORT_ERROR();
-            }
-            else if(USBD_IOTP_BUFF_Get_Transferred_Size(test->tp) > (num_expected_packets * mps))
-            {
-               USBD_WARN_4(MAIN_APP_TEST_ERROR, "send irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-                  test->size,
-                  ep_num,
-                  (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-                  test->ep_num_bufs);
-               USBD_WARN_2(MAIN_APP_TEST_ERROR, "data transferred size incorrect! test->size_result = %d > num_expected_packets * mps = %d",
-                  USBD_IOTP_BUFF_Get_Transferred_Size(test->tp), num_expected_packets * mps);
                REPORT_ERROR();
             }
             else if(0 != memcmp(test->data, test->data_result, test->size_result))
@@ -363,7 +277,6 @@ void iotp_test_send_irq_abort_by_user(
    }
 
    test->test_failed   = USBD_FALSE;
-   test->test_aborted  = USBD_FALSE;
 
    test->tp         = tp;
    test->dir         = dir;

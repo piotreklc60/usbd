@@ -1279,7 +1279,8 @@ static void port_test_io_abort(USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Dire
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
-   USBD_DEBUG_HI_2(USBD_DBG_PORT_IO, "EP: %d; dir: %s", ep_num, (USB_EP_DIRECTION_OUT == dir) ? "out" : "in");
+   USBD_DEBUG_HI_3(USBD_DBG_PORT_IO, "EP: %d; dir: %s; flush_hw_bufs: %d",
+      ep_num, (USB_EP_DIRECTION_OUT == dir) ? "out" : "in", flush_hw_bufs);
 
    if(ep_num < USBD_MAX_NUM_ENDPOINTS)
    {

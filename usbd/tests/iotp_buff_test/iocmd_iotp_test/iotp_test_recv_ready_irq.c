@@ -43,8 +43,7 @@
 typedef struct
 {
    USBD_IOTP_BUFF_Params_XT  *tp;
-   USB_EP_Direction_ET       dir;
-   USBD_Bool_DT               in_progress;
+   USB_EP_Direction_ET        dir;
    USBD_Bool_DT               is_tp_in;
    uint8_t                    ep_num_bufs;
    uint8_t                   *data;
@@ -74,101 +73,15 @@ static void report_error(void)
 }
 
 
-static void test_ready(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
-{
-   uint8_t ep_num = USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP((USBD_IOTP_BUFF_Params_XT*)tp_params);
-   uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
-   test_params_T *test = &test_params[ep_index];
-
-   USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-   if(USBD_BOOL_IS_TRUE(test->read_in_progress))
-   {
-      USBD_WARN_2(MAIN_APP_TEST_ERROR, "%s called from inside \"USBD_IOTP_BUFF_Recv_And_Ready\" with size = %d", __FUNCTION__, size);
-      REPORT_ERROR();
-   }
-
-   USBD_DEBUG_HI_2(MAIN_APP_TEST, "%s; size = %d", __FUNCTION__, size);
-
-   if((size >= 0) && ((-1) == USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(USBD_IOTP_BUFF_Get_USBD(tp_params), ep_num, USBD_FALSE)))
-   {
-      USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-            test->size,
-            ep_num,
-            (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-            test->ep_num_bufs);
-      USBD_WARN_2(MAIN_APP_TEST_ERROR, "endpoint is not waiting on %s callback when size = %d!", __FUNCTION__, size);
-      REPORT_ERROR();
-   }
-
-   if((size < 0) && ((-1) != USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(USBD_IOTP_BUFF_Get_USBD(tp_params), ep_num, USBD_FALSE)))
-   {
-      USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-           test->size,
-           ep_num,
-           (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-           test->ep_num_bufs);
-      USBD_WARN_2(MAIN_APP_TEST_ERROR, "endpoint is waiting on %s callback when size = %d!", __FUNCTION__, size);
-      REPORT_ERROR();
-   }
-
-   if((-1) == size)
-   {
-      test->in_progress = USBD_IOTP_BUFF_Is_Transfer_Active(tp_params);
-   }
-
-   USBD_EXIT_FUNC(MAIN_APP_TEST);
-}
-
-static void test_buf_empty(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
-{
-   uint8_t ep_num = USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP((USBD_IOTP_BUFF_Params_XT*)tp_params);
-   uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
-   test_params_T *test = &test_params[ep_index];
-
-   USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-   USBD_WARN_2(MAIN_APP_TEST_ERROR, "%s called! size = %d", __FUNCTION__, size);
-   REPORT_ERROR();
-
-   USBD_EXIT_FUNC(MAIN_APP_TEST);
-}
-
-static void test_error(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
-{
-   USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-   USBD_WARN_2(MAIN_APP_TEST_ERROR, "%s; size = %d", __FUNCTION__, size);
-
-   USBD_EXIT_FUNC(MAIN_APP_TEST);
-}
-
-static void test_abort(USBD_IOTP_BUFF_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
-{
-   USBD_ENTER_FUNC(MAIN_APP_TEST);
-
-   USBD_WARN_2(MAIN_APP_TEST_ERROR, "%s; size = %d", __FUNCTION__, size);
-
-   USBD_EXIT_FUNC(MAIN_APP_TEST);
-}
-
 static void prepare_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 {
    test_params_T *test = &test_params[ep_index];
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-   USBD_IOTP_BUFF_Set_Handlers(
-      test->tp,
-      test_ready,
-      test_buf_empty,
-      test_error,
-      test_abort);
-
    port_test_set_data(ep_num, test->dir, test->data, test->size, &test->size_result);
    port_test_set_num_buffers(ep_num, test->dir, test->ep_num_bufs);
    test->size_result = 0;
-   test->in_progress = USBD_TRUE;
 
    USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* prepare_test */
@@ -248,25 +161,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
    if(USBD_BOOL_IS_FALSE(test->is_tp_in))
    {
-      if(USBD_BOOL_IS_TRUE(test->in_progress))
-      {
-         if((test->size != BUFF_RING_GET_SIZE(test->tp->core.buff))
-            && (0 == (test->size % test->tp->core.pipe_params.data.mps)))
-         {
-            /* "ready function will not be called  for non-control ep when size = n*mps because ring buffer doesn't know that host finished transfer " */
-         }
-         else
-         {
-            USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-                 test->size,
-                 ep_num,
-                 (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
-                 test->ep_num_bufs);
-            USBD_WARN_2(MAIN_APP_TEST_ERROR, "transfer still active! test->size_result = %d; test->size = %d", test->size_result, test->size);
-            REPORT_ERROR();
-         }
-      }
-      else if(test->size_result != test->size)
+      if(test->size_result != test->size)
       {
          USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
               test->size,
@@ -276,7 +171,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
          USBD_WARN_2(MAIN_APP_TEST_ERROR, "data transferred size incorrect! test->size_result = %d; test->size = %d", test->size_result, test->size);
          REPORT_ERROR();
       }
-      else if(USBD_IOTP_BUFF_Get_Transferred_Size(test->tp) != test->size)
+      else if(Buff_Ring_Get_Busy_Size(test->tp->core.buff, true) != test->size)
       {
          USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
               test->size,
@@ -284,7 +179,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
               (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
               test->ep_num_bufs);
          USBD_WARN_2(MAIN_APP_TEST_ERROR, "data transferred size incorrect! transferred_size = %d; test->size = %d",
-            USBD_IOTP_BUFF_Get_Transferred_Size(test->tp), test->size);
+            Buff_Ring_Get_Busy_Size(test->tp->core.buff, true), test->size);
          REPORT_ERROR();
       }
       else if(0 != memcmp(test->data, test->data_result, test->size))

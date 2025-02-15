@@ -28,21 +28,6 @@
 
 
 
-#define USBD_IOTP_BUFF_CHECK_READY_HANDLER(tp)                USBD_CHECK_HANDLER(USBD_IOTP_BUFF_Callback_HT, (tp)->up_link.handlers.ready)
-#define USBD_IOTP_BUFF_CHECK_BUF_EMPTY_HANDLER(tp)            USBD_CHECK_HANDLER(USBD_IOTP_BUFF_Callback_HT, (tp)->up_link.handlers.buf_empty)
-#define USBD_IOTP_BUFF_CHECK_ERROR_HANDLER(tp)                USBD_CHECK_HANDLER(USBD_IOTP_BUFF_Callback_HT, (tp)->up_link.handlers.error)
-#define USBD_IOTP_BUFF_CHECK_ABORT_HANDLER(tp)                USBD_CHECK_HANDLER(USBD_IOTP_BUFF_Callback_HT, (tp)->up_link.handlers.abort)
-
-
-#define USBD_IOTP_BUFF_GET_READY_HANDLER(tp)                  USBD_GET_HANDLER(USBD_IOTP_BUFF_Callback_HT,   (tp)->up_link.handlers.ready)
-#define USBD_IOTP_BUFF_GET_BUF_EMPTY_HANDLER(tp)              USBD_GET_HANDLER(USBD_IOTP_BUFF_Callback_HT,   (tp)->up_link.handlers.buf_empty)
-#define USBD_IOTP_BUFF_GET_ERROR_HANDLER(tp)                  USBD_GET_HANDLER(USBD_IOTP_BUFF_Callback_HT,   (tp)->up_link.handlers.error)
-#define USBD_IOTP_BUFF_GET_ABORT_HANDLER(tp)                  USBD_GET_HANDLER(USBD_IOTP_BUFF_Callback_HT,   (tp)->up_link.handlers.abort)
-#define USBD_IOTP_BUFF_GET_VENDOR_DATA_PTR(tp)                (&((tp)->up_link.data.vendor_data))
-
-
-
-
 #define USBD_IOTP_BUFF_SET_USBD_INSIDE_TP(tp, new_value)      USBD_SET_PTR(void, (tp)->core.pipe_params.data.usbd, (new_value))
 #define USBD_IOTP_BUFF_SET_USBDC_INSIDE_TP(tp, new_value)     USBD_SET_PTR(void, (tp)->core.pipe_params.data.usbdc, (new_value))
 #define USBD_IOTP_BUFF_SET_EP_NUM_INSIDE_TP(tp, new_value)    (tp)->core.pipe_params.data.ep_num = (new_value)
@@ -52,55 +37,6 @@
 
 #define USBD_IOTP_BUFF_GET_INVOKE_PARAMS(tp)                  (tp)->invoke.invoke
 
-
-#define USBD_IOTP_BUFF_SET_READY_HANDLER(tp, new_value) \
-            USBD_SET_HANDLER( \
-               USBD_IOTP_BUFF_Callback_HT, \
-               (tp)->up_link.handlers.ready, \
-               (new_value))
-
-#define USBD_IOTP_BUFF_SET_BUF_EMPTY_HANDLER(tp, new_value) \
-            USBD_SET_HANDLER( \
-               USBD_IOTP_BUFF_Callback_HT, \
-               (tp)->up_link.handlers.buf_empty, \
-               (new_value))
-
-#define USBD_IOTP_BUFF_SET_ERROR_HANDLER(tp, new_value) \
-            USBD_SET_HANDLER( \
-               USBD_IOTP_BUFF_Callback_HT, \
-               (tp)->up_link.handlers.error, \
-               (new_value))
-
-#define USBD_IOTP_BUFF_SET_ABORT_HANDLER(tp, new_value) \
-            USBD_SET_HANDLER( \
-               USBD_IOTP_BUFF_Callback_HT, \
-               (tp)->up_link.handlers.abort, \
-               (new_value))
-
-
-#define USBD_IOTP_BUFF_CALL_READY(usbd, ep_num, dir, tp, size) \
-            USBD_CALL_HANDLER(USBD_IOTP_BUFF_Callback_HT, (tp)->up_link.handlers.ready)( \
-               ((USBD_IOTP_BUFF_Params_XT*)(tp)), \
-               (dir), \
-               (size))
-
-#define USBD_IOTP_BUFF_CALL_BUF_EMPTY(usbd, ep_num, dir, tp, size) \
-            USBD_CALL_HANDLER(USBD_IOTP_BUFF_Callback_HT, (tp)->up_link.handlers.buf_empty)( \
-               ((USBD_IOTP_BUFF_Params_XT*)(tp)), \
-               (dir), \
-               (size))
-
-#define USBD_IOTP_BUFF_CALL_ERROR(usbd, ep_num, dir, tp, size) \
-            USBD_CALL_HANDLER(USBD_IOTP_BUFF_Callback_HT, (tp)->up_link.handlers.error)( \
-               ((USBD_IOTP_BUFF_Params_XT*)(tp)), \
-               (dir), \
-               (size))
-
-#define USBD_IOTP_BUFF_CALL_ABORT(usbd, ep_num, dir, tp, size) \
-            USBD_CALL_HANDLER(USBD_IOTP_BUFF_Callback_HT, (tp)->up_link.handlers.abort)( \
-               ((USBD_IOTP_BUFF_Params_XT*)(tp)), \
-               (dir), \
-               (size))
 
 
 #endif
