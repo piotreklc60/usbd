@@ -55,6 +55,11 @@
 
 
 
+#define USBD_IOTP_BUFF_SLOW_DOWN_OUT_PIPE_WHEN_BUFF_IS_FULL          BUFF_FALSE
+#define USBD_IOTP_BUFF_ALLOW_OUT_BUFF_OVERWRITE_WHEN_BUFF_IS_FULL    BUFF_TRUE
+
+
+
 typedef struct USBD_IOTP_BUFF_Params_eXtended_Tag
 {
    /* this field must be present for security reasons to identify properly tp as extension params in Buff_Ring_XT */
@@ -64,6 +69,7 @@ typedef struct USBD_IOTP_BUFF_Params_eXtended_Tag
       union
       {
          USBD_Vendor_Data_XT        vendor_data;
+         Buff_Bool_DT               allow_out_buff_overwrite_when_full;
       }data;
    }up_link;
    struct

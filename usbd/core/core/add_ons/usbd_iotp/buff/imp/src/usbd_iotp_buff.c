@@ -579,7 +579,7 @@ static Buff_Size_DT USBD_IOTP_BUFF_vendor_memcpy_in(const Buff_Memcpy_Params_XT 
       params->size,
       params->is_last_part ? "true" : "false");
 
-   if(params->is_last_part)
+   if(BUFF_BOOL_IS_TRUE(params->is_last_part))
    {
       vendor_data->is_last_part = USBD_TRUE;
    }
@@ -608,6 +608,7 @@ static void USBD_IOTP_BUFF_io_data_memcpy_in(
 {
    Buff_Ring_Extensions_XT        *extension;
    USBD_IOTP_BUFF_Params_XT       *tp          = (USBD_IOTP_BUFF_Params_XT*)tp_params;
+   Buff_Ring_Extension_On_Write    on_write;
    usbd_iotp_buff_vendor_memcpy_XT vendor_data;
    USBD_Bool_DT                    port_memcpy_called = USBD_FALSE;
 
@@ -644,38 +645,31 @@ static void USBD_IOTP_BUFF_io_data_memcpy_in(
 
       USBD_IO_SET_IN_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
 
+      if(BUFF_RING_GET_BUSY_SIZE(tp->core.buff) > 0)
+      {
+         USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_data_memcpy_in);
+         on_write = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
+      }
+      else
+      {
+         USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
+         if(USBD_BOOL_IS_TRUE(port_memcpy_called))
+         {
+            on_write = USBD_IOTP_BUFF_extension_on_write_connect_memcpy_only;
+         }
+         else
+         {
+            on_write = USBD_IOTP_BUFF_extension_on_write;
+         }
+      }
+
       extension = tp->core.buff->extension;
 
       if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
       {
          tp->owner                  = USBD_IOTP_BUFF_dummy_data;
          extension->on_write_params = tp;
-         extension->on_write        = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
-      }
-
-      if(BUFF_RING_GET_BUSY_SIZE(tp->core.buff) > 0)
-      {
-         USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_data_memcpy_in);
-      }
-      else
-      {
-         USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
-
-         extension = tp->core.buff->extension;
-
-         if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
-         {
-            tp->owner                  = USBD_IOTP_BUFF_dummy_data;
-            extension->on_write_params = tp;
-            if(USBD_BOOL_IS_TRUE(port_memcpy_called))
-            {
-               extension->on_write        = USBD_IOTP_BUFF_extension_on_write_connect_memcpy_only;
-            }
-            else
-            {
-               extension->on_write        = USBD_IOTP_BUFF_extension_on_write;
-            }
-         }
+         extension->on_write        = on_write;
       }
 
       USBD_DEBUG_HI_4(
@@ -699,92 +693,11 @@ static void USBD_IOTP_BUFF_io_evdata_in(
    USBD_IO_Inout_Data_Size_DT size,
    USBD_IO_IN_Data_Method_Port_HT mem_cpy)
 {
-   Buff_Ring_Extensions_XT        *extension;
-   USBD_IOTP_BUFF_Params_XT       *tp          = (USBD_IOTP_BUFF_Params_XT*)tp_params;
-   usbd_iotp_buff_vendor_memcpy_XT vendor_data;
-
    USBD_UNUSED_PARAM(size);
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_BUFF_Params_XT, tp) && USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction)
-      && USBD_CHECK_HANDLER(USBD_IO_IN_Data_Method_Port_HT, mem_cpy) && BUFF_CHECK_PTR(Buff_Ring_XT, tp->core.buff))
-   {
-      USBD_DEBUG_HI_4(
-         USBD_DBG_IOTPBF_PROCESSING,
-         "evdata_in  before::ep: %d::%s, dir: %s; busy_size = %d",
-         USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-         USBD_IO_UP_Is_EP_Active(
-            USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-            USB_EP_DIRECTION_IN) ? "active" : "passive",
-         USB_EP_DESC_DIR_OUT == USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp) ? "out" : "in",
-         BUFF_RING_GET_BUSY_SIZE(tp->core.buff));
-
-      if(!BUFF_RING_IS_EMPTY(tp->core.buff))
-      {
-         vendor_data.tp             = tp;
-         vendor_data.data_method.in = mem_cpy;
-         vendor_data.is_last_part   = USBD_TRUE;
-
-         (void)Buff_Ring_Read_Vendor(
-            tp->core.buff,
-            &vendor_data,
-            (Buff_Size_DT)(tp->core.pipe_params.data.mps + tp->core.pipe_params.data.mps),
-            USBD_IOTP_BUFF_vendor_memcpy_in,
-            BUFF_TRUE);
-      }
-
-      USBD_IO_SET_IN_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
-
-      if(BUFF_RING_GET_BUSY_SIZE(tp->core.buff) > 0)
-      {
-         USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_data_memcpy_in);
-
-         extension = tp->core.buff->extension;
-
-         if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
-         {
-            tp->owner                  = USBD_IOTP_BUFF_dummy_data;
-            extension->on_write_params = tp;
-            extension->on_write        = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
-         }
-      }
-      else
-      {
-         USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
-
-         extension = tp->core.buff->extension;
-
-         if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
-         {
-            tp->owner                  = USBD_IOTP_BUFF_dummy_data;
-            extension->on_write_params = tp;
-
-            if(USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(
-               USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-               USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp)) < 0)
-            {
-               extension->on_write     = USBD_IOTP_BUFF_extension_on_write;
-            }
-            else
-            {
-               extension->on_write     = USBD_IOTP_BUFF_extension_on_write_connect_memcpy_only;
-            }
-         }
-      }
-
-      USBD_DEBUG_HI_4(
-         USBD_DBG_IOTPBF_PROCESSING,
-         "evdata_in  after ::ep: %d::%s, dir: %s; busy_size = %d",
-         USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-         USBD_IO_UP_Is_EP_Active(
-            USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-            USB_EP_DIRECTION_IN) ? "active" : "passive",
-         USB_EP_DESC_DIR_OUT == USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp) ? "out" : "in",
-         BUFF_RING_GET_BUSY_SIZE(tp->core.buff));
-   }
+   USBD_IOTP_BUFF_io_data_memcpy_in(tp_params, transaction, mem_cpy);
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 } /* USBD_IOTP_BUFF_io_evdata_in */
@@ -878,7 +791,7 @@ static Buff_Size_DT USBD_IOTP_BUFF_vendor_memcpy_out(const Buff_Memcpy_Params_XT
       params->size,
       params->is_last_part ? "true" : "false");
 
-   if(params->is_last_part)
+   if(BUFF_BOOL_IS_TRUE(params->is_last_part))
    {
       if(params->size >= (Buff_Size_DT)(vendor_data->out_left_data_size))
       {
@@ -937,14 +850,16 @@ static void USBD_IOTP_BUFF_io_memcpy_out(
    usbd_iotp_buff_vendor_memcpy_XT vendor_data;
    Buff_Size_DT                    ret_size    = 0;
 
+   USBD_UNUSED_PARAM(packet_size);
+
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
    if(USBD_CHECK_PTR(USBD_IOTP_BUFF_Params_XT, tp) && USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction)
       && USBD_CHECK_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, data_method) && BUFF_CHECK_PTR(Buff_Ring_XT, tp->core.buff))
    {
-      USBD_DEBUG_HI_7(
+      USBD_DEBUG_HI_9(
          USBD_DBG_IOTPBF_PROCESSING,
-         "memcpy_out before::ep: %d::%s, dir: %s; buff:: size: %d; busy_size: %d; first_free: %d; first_busy: %d",
+         "memcpy_out before::ep: %d::%s, dir: %s; buff:: size: %d; busy_size: %d; first_free: %d; first_busy: %d; left_size: %d; packet_size: %d",
          USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
          USBD_IO_UP_Is_EP_Active(
             USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
@@ -954,45 +869,46 @@ static void USBD_IOTP_BUFF_io_memcpy_out(
          tp->core.buff->size,
          tp->core.buff->busy_size,
          tp->core.buff->first_free,
-         tp->core.buff->first_busy);
+         tp->core.buff->first_busy,
+         left_size,
+         packet_size);
 
       vendor_data.tp                   = tp;
       vendor_data.data_method.out      = data_method;
       vendor_data.out_left_data_size   = left_size;
 
-      if(0 != packet_size)
+      BUFF_PROTECTION_LOCK(tp->core.buff);
+
+      if(left_size <= (USBD_IO_Inout_Data_Size_DT)BUFF_RING_GET_FREE_SIZE(tp->core.buff))
       {
          ret_size = Buff_Ring_Write_Vendor(
-            tp->core.buff, &vendor_data, left_size, USBD_IOTP_BUFF_vendor_memcpy_out, BUFF_FALSE, BUFF_TRUE);
-
-         if(0 == ret_size)
-         {
-            /**
-             * nothing has been written -
-             * perform data reading with size 0 only to block endpoint on reading and wait for more space in the buffer
-             */
-               (void)USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, data_method)(
-                  USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-                  USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-                  USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp),
-                  &left_size,
-                  0,
-                  USBD_FALSE);
-         }
+            tp->core.buff,
+            &vendor_data,
+            left_size,
+            USBD_IOTP_BUFF_vendor_memcpy_out,
+            tp->up_link.data.allow_out_buff_overwrite_when_full,
+            BUFF_FALSE);
       }
-      else
+
+      BUFF_PROTECTION_UNLOCK(tp->core.buff);
+
+      if(0 == ret_size)
       {
-         /* zero length packet - release EP buffer */
-         (void)USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, data_method)(
-            USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp),
-            &left_size,
-            0,
-            USBD_TRUE);
-
-         vendor_data.out_left_data_size = (-1);
+         /**
+          * nothing has been written -
+          * perform data reading with size 0 only to block endpoint on reading and wait for more space in the buffer
+          */
+            (void)USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, data_method)(
+               USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
+               USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
+               USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp),
+               &left_size,
+               0,
+               USBD_FALSE);
       }
+
+      USBD_IO_SET_OUT_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
+      USBD_IO_SET_OUT_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_memcpy_out);
 
       extension = tp->core.buff->extension;
 
@@ -1042,109 +958,9 @@ static void USBD_IOTP_BUFF_io_evdata_out(
    USBD_IO_Inout_Data_Size_DT size,
    USBD_IO_OUT_Data_Method_Port_HT mem_cpy)
 {
-   Buff_Ring_Extensions_XT        *extension;
-   USBD_IOTP_BUFF_Params_XT       *tp          = (USBD_IOTP_BUFF_Params_XT*)tp_params;
-   usbd_iotp_buff_vendor_memcpy_XT vendor_data;
-   Buff_Size_DT                    ret_size    = 0;
-
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_BUFF_Params_XT, tp) && USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction)
-      && USBD_CHECK_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, mem_cpy) && BUFF_CHECK_PTR(Buff_Ring_XT, tp->core.buff))
-   {
-      USBD_DEBUG_HI_7(
-         USBD_DBG_IOTPBF_PROCESSING,
-         "evdata_out before::ep: %d::%s, dir: %s; buff:: size: %d; busy_size: %d; first_free: %d; first_busy: %d",
-         USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-         USBD_IO_UP_Is_EP_Active(
-            USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-            USB_EP_DIRECTION_OUT) ? "active" : "passive",
-         USB_EP_DESC_DIR_OUT == USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp) ? "out" : "in",
-         tp->core.buff->size,
-         tp->core.buff->busy_size,
-         tp->core.buff->first_free,
-         tp->core.buff->first_busy);
-
-      vendor_data.tp                   = tp;
-      vendor_data.data_method.out      = mem_cpy;
-      vendor_data.out_left_data_size   = size;
-
-      if(0 != size)
-      {
-         ret_size = Buff_Ring_Write_Vendor(
-            tp->core.buff, &vendor_data, size, USBD_IOTP_BUFF_vendor_memcpy_out, BUFF_FALSE, BUFF_TRUE);
-
-         if(0 == ret_size)
-         {
-            /**
-             * nothing has been written -
-             * perform data reading with size 0 only to stuck endpoint on reading and wait for more space in the buffer
-             */
-            (void)USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, mem_cpy)(
-               USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-               USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-               USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp),
-               &size,
-               0,
-               USBD_FALSE);
-         }
-      }
-      else
-      {
-         /* zero length packet - release EP buffer */
-         (void)USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, mem_cpy)(
-            USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp),
-            &size,
-            0,
-            USBD_TRUE);
-
-         vendor_data.out_left_data_size = (-1);
-      }
-
-      USBD_IO_SET_OUT_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
-      USBD_IO_SET_OUT_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_memcpy_out);
-
-      extension = tp->core.buff->extension;
-
-      if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
-      {
-         tp->owner                     = USBD_IOTP_BUFF_dummy_data;
-         extension->on_read_params     = tp;
-         extension->on_remove_params   = tp;
-
-         if(!BUFF_RING_IS_FULL(tp->core.buff))
-         {
-            USBD_DEBUG_MID(USBD_DBG_IOTPBF_PROCESSING, "remove OUT extensions");
-
-            extension->on_read            = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Read);
-            extension->on_remove          = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
-         }
-         else
-         {
-            USBD_DEBUG_MID(USBD_DBG_IOTPBF_PROCESSING, "add OUT extensions");
-
-            extension->on_read            = USBD_IOTP_BUFF_extension_on_read;
-            extension->on_remove          = USBD_IOTP_BUFF_extension_on_remove;
-         }
-      }
-
-      USBD_DEBUG_HI_7(
-         USBD_DBG_IOTPBF_PROCESSING,
-         "evdata_out after ::ep: %d::%s, dir: %s; buff:: size: %d; busy_size: %d; first_free: %d; first_busy: %d",
-         USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-         USBD_IO_UP_Is_EP_Active(
-            USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp),
-            USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
-            USB_EP_DIRECTION_OUT) ? "active" : "passive",
-         USB_EP_DESC_DIR_OUT == USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp) ? "out" : "in",
-         tp->core.buff->size,
-         tp->core.buff->busy_size,
-         tp->core.buff->first_free,
-         tp->core.buff->first_busy);
-   }
+   USBD_IOTP_BUFF_io_memcpy_out(tp_params, transaction, size, size, mem_cpy);
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 } /* USBD_IOTP_BUFF_io_evdata_out */

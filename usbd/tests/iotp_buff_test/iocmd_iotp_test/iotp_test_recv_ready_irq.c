@@ -310,57 +310,60 @@ void iotp_test_recv_ready_irq(USBD_Params_XT *usbd, USBD_IOTP_BUFF_Params_XT *tp
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-   test->read_in_progress = USBD_FALSE;
-
-   if(size > TEST_MAX_DATA_SIZE)
+   if(size > 0)
    {
-      USBD_WARN_2(MAIN_APP_TEST_INTRO, "test size = %d too big! now is cut to %d!", size, TEST_MAX_DATA_SIZE);
-      REPORT_ERROR();
-      size = TEST_MAX_DATA_SIZE;
-   }
+      test->read_in_progress = USBD_FALSE;
 
-   test->test_failed = USBD_FALSE;
+      if(size > TEST_MAX_DATA_SIZE)
+      {
+         USBD_WARN_2(MAIN_APP_TEST_INTRO, "test size = %d too big! now is cut to %d!", size, TEST_MAX_DATA_SIZE);
+         REPORT_ERROR();
+         size = TEST_MAX_DATA_SIZE;
+      }
 
-   test->tp    = tp;
-   test->dir   = dir;
-   if(USB_EP_DIRECTION_IN == dir)
-   {
-      test->is_tp_in   = USBD_TRUE;
-   }
-   else
-   {
-      test->is_tp_in   = USBD_FALSE;
-   }
-   test->data   = data;
-   test->size   = size;
-   test->ep_num_bufs = 1 + ((num_bufs - 1) & 1);
+      test->test_failed = USBD_FALSE;
 
-   USBD_DEBUG_HI_5(MAIN_APP_TEST_INTRO, "%s: size = %d, ep_num: %d, dir: %s, num buffers: %d",
-      __FUNCTION__, test->size, ep_num, (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT", test->ep_num_bufs);
+      test->tp    = tp;
+      test->dir   = dir;
+      if(USB_EP_DIRECTION_IN == dir)
+      {
+         test->is_tp_in   = USBD_TRUE;
+      }
+      else
+      {
+         test->is_tp_in   = USBD_FALSE;
+      }
+      test->data   = data;
+      test->size   = size;
+      test->ep_num_bufs = 1 + ((num_bufs - 1) & 1);
 
-   prepare_test(usbd, ep_index, ep_num);
-   perform_test(usbd, ep_index, ep_num);
-   check_result(usbd, ep_index, ep_num);
+      USBD_DEBUG_HI_5(MAIN_APP_TEST_INTRO, "%s: size = %d, ep_num: %d, dir: %s, num buffers: %d",
+         __FUNCTION__, test->size, ep_num, (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT", test->ep_num_bufs);
 
-   USBD_EMERG_2(MAIN_APP_TEST_INTRO, "test size = %d; EP OUT size: %d!", size, port_test_get_out_ep_buf_size(ep_num));
+      prepare_test(usbd, ep_index, ep_num);
+      perform_test(usbd, ep_index, ep_num);
+      check_result(usbd, ep_index, ep_num);
 
-   on_remove = test->tp->core.buff->extension->on_remove;
-   test->tp->core.buff->extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
-   Buff_Ring_Clear(test->tp->core.buff, true);
-   test->tp->core.buff->extension->on_remove = on_remove;
+      USBD_EMERG_2(MAIN_APP_TEST_INTRO, "test size = %d; EP OUT size: %d!", size, port_test_get_out_ep_buf_size(ep_num));
 
-   test->read_in_progress = USBD_FALSE;
+      on_remove = test->tp->core.buff->extension->on_remove;
+      test->tp->core.buff->extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
+      Buff_Ring_Clear(test->tp->core.buff, true);
+      test->tp->core.buff->extension->on_remove = on_remove;
 
-   if(USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_TRUE) >= 0)
-   {
-      USBD_WARN_1(MAIN_APP_TEST_INTRO, "test size = %d; EP IS STILL WAITING!", size);
-      REPORT_ERROR();
-   }
+      test->read_in_progress = USBD_FALSE;
 
-   if(port_test_get_out_ep_buf_size(ep_num) > 0)
-   {
-      USBD_WARN_1(MAIN_APP_TEST_INTRO, "test size = %d; EP IS STILL WAITING!", size);
-      REPORT_ERROR();
+      if(USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_TRUE) >= 0)
+      {
+         USBD_WARN_1(MAIN_APP_TEST_INTRO, "test size = %d; EP IS STILL WAITING!", size);
+         REPORT_ERROR();
+      }
+
+      if(port_test_get_out_ep_buf_size(ep_num) > 0)
+      {
+         USBD_WARN_1(MAIN_APP_TEST_INTRO, "test size = %d; EP IS STILL WAITING!", size);
+         REPORT_ERROR();
+      }
    }
 
    USBD_EXIT_FUNC(MAIN_APP_TEST);
