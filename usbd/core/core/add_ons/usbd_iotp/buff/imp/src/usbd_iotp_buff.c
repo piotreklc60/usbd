@@ -611,6 +611,7 @@ static void USBD_IOTP_BUFF_io_data_memcpy_in(
    Buff_Ring_Extension_On_Write    on_write;
    usbd_iotp_buff_vendor_memcpy_XT vendor_data;
    USBD_Bool_DT                    port_memcpy_called = USBD_FALSE;
+   USBD_Bool_DT                    ring_is_empty;
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
@@ -628,6 +629,8 @@ static void USBD_IOTP_BUFF_io_data_memcpy_in(
          USB_EP_DESC_DIR_OUT == USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp) ? "out" : "in",
          BUFF_RING_GET_BUSY_SIZE(tp->core.buff));
 
+      BUFF_PROTECTION_LOCK(tp->core.buff);
+
       if(!BUFF_RING_IS_EMPTY(tp->core.buff))
       {
          port_memcpy_called         = USBD_TRUE;
@@ -640,12 +643,16 @@ static void USBD_IOTP_BUFF_io_data_memcpy_in(
             &vendor_data,
             (Buff_Size_DT)(tp->core.pipe_params.data.mps + tp->core.pipe_params.data.mps),
             USBD_IOTP_BUFF_vendor_memcpy_in,
-            BUFF_TRUE);
+            BUFF_FALSE);
       }
+
+      ring_is_empty = BUFF_RING_IS_EMPTY(tp->core.buff);
+
+      BUFF_PROTECTION_UNLOCK(tp->core.buff);
 
       USBD_IO_SET_IN_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
 
-      if(BUFF_RING_GET_BUSY_SIZE(tp->core.buff) > 0)
+      if(USBD_BOOL_IS_FALSE(ring_is_empty))
       {
          USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_data_memcpy_in);
          on_write = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
@@ -849,6 +856,7 @@ static void USBD_IOTP_BUFF_io_memcpy_out(
    USBD_IOTP_BUFF_Params_XT       *tp          = (USBD_IOTP_BUFF_Params_XT*)tp_params;
    usbd_iotp_buff_vendor_memcpy_XT vendor_data;
    Buff_Size_DT                    ret_size    = 0;
+   USBD_Bool_DT                    ring_is_full;
 
    USBD_UNUSED_PARAM(packet_size);
 
@@ -890,6 +898,8 @@ static void USBD_IOTP_BUFF_io_memcpy_out(
             BUFF_FALSE);
       }
 
+      ring_is_full = BUFF_RING_IS_FULL(tp->core.buff);
+
       BUFF_PROTECTION_UNLOCK(tp->core.buff);
 
       if(0 == ret_size)
@@ -918,7 +928,7 @@ static void USBD_IOTP_BUFF_io_memcpy_out(
          extension->on_read_params     = tp;
          extension->on_remove_params   = tp;
 
-         if(BUFF_RING_IS_FULL(tp->core.buff))
+         if(USBD_BOOL_IS_TRUE(ring_is_full))
          {
             USBD_DEBUG_MID(USBD_DBG_IOTPBF_PROCESSING, "add OUT extensions");
 
