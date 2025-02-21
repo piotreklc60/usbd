@@ -232,11 +232,11 @@ void USBD_Port_STM32_CAT_A_Configure_USB_Irqs(USBD_Bool_DT configure)
       HAL_EXTI_SetConfigLine(&port_stm32f103_exti_wkup_handle, &exti_init_structure);
 
       /* configure lower priority USB Dev IRQ */
-      HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 3, 0);
+      HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY, 0);
       HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
 
       /* configure higher priority (data transfer) USB Dev IRQ */
-      HAL_NVIC_SetPriority(USB_HP_CAN1_TX_IRQn, 2, 0);
+      HAL_NVIC_SetPriority(USB_HP_CAN1_TX_IRQn, USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY, 0);
       HAL_NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
    }
    else
@@ -253,6 +253,30 @@ void USBD_Port_STM32_CAT_A_Configure_USB_Irqs(USBD_Bool_DT configure)
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_DEV);
 }
+
+#if((USBD_MAX_NUM_ENDPOINTS > 1) && (USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY > USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY))
+extern void USBD_Port_STM32_CAT_A_Disable_USB_HP_Irq(void)
+{
+   HAL_NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
+} /* USBD_Port_STM32_CAT_A_Disable_USB_HP_Irq */
+
+extern void USBD_Port_STM32_CAT_A_Enable_USB_HP_Irq(void)
+{
+   HAL_NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
+} /* USBD_Port_STM32_CAT_A_Enable_USB_HP_Irq */
+#endif
+
+#if(USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY < USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY)
+extern void USBD_Port_STM32_CAT_A_Disable_USB_LP_Irq(void)
+{
+   HAL_NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
+} /* USBD_Port_STM32_CAT_A_Disable_USB_LP_Irq */
+
+extern void USBD_Port_STM32_CAT_A_Enable_USB_LP_Irq(void)
+{
+   HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
+} /* USBD_Port_STM32_CAT_A_Enable_USB_LP_Irq */
+#endif
 
 void USBD_Port_STM32_CAT_A_Clear_Exti_Line_18_Irq_Status(void)
 {

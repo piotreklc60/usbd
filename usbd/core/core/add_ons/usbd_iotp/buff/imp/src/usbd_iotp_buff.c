@@ -65,18 +65,12 @@ typedef struct usbd_iotp_buff_vendor_memcpy_eXtended_Tag
 
 static void USBD_IOTP_BUFF_process_extension_on_write(
    Buff_Ring_XT *buf,
-   Buff_Ring_Extensions_XT *extension,
-   USBD_Bool_DT call_trigger);
+   Buff_Ring_Extensions_XT *extension);
 static void USBD_IOTP_BUFF_extension_on_write(
    Buff_Ring_XT *buf,
    Buff_Ring_Extensions_XT *extension,
    Buff_Size_DT size,
-   bool_t rewind_occured);
-static void USBD_IOTP_BUFF_extension_on_write_connect_memcpy_only(
-   Buff_Ring_XT *buf,
-   Buff_Ring_Extensions_XT *extension,
-   Buff_Size_DT size,
-   bool_t rewind_occured);
+   Buff_Bool_DT rewind_occured);
 static Buff_Size_DT USBD_IOTP_BUFF_vendor_memcpy_in(
    const Buff_Memcpy_Params_XT *params);
 static void USBD_IOTP_BUFF_io_data_memcpy_in(
@@ -94,11 +88,11 @@ static void USBD_IOTP_BUFF_extension_on_read(
    Buff_Ring_XT *buf,
    Buff_Ring_Extensions_XT *extension,
    Buff_Size_DT size,
-   bool_t rewind_occured);
+   Buff_Bool_DT rewind_occured);
 static void USBD_IOTP_BUFF_extension_on_remove(
    Buff_Ring_XT *buf,
    Buff_Ring_Extensions_XT *extension,
-   bool_t rewind_occured);
+   Buff_Bool_DT rewind_occured);
 static Buff_Size_DT USBD_IOTP_BUFF_vendor_memcpy_out(
    const Buff_Memcpy_Params_XT *params);
 static void USBD_IOTP_BUFF_io_memcpy_out(
@@ -123,10 +117,8 @@ static void USBD_IOTP_BUFF_io_error(
 #endif
 static void USBD_IOTP_BUFF_io_reinit(
    void *tp_params, void *tp_owner, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_Bool_DT active);
-static USBD_Bool_DT USBD_IOTP_BUFF_trigger_in(
-   USBD_IOTP_BUFF_Params_XT *tp, Buff_Ring_Extensions_XT *extension, USBD_Params_XT *usbd, uint8_t ep_num, USBD_Bool_DT call_trigger);
-static USBD_Bool_DT USBD_IOTP_BUFF_trigger_out(
-   USBD_IOTP_BUFF_Params_XT *tp, Buff_Ring_Extensions_XT *extension, USBD_Params_XT *usbd, uint8_t ep_num);
+static USBD_Bool_DT USBD_IOTP_BUFF_trigger_in(USBD_Params_XT *usbd, uint8_t ep_num);
+static USBD_Bool_DT USBD_IOTP_BUFF_trigger_out(USBD_Params_XT *usbd, uint8_t ep_num);
 #ifdef USBD_EVENT_PRESENT
 static void USBD_IOTP_BUFF_proc_event(USBD_IOTP_BUFF_Params_XT *tp, uint8_t req);
 static void USBD_IOTP_BUFF_event(
@@ -147,7 +139,7 @@ static const USBD_IO_UP_Error_HT USBD_IOTP_BUFF_error_table[4] =
    USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Error_HT)
 };
 
-static const uint8_t USBD_IOTP_BUFF_dummy_data[2] = {0, 1};
+static USBD_Atomic_Bool_DT USBD_IOTP_BUFF_refresh_trigger;
 
 void USBD_IOTP_BUFF_Init(
       USBD_Params_XT *usbd,
@@ -249,7 +241,7 @@ USBD_Bool_DT USBD_IOTP_BUFF_Install(
                USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp),
                &(tp->core.pipe_params.handlers),
                tp,
-               (void*)USBD_IOTP_BUFF_dummy_data);
+               (void*)(&USBD_IOTP_BUFF_refresh_trigger));
 
             result = USBD_TRUE;
          }
@@ -461,7 +453,7 @@ USBD_Bool_DT USBD_IOTP_BUFF_Abort(
          USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(tp),
          USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_BUFF_dummy_data))
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, (&USBD_IOTP_BUFF_refresh_trigger)))
       {
          if(USBD_BOOL_IS_TRUE(USBD_IOTP_BUFF_is_transfer_active(tp)) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
          {
@@ -483,6 +475,8 @@ USBD_Bool_DT USBD_IOTP_BUFF_Abort(
                   USBD_ATOMIC_UINT8_SET(
                      tp->invoke.req,
                      USBD_BOOL_IS_TRUE(flush_hw_bufs) ? USBD_IOTP_BUFF_INVOKE_REQ_ABORT_FLUSH_HW : USBD_IOTP_BUFF_INVOKE_REQ_ABORT_NO_FLUSH_HW);
+
+                  USBD_ATOMIC_BOOL_SET(USBD_IOTP_BUFF_refresh_trigger, USBD_TRUE);
             }
          }
       }
@@ -495,8 +489,7 @@ USBD_Bool_DT USBD_IOTP_BUFF_Abort(
 
 
 
-static void USBD_IOTP_BUFF_process_extension_on_write(
-   Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, USBD_Bool_DT call_trigger)
+static void USBD_IOTP_BUFF_process_extension_on_write(Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension)
 {
    USBD_IOTP_BUFF_Params_XT  *tp;
    void                      *usbd;
@@ -507,7 +500,7 @@ static void USBD_IOTP_BUFF_process_extension_on_write(
    tp = (USBD_IOTP_BUFF_Params_XT *)(extension->on_write_params);
 
    if(USBD_CHECK_PTR(USBD_IOTP_BUFF_Params_XT, tp)
-      && USBD_COMPARE_PTRS(void, tp->owner, void, USBD_IOTP_BUFF_dummy_data)
+      && USBD_COMPARE_PTRS(void, tp->owner, void, (&USBD_IOTP_BUFF_refresh_trigger))
       && BUFF_COMPARE_PTRS(Buff_Ring_XT, buf, Buff_Ring_XT, tp->core.buff) )
    {
       usbd   = USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp);
@@ -515,10 +508,14 @@ static void USBD_IOTP_BUFF_process_extension_on_write(
 
       if(USBD_COMPARE_PTRS(USBD_IOTP_BUFF_Params_XT, USBD_IO_UP_Get_IN_TP_Params(usbd, ep_num), USBD_IOTP_BUFF_Params_XT, tp))
       {
-         if(!USBD_INVOKE(
-            USBD_IOTP_BUFF_GET_INVOKE_PARAMS(tp), USBD_IOTP_BUFF_trigger_in(tp, extension, usbd, ep_num, call_trigger)))
+         if(USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(usbd, ep_num) < 0)
          {
-            /* action not yet executed */
+            if(!USBD_INVOKE(
+               USBD_IOTP_BUFF_GET_INVOKE_PARAMS(tp), USBD_IOTP_BUFF_trigger_in(usbd, ep_num)))
+            {
+               /* action not yet executed, will be done by SOF event */
+               USBD_ATOMIC_BOOL_SET(USBD_IOTP_BUFF_refresh_trigger, USBD_TRUE);
+            }
          }
       }
       else
@@ -535,30 +532,17 @@ static void USBD_IOTP_BUFF_process_extension_on_write(
 } /* USBD_IOTP_BUFF_process_extension_on_write */
 
 static void USBD_IOTP_BUFF_extension_on_write(
-   Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, bool_t rewind_occured)
+   Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, Buff_Bool_DT rewind_occured)
 {
    USBD_UNUSED_PARAM(size);
    USBD_UNUSED_PARAM(rewind_occured);
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
-   USBD_IOTP_BUFF_process_extension_on_write(buf, extension, USBD_TRUE);
+   USBD_IOTP_BUFF_process_extension_on_write(buf, extension);
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 } /* USBD_IOTP_BUFF_extension_on_write */
-
-static void USBD_IOTP_BUFF_extension_on_write_connect_memcpy_only(
-   Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, bool_t rewind_occured)
-{
-   USBD_UNUSED_PARAM(size);
-   USBD_UNUSED_PARAM(rewind_occured);
-
-   USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
-
-   USBD_IOTP_BUFF_process_extension_on_write(buf, extension, USBD_FALSE);
-
-   USBD_EXIT_FUNC(USBD_DBG_IOTPBF_PROCESSING);
-} /* USBD_IOTP_BUFF_extension_on_write_connect_memcpy_only */
 
 static Buff_Size_DT USBD_IOTP_BUFF_vendor_memcpy_in(const Buff_Memcpy_Params_XT *params)
 {
@@ -606,12 +590,8 @@ static void USBD_IOTP_BUFF_io_data_memcpy_in(
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
    USBD_IO_IN_Data_Method_Port_HT data_method)
 {
-   Buff_Ring_Extensions_XT        *extension;
    USBD_IOTP_BUFF_Params_XT       *tp          = (USBD_IOTP_BUFF_Params_XT*)tp_params;
-   Buff_Ring_Extension_On_Write    on_write;
    usbd_iotp_buff_vendor_memcpy_XT vendor_data;
-   USBD_Bool_DT                    port_memcpy_called = USBD_FALSE;
-   USBD_Bool_DT                    ring_is_empty;
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 
@@ -633,7 +613,6 @@ static void USBD_IOTP_BUFF_io_data_memcpy_in(
 
       if(!BUFF_RING_IS_EMPTY(tp->core.buff))
       {
-         port_memcpy_called         = USBD_TRUE;
          vendor_data.tp             = tp;
          vendor_data.data_method.in = data_method;
          vendor_data.is_last_part   = USBD_TRUE;
@@ -646,38 +625,7 @@ static void USBD_IOTP_BUFF_io_data_memcpy_in(
             BUFF_FALSE);
       }
 
-      ring_is_empty = BUFF_RING_IS_EMPTY(tp->core.buff);
-
       BUFF_PROTECTION_UNLOCK(tp->core.buff);
-
-      USBD_IO_SET_IN_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
-
-      if(USBD_BOOL_IS_FALSE(ring_is_empty))
-      {
-         USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_data_memcpy_in);
-         on_write = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
-      }
-      else
-      {
-         USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
-         if(USBD_BOOL_IS_TRUE(port_memcpy_called))
-         {
-            on_write = USBD_IOTP_BUFF_extension_on_write_connect_memcpy_only;
-         }
-         else
-         {
-            on_write = USBD_IOTP_BUFF_extension_on_write;
-         }
-      }
-
-      extension = tp->core.buff->extension;
-
-      if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
-      {
-         tp->owner                  = USBD_IOTP_BUFF_dummy_data;
-         extension->on_write_params = tp;
-         extension->on_write        = on_write;
-      }
 
       USBD_DEBUG_HI_4(
          USBD_DBG_IOTPBF_PROCESSING,
@@ -715,6 +663,7 @@ static void USBD_IOTP_BUFF_extension_on_read_remove(Buff_Ring_XT *buf, Buff_Ring
 {
    USBD_IOTP_BUFF_Params_XT *tp;
    USBD_Params_XT *usbd;
+   USBD_IO_Inout_Data_Size_DT waiting_size;
    uint8_t ep_num;
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
@@ -724,7 +673,7 @@ static void USBD_IOTP_BUFF_extension_on_read_remove(Buff_Ring_XT *buf, Buff_Ring
    if(!BUFF_RING_IS_FULL(buf))
    {
       if(USBD_CHECK_PTR(USBD_IOTP_BUFF_Params_XT, tp)
-         && USBD_COMPARE_PTRS(void, tp->owner, void, USBD_IOTP_BUFF_dummy_data)
+         && USBD_COMPARE_PTRS(void, tp->owner, void, (&USBD_IOTP_BUFF_refresh_trigger))
          && BUFF_COMPARE_PTRS(Buff_Ring_XT, buf, Buff_Ring_XT, tp->core.buff) )
       {
          usbd   = USBD_IOTP_BUFF_GET_USBD_FROM_TP(tp);
@@ -732,10 +681,16 @@ static void USBD_IOTP_BUFF_extension_on_read_remove(Buff_Ring_XT *buf, Buff_Ring
 
          if(USBD_COMPARE_PTRS(USBD_IOTP_BUFF_Params_XT, USBD_IO_UP_Get_OUT_TP_Params(usbd, ep_num), USBD_IOTP_BUFF_Params_XT, tp))
          {
-            if(!USBD_INVOKE(
-               USBD_IOTP_BUFF_GET_INVOKE_PARAMS(tp), USBD_IOTP_BUFF_trigger_out(tp, extension, usbd, ep_num)))
+            waiting_size = USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_TRUE);
+
+            if((waiting_size > 0) && ((USBD_IO_Inout_Data_Size_DT)BUFF_RING_GET_FREE_SIZE((tp->core.buff)) >= waiting_size))
             {
-               /* action not yet executed */
+               if(!USBD_INVOKE(
+                  USBD_IOTP_BUFF_GET_INVOKE_PARAMS(tp), USBD_IOTP_BUFF_trigger_out(usbd, ep_num)))
+               {
+                  /* action not yet executed, will be done by SOF event */
+                  USBD_ATOMIC_BOOL_SET(USBD_IOTP_BUFF_refresh_trigger, USBD_TRUE);
+               }
             }
          }
          else
@@ -757,7 +712,7 @@ static void USBD_IOTP_BUFF_extension_on_read_remove(Buff_Ring_XT *buf, Buff_Ring
 } /* USBD_IOTP_BUFF_extension_on_read_remove */
 
 static void USBD_IOTP_BUFF_extension_on_read(
-   Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, bool_t rewind_occured)
+   Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, Buff_Bool_DT rewind_occured)
 {
    USBD_UNUSED_PARAM(size);
    USBD_UNUSED_PARAM(rewind_occured);
@@ -769,7 +724,7 @@ static void USBD_IOTP_BUFF_extension_on_read(
    USBD_EXIT_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 } /* USBD_IOTP_BUFF_extension_on_read */
 
-static void USBD_IOTP_BUFF_extension_on_remove(Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, bool_t rewind_occured)
+static void USBD_IOTP_BUFF_extension_on_remove(Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Bool_DT rewind_occured)
 {
    USBD_UNUSED_PARAM(rewind_occured);
 
@@ -852,11 +807,9 @@ static void USBD_IOTP_BUFF_io_memcpy_out(
    USBD_IO_Inout_Data_Size_DT left_size,
    USBD_IO_OUT_Data_Method_Port_HT data_method)
 {
-   Buff_Ring_Extensions_XT        *extension;
    USBD_IOTP_BUFF_Params_XT       *tp          = (USBD_IOTP_BUFF_Params_XT*)tp_params;
    usbd_iotp_buff_vendor_memcpy_XT vendor_data;
    Buff_Size_DT                    ret_size    = 0;
-   USBD_Bool_DT                    ring_is_full;
 
    USBD_UNUSED_PARAM(packet_size);
 
@@ -898,8 +851,6 @@ static void USBD_IOTP_BUFF_io_memcpy_out(
             BUFF_FALSE);
       }
 
-      ring_is_full = BUFF_RING_IS_FULL(tp->core.buff);
-
       BUFF_PROTECTION_UNLOCK(tp->core.buff);
 
       if(0 == ret_size)
@@ -915,33 +866,6 @@ static void USBD_IOTP_BUFF_io_memcpy_out(
                &left_size,
                0,
                USBD_FALSE);
-      }
-
-      USBD_IO_SET_OUT_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
-      USBD_IO_SET_OUT_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_memcpy_out);
-
-      extension = tp->core.buff->extension;
-
-      if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
-      {
-         tp->owner                     = USBD_IOTP_BUFF_dummy_data;
-         extension->on_read_params     = tp;
-         extension->on_remove_params   = tp;
-
-         if(USBD_BOOL_IS_TRUE(ring_is_full))
-         {
-            USBD_DEBUG_MID(USBD_DBG_IOTPBF_PROCESSING, "add OUT extensions");
-
-            extension->on_read            = USBD_IOTP_BUFF_extension_on_read;
-            extension->on_remove          = USBD_IOTP_BUFF_extension_on_remove;
-         }
-         else
-         {
-            USBD_DEBUG_MID(USBD_DBG_IOTPBF_PROCESSING, "remove OUT extensions");
-
-            extension->on_read            = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Read);
-            extension->on_remove          = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
-         }
       }
 
       USBD_DEBUG_HI_7(
@@ -986,43 +910,54 @@ static void USBD_IOTP_BUFF_clear_buff(
 
    extension = tp->core.buff->extension;
 
+   BUFF_PROTECTION_LOCK(tp->core.buff);
+
    if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
    {
+      tp->owner = (&USBD_IOTP_BUFF_refresh_trigger);
+
       if(USB_EP_DESC_DIR_OUT == USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(tp))
       {
          USBD_IO_SET_OUT_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
+
+         extension->on_read_params  = tp;
+         extension->on_remove_params= tp;
+
          if(USBD_BOOL_IS_TRUE(set_valid_handlers))
          {
             USBD_IO_SET_OUT_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_memcpy_out);
+            extension->on_read      = USBD_IOTP_BUFF_extension_on_read;
+            extension->on_remove    = USBD_IOTP_BUFF_extension_on_remove;
          }
          else
          {
             USBD_IO_SET_OUT_MEMCPY_HANDLER(transaction,  USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
+            extension->on_read      = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Read);
+            extension->on_remove    = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
          }
-
-         extension->on_read         = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Read);
-         extension->on_remove       = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
       }
       else
       {
          USBD_IO_SET_IN_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
-         USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
 
-         tp->owner                  = USBD_IOTP_BUFF_dummy_data;
          extension->on_write_params = tp;
 
          if(USBD_BOOL_IS_FALSE(set_valid_handlers))
          {
+            USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
             extension->on_write     = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
          }
          else
          {
+            USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_data_memcpy_in);
             extension->on_write     = USBD_IOTP_BUFF_extension_on_write;
          }
       }
    }
 
-   Buff_Ring_Clear(tp->core.buff, BUFF_TRUE);
+   Buff_Ring_Clear(tp->core.buff, BUFF_FALSE);
+
+   BUFF_PROTECTION_UNLOCK(tp->core.buff);
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPBF_PROCESSING);
 }
@@ -1135,7 +1070,7 @@ static void USBD_IOTP_BUFF_io_reinit(
    tp = (USBD_IOTP_BUFF_Params_XT*)tp_params;
 
    if(USBD_CHECK_PTR(USBD_IOTP_BUFF_Params_XT, tp) && USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction)
-      && BUFF_CHECK_PTR(Buff_Ring_XT, tp->core.buff) && USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_BUFF_dummy_data))
+      && BUFF_CHECK_PTR(Buff_Ring_XT, tp->core.buff) && USBD_COMPARE_PTRS(void, tp_owner, void, (&USBD_IOTP_BUFF_refresh_trigger)))
    {
       USBD_DEBUG_HI_4(
          USBD_DBG_IOTPBF_PROCESSING,
@@ -1232,48 +1167,22 @@ static void USBD_IOTP_BUFF_io_reinit(
 
 
 
-static USBD_Bool_DT USBD_IOTP_BUFF_trigger_in(
-   USBD_IOTP_BUFF_Params_XT *tp, Buff_Ring_Extensions_XT *extension, USBD_Params_XT *usbd, uint8_t ep_num, USBD_Bool_DT call_trigger)
+static USBD_Bool_DT USBD_IOTP_BUFF_trigger_in(USBD_Params_XT *usbd, uint8_t ep_num)
 {
-   USBD_UNUSED_PARAM(tp);
-
-   USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
-
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
 
-   if(USBD_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
-   {
-      extension->on_write = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
-   }
-
-   transaction = USBD_IO_Get_IN_Transaction_Params(usbd, ep_num);
-
-   if(USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction))
-   {
-      USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_BUFF_io_data_memcpy_in);
-   }
-   if(USBD_BOOL_IS_TRUE(call_trigger))
-   {
-      (void)USBD_IO_UP_Trigger_INOUT(usbd, ep_num, USB_EP_DIRECTION_IN, USBD_FALSE);
-   }
+   (void)USBD_IO_UP_Trigger_INOUT(usbd, ep_num, USB_EP_DIRECTION_IN, USBD_FALSE);
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPBF_EVENT);
 
    return USBD_TRUE;
 } /* USBD_IOTP_BUFF_trigger_in */
 
-static USBD_Bool_DT USBD_IOTP_BUFF_trigger_out(
-   USBD_IOTP_BUFF_Params_XT *tp, Buff_Ring_Extensions_XT *extension, USBD_Params_XT *usbd, uint8_t ep_num)
+static USBD_Bool_DT USBD_IOTP_BUFF_trigger_out(USBD_Params_XT *usbd, uint8_t ep_num)
 {
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
 
    USBD_IO_UP_Trigger_INOUT(usbd, ep_num, USB_EP_DIRECTION_OUT, USBD_TRUE);
-
-   if((!BUFF_RING_IS_FULL(tp->core.buff)) && ((-1) == USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_FALSE)))
-   {
-      extension->on_read   = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Read);
-      extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
-   }
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPBF_EVENT);
 
@@ -1304,7 +1213,8 @@ static void USBD_IOTP_BUFF_proc_event(USBD_IOTP_BUFF_Params_XT *tp, uint8_t req)
 static void USBD_IOTP_BUFF_event(
    USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_EVENT_Event_Header_XT *event_params, USBD_EVENT_Reason_ET reason)
 {
-   USBD_IOTP_BUFF_Params_XT *tp;
+   USBD_IOTP_BUFF_Params_XT  *tp;
+   USBD_IO_Inout_Data_Size_DT waiting_size;
    uint8_t ep_num;
    uint8_t req;
 
@@ -1314,40 +1224,47 @@ static void USBD_IOTP_BUFF_event(
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
 
-   for(ep_num = 0; ep_num < USBD_MAX_NUM_ENDPOINTS; ep_num++)
+   if(USBD_ATOMIC_BOOL_IS_TRUE(USBD_IOTP_BUFF_refresh_trigger))
    {
-      /* OUT TP */
-      if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_OUT_TP_Owner(usbd, ep_num), void, USBD_IOTP_BUFF_dummy_data))
+      for(ep_num = 0; ep_num < USBD_MAX_NUM_ENDPOINTS; ep_num++)
       {
-         tp = USBD_IO_UP_Get_OUT_TP_Params(usbd, ep_num);
-         req = USBD_ATOMIC_UINT8_GET(tp->invoke.req);
-
-         if(USBD_IOTP_BUFF_INVOKE_REQ_NONE != req)
+         /* OUT TP */
+         if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_OUT_TP_Owner(usbd, ep_num), void, (&USBD_IOTP_BUFF_refresh_trigger)))
          {
-            USBD_IOTP_BUFF_proc_event(tp, req);
+            tp = USBD_IO_UP_Get_OUT_TP_Params(usbd, ep_num);
+            req = USBD_ATOMIC_UINT8_GET(tp->invoke.req);
+
+            if(USBD_IOTP_BUFF_INVOKE_REQ_NONE != req)
+            {
+               USBD_IOTP_BUFF_proc_event(tp, req);
+            }
+
+            waiting_size = USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_TRUE);
+
+            if((waiting_size > 0) && ((USBD_IO_Inout_Data_Size_DT)BUFF_RING_GET_FREE_SIZE((tp->core.buff)) >= waiting_size))
+            {
+               USBD_IOTP_BUFF_trigger_out(usbd, ep_num);
+            }
          }
-
-         if(!BUFF_RING_IS_FULL(tp->core.buff) && (USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_FALSE) > 0))
+         /* IN TP */
+         if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_IN_TP_Owner(usbd, ep_num), void, (&USBD_IOTP_BUFF_refresh_trigger)))
          {
-            USBD_IOTP_BUFF_trigger_out(tp, tp->core.buff->extension, usbd, ep_num);
+            tp = USBD_IO_UP_Get_IN_TP_Params(usbd, ep_num);
+            req = USBD_ATOMIC_UINT8_GET(tp->invoke.req);
+
+            if(USBD_IOTP_BUFF_INVOKE_REQ_NONE != req)
+            {
+               USBD_IOTP_BUFF_proc_event(tp, req);
+            }
+
+            if((!BUFF_RING_IS_EMPTY(tp->core.buff)) && (USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(usbd, ep_num) < 0))
+            {
+               USBD_IOTP_BUFF_trigger_in(usbd, ep_num);
+            }
          }
       }
-      /* IN TP */
-      if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_IN_TP_Owner(usbd, ep_num), void, USBD_IOTP_BUFF_dummy_data))
-      {
-         tp = USBD_IO_UP_Get_IN_TP_Params(usbd, ep_num);
-         req = USBD_ATOMIC_UINT8_GET(tp->invoke.req);
 
-         if(USBD_IOTP_BUFF_INVOKE_REQ_NONE != req)
-         {
-            USBD_IOTP_BUFF_proc_event(tp, req);
-         }
-
-         if(!BUFF_RING_IS_EMPTY(tp->core.buff) && (USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(usbd, ep_num) < 0))
-         {
-            USBD_IOTP_BUFF_trigger_in(tp, tp->core.buff->extension, usbd, ep_num, USBD_TRUE);
-         }
-      }
+      USBD_ATOMIC_BOOL_SET(USBD_IOTP_BUFF_refresh_trigger, USBD_FALSE);
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPBF_EVENT);

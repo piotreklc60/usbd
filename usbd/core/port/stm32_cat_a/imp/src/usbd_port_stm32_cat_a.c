@@ -371,7 +371,7 @@ static void port_stm32_cat_a_dev_activate_deactivate(USBD_Params_XT* usbd, USBD_
    USBD_ENTER_FUNC(USBD_DBG_PORT_DEV);
 
 #if(USBD_FEATURE_PRESENT == USBD_MULTI_SESSION_SUPPORTED)
-   if(USBD_BOOL_IS_TRUE(state))
+   if(USBD_BOOL_IS_TRUE(state) && USBD_CHECK_PTR(void, usbd))
 #endif
    {
       USBD_IO_DOWN_Set_Common_Handlers(usbd, &port_stm32_cat_a_io_common);
@@ -1022,99 +1022,77 @@ static void port_stm32_cat_a_io_process_in(uint8_t ep_num)
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
-   if(USBD_CHECK_PTR(void, port_stm32_cat_a_usbd) && (ep_num < USBD_MAX_NUM_ENDPOINTS))
+   ep = &port_stm32_cat_a_io_ep[ep_num];
+   transaction = USBD_IO_GET_IN_TRANSACATION_PARAMS(port_stm32_cat_a_usbd, ep_num);
+   tp_params   = USBD_IO_GET_IN_TP_PARAMS_PTR(port_stm32_cat_a_usbd, ep_num);
+
+   ep->in.data_provided = USBD_FALSE;
+
+   if(ep->in.num_used_bufs > 0)
    {
-      ep = &port_stm32_cat_a_io_ep[ep_num];
-      transaction = USBD_IO_GET_IN_TRANSACATION_PARAMS(port_stm32_cat_a_usbd, ep_num);
-      tp_params   = USBD_IO_GET_IN_TP_PARAMS_PTR(port_stm32_cat_a_usbd, ep_num);
-
-      ep->in.data_provided = USBD_FALSE;
-
-      if(ep->in.num_used_bufs > 0)
-      {
-         (ep->in.num_used_bufs)--;
-      }
+      (ep->in.num_used_bufs)--;
+   }
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
-      ep->in.buf0.size      = ep->in.buf1.size;
-      ep->in.buf1.size      = 0;
+   ep->in.buf0.size      = ep->in.buf1.size;
+   ep->in.buf1.size      = 0;
 #else
-      ep->in.buf0.size      = 0;
+   ep->in.buf0.size      = 0;
 #endif
 
 #if(USBD_FEATURE_PRESENT == USBD_IO_BULK_TRANSFER_SUPPORTED)
-      /* double buffered BULK EP - there is a second data buffer prepared in previous IRQ; allow for sending */
-      if((ep->in.num_used_bufs > 0) && (USB_EP_DESC_TRANSFER_TYPE_BULK == ep->in.ep_type))
-      {
-         /* clear TX IRQ flag and allow for sending already prepared buffer */
-         USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
-            ep->in.hw.ep_reg_num,
-            USBD_STM32_REG->EP_REG[ep->in.hw.ep_reg_num],
-            temp,
-            temp_before,
-            temp_after,
-            /*_EX_OR*/USBDEP_STM32_CAT_A__TX_VALID,
-            /*_AND  */USBDEP_STM32_CAT_A__ADDR_KIND_TYPE | USBDEP_STM32_CAT_A__STAT_TX,
-            /*_OR   */USBDEP_STM32_CAT_A__DTOG_RX);
+   /* double buffered BULK EP - there is a second data buffer prepared in previous IRQ; allow for sending */
+   if((ep->in.num_used_bufs > 0) && (USB_EP_DESC_TRANSFER_TYPE_BULK == ep->in.ep_type))
+   {
+      /* clear TX IRQ flag and allow for sending already prepared buffer */
+      USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
+         ep->in.hw.ep_reg_num,
+         USBD_STM32_REG->EP_REG[ep->in.hw.ep_reg_num],
+         temp,
+         temp_before,
+         temp_after,
+         /*_EX_OR*/USBDEP_STM32_CAT_A__TX_VALID,
+         /*_AND  */USBDEP_STM32_CAT_A__ADDR_KIND_TYPE | USBDEP_STM32_CAT_A__STAT_TX,
+         /*_OR   */USBDEP_STM32_CAT_A__DTOG_RX);
 
-         /* don't ask why register is being modified twice - I also don't understand it
-          * but for some reason this processor needs 2 REG modifications to set it from NAK to VALID
-          */
-         port_stm32_cat_a_io_force_valid_in_stat(ep);
-      }
-      else
+      /* don't ask why register is being modified twice - I also don't understand it
+       * but for some reason this processor needs 2 REG modifications to set it from NAK to VALID
+       */
+      port_stm32_cat_a_io_force_valid_in_stat(ep);
+   }
+   else
 #endif
-      {
-         /* clear only TX IRQ flag */
-         USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
-            ep->in.hw.ep_reg_num,
-            USBD_STM32_REG->EP_REG[ep->in.hw.ep_reg_num],
-            temp,
-            temp_before,
-            temp_after,
-            /*_EX_OR*/((ep->in.max_num_bufs > 1) ? USBDEP_STM32_CAT_A__TX_VALID : USBDEP_STM32_CAT_A__TX_NAK),
-            /*_AND  */USBDEP_STM32_CAT_A__ADDR_KIND_TYPE | USBDEP_STM32_CAT_A__STAT_TX,
-            /*_OR   */USBDEP_STM32_CAT_A__CTR_RX);
-      }
+   {
+      /* clear only TX IRQ flag */
+      USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
+         ep->in.hw.ep_reg_num,
+         USBD_STM32_REG->EP_REG[ep->in.hw.ep_reg_num],
+         temp,
+         temp_before,
+         temp_after,
+         /*_EX_OR*/((ep->in.max_num_bufs > 1) ? USBDEP_STM32_CAT_A__TX_VALID : USBDEP_STM32_CAT_A__TX_NAK),
+         /*_AND  */USBDEP_STM32_CAT_A__ADDR_KIND_TYPE | USBDEP_STM32_CAT_A__STAT_TX,
+         /*_OR   */USBDEP_STM32_CAT_A__CTR_RX);
+   }
 
 #if(USBD_PORT_STM32_CAT_A_DMA_TYPE == PORT_STM32_CAT_A_DMA_HALF_DMA)
-      USBD_INFO_LO_2(USBD_DBG_PORT_IO, "irq: in: half_dma; num_used_bufs: %d; dma_size: %d", ep->in.num_used_bufs, ep->in.dma.size);
+   USBD_INFO_LO_2(USBD_DBG_PORT_IO, "irq: in: half_dma; num_used_bufs: %d; dma_size: %d", ep->in.num_used_bufs, ep->in.dma.size);
 
-      if(ep->in.dma.size > 0)
+   if(ep->in.dma.size > 0)
+   {
+      size = port_stm32_cat_a_io_data_in_process_bufs(ep, ep->in.dma.data, ep->in.dma.size, USBD_TRUE);
+
+      ep->in.dma.data  = &(((uint8_t*)(ep->in.dma.data))[size]);
+      ep->in.dma.size -= size;
+   }
+
+   if(0 == ep->in.dma.size)
+   {
+      if((ep->in.num_used_bufs < ep->in.max_num_bufs) && USBD_IO_CHECK_IN_PROVIDE_HANDLER(transaction))
       {
-         size = port_stm32_cat_a_io_data_in_process_bufs(ep, ep->in.dma.data, ep->in.dma.size, USBD_TRUE);
-
-         ep->in.dma.data  = &(((uint8_t*)(ep->in.dma.data))[size]);
-         ep->in.dma.size -= size;
+         USBD_DEBUG_HI(USBD_DBG_PORT_IO, "provide IN");
+         USBD_IO_CALL_IN_PROVIDE_HANDLER(port_stm32_cat_a_usbd, tp_params, transaction, port_stm32_cat_a_io_in_provide);
       }
-
-      if(0 == ep->in.dma.size)
-      {
-         if((ep->in.num_used_bufs < ep->in.max_num_bufs) && USBD_IO_CHECK_IN_PROVIDE_HANDLER(transaction))
-         {
-            USBD_DEBUG_HI(USBD_DBG_PORT_IO, "provide IN");
-            USBD_IO_CALL_IN_PROVIDE_HANDLER(port_stm32_cat_a_usbd, tp_params, transaction, port_stm32_cat_a_io_in_provide);
-         }
-         if((ep->in.num_used_bufs < ep->in.max_num_bufs) && USBD_IO_CHECK_IN_MEMCPY_HANDLER(transaction))
-         {
-            USBD_DEBUG_HI(USBD_DBG_PORT_IO, "memcpy IN");
-            USBD_IO_CALL_IN_MEMCPY_HANDLER(port_stm32_cat_a_usbd, tp_params, transaction, port_stm32_cat_a_io_in_memcpy);
-         }
-         if(USBD_BOOL_IS_FALSE(ep->in.data_provided))
-         {
-            if(ep->in.num_used_bufs > 0)
-            {
-               size = (USBD_IO_Inout_Data_Size_DT)(ep->in.buf0.size) + (USBD_IO_Inout_Data_Size_DT)(ep->in.buf1.size);
-            }
-            else
-            {
-               size = (-1);
-            }
-            USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "data_event with size: %d", size);
-            USBD_IO_DOWN_Process_IN_Data_Event(port_stm32_cat_a_usbd, ep_num, size, port_stm32_cat_a_io_in_memcpy);
-         }
-      }
-#else
-      if(USBD_IO_CHECK_IN_MEMCPY_HANDLER(transaction))
+      if((ep->in.num_used_bufs < ep->in.max_num_bufs) && USBD_IO_CHECK_IN_MEMCPY_HANDLER(transaction))
       {
          USBD_DEBUG_HI(USBD_DBG_PORT_IO, "memcpy IN");
          USBD_IO_CALL_IN_MEMCPY_HANDLER(port_stm32_cat_a_usbd, tp_params, transaction, port_stm32_cat_a_io_in_memcpy);
@@ -1123,11 +1101,7 @@ static void port_stm32_cat_a_io_process_in(uint8_t ep_num)
       {
          if(ep->in.num_used_bufs > 0)
          {
-#if(USBD_MAX_NUM_ENDPOINTS > 1)
             size = (USBD_IO_Inout_Data_Size_DT)(ep->in.buf0.size) + (USBD_IO_Inout_Data_Size_DT)(ep->in.buf1.size);
-#else
-            size = (USBD_IO_Inout_Data_Size_DT)(ep->in.buf0.size);
-#endif
          }
          else
          {
@@ -1136,13 +1110,31 @@ static void port_stm32_cat_a_io_process_in(uint8_t ep_num)
          USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "data_event with size: %d", size);
          USBD_IO_DOWN_Process_IN_Data_Event(port_stm32_cat_a_usbd, ep_num, size, port_stm32_cat_a_io_in_memcpy);
       }
-#endif
    }
-   else
+#else
+   if(USBD_IO_CHECK_IN_MEMCPY_HANDLER(transaction))
    {
-      USBD_WARN_2(USBD_DBG_PORT_INVALID_PARAMS, "port test proc in - params invalid! ep_num = %d, port_stm32_cat_a_usbd = %p",
-         ep_num, port_stm32_cat_a_usbd);
+      USBD_DEBUG_HI(USBD_DBG_PORT_IO, "memcpy IN");
+      USBD_IO_CALL_IN_MEMCPY_HANDLER(port_stm32_cat_a_usbd, tp_params, transaction, port_stm32_cat_a_io_in_memcpy);
    }
+   if(USBD_BOOL_IS_FALSE(ep->in.data_provided))
+   {
+      if(ep->in.num_used_bufs > 0)
+      {
+#if(USBD_MAX_NUM_ENDPOINTS > 1)
+         size = (USBD_IO_Inout_Data_Size_DT)(ep->in.buf0.size) + (USBD_IO_Inout_Data_Size_DT)(ep->in.buf1.size);
+#else
+         size = (USBD_IO_Inout_Data_Size_DT)(ep->in.buf0.size);
+#endif
+      }
+      else
+      {
+         size = (-1);
+      }
+      USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "data_event with size: %d", size);
+      USBD_IO_DOWN_Process_IN_Data_Event(port_stm32_cat_a_usbd, ep_num, size, port_stm32_cat_a_io_in_memcpy);
+   }
+#endif
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
 } /* port_stm32_cat_a_io_process_in */
@@ -1369,9 +1361,9 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_process_data_out(
 
 static void port_stm32_cat_a_io_process_out(uint8_t ep_num)
 {
-   port_stm32_cat_a_io_ep_XT *ep;
-   USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
-   void *tp_params;
+   port_stm32_cat_a_io_ep_XT             *ep          = &port_stm32_cat_a_io_ep[ep_num];
+   USBD_IO_UP_DOWN_Transaction_Params_XT *transaction = USBD_IO_GET_OUT_TRANSACATION_PARAMS(port_stm32_cat_a_usbd, ep_num);
+   void                                  *tp_params   = USBD_IO_GET_OUT_TP_PARAMS_PTR(port_stm32_cat_a_usbd, ep_num);
    uint32_t temp;
 #ifdef USBD_USE_IOCMD
    uint32_t temp_before;
@@ -1383,136 +1375,83 @@ static void port_stm32_cat_a_io_process_out(uint8_t ep_num)
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
-   if(USBD_CHECK_PTR(void, port_stm32_cat_a_usbd) && (ep_num < USBD_MAX_NUM_ENDPOINTS))
+   /* control transfer, SETUP packet (zero-length packet) has been received; abort IN transfer and finish processing OUT packet */
+   if((USB_EP_DESC_TRANSFER_TYPE_CONTROL == ep->out.ep_type)
+      && (0 != (USBD_STM32_REG->EP_REG[ep->out.hw.ep_reg_num] & USBDEP_STM32_CAT_A__KIND)))
    {
-      ep = &port_stm32_cat_a_io_ep[ep_num];
-      transaction = USBD_IO_GET_OUT_TRANSACATION_PARAMS(port_stm32_cat_a_usbd, ep_num);
-      tp_params   = USBD_IO_GET_OUT_TP_PARAMS_PTR(port_stm32_cat_a_usbd, ep_num);
+      USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "OUT packet on CONTROL IN transfer; abort IN %s",
+         ((ep->in.num_used_bufs > 0) || (ep->in.dma.size > 0)) ? "earlier" : "");
 
-      /* control transfer, SETUP packet (zero-length packet) has been received; abort IN transfer and finish processing OUT packet */
-      if((USB_EP_DESC_TRANSFER_TYPE_CONTROL == ep->out.ep_type)
-         && (0 != (USBD_STM32_REG->EP_REG[ep->out.hw.ep_reg_num] & USBDEP_STM32_CAT_A__KIND)))
-      {
-         USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "OUT packet on CONTROL IN transfer; abort IN %s",
-            ((ep->in.num_used_bufs > 0) || (ep->in.dma.size > 0)) ? "earlier" : "");
+      /* modify EP control register to allow receiving next data packets */
+      USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
+         ep->out.hw.ep_reg_num,
+         USBD_STM32_REG->EP_REG[ep->out.hw.ep_reg_num],
+         temp,
+         temp_before,
+         temp_after,
+         /*_EX_OR*/USBDEP_STM32_CAT_A__RX_VALID,
+         /*_AND  */USBDEP_STM32_CAT_A__ADDR_TYPE | USBDEP_STM32_CAT_A__STAT_RX,
+         /*_OR   */0);
 
-         /* modify EP control register to allow receiving next data packets */
-         USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
-            ep->out.hw.ep_reg_num,
-            USBD_STM32_REG->EP_REG[ep->out.hw.ep_reg_num],
-            temp,
-            temp_before,
-            temp_after,
-            /*_EX_OR*/USBDEP_STM32_CAT_A__RX_VALID,
-            /*_AND  */USBDEP_STM32_CAT_A__ADDR_TYPE | USBDEP_STM32_CAT_A__STAT_RX,
-            /*_OR   */0);
-
-         USBD_IO_Abort(port_stm32_cat_a_usbd, ep_num, USB_EP_DIRECTION_IN, USBD_TRUE);
-      }
-      else if(USBD_BOOL_IS_FALSE(ep->out.is_ep_waiting))
-      {
+      USBD_IO_Abort(port_stm32_cat_a_usbd, ep_num, USB_EP_DIRECTION_IN, USBD_TRUE);
+   }
+   else if(USBD_BOOL_IS_FALSE(ep->out.is_ep_waiting))
+   {
 #if(USBD_PORT_STM32_CAT_A_DMA_TYPE == PORT_STM32_CAT_A_DMA_HALF_DMA)
-         /* reads parameters of received OUT packet */
-         port_stm32_cat_a_read_out_packet_params(ep);
+      /* reads parameters of received OUT packet */
+      port_stm32_cat_a_read_out_packet_params(ep);
 
-         /**
-          * set two markers:
-          * - is_ep_processed is used to recognize if any action was performed on received data
-          *   (if not then packet is terminated by this function)
-          * - is_ep_waiting is used to recognize if buffer has been released by upper layer
-          *   of if port must wait for further actions before allowing for next packets reception
-          */
-         ep->out.is_ep_processed = USBD_FALSE;
-         ep->out.is_ep_waiting   = USBD_TRUE;
+      /**
+       * set two markers:
+       * - is_ep_processed is used to recognize if any action was performed on received data
+       *   (if not then packet is terminated by this function)
+       * - is_ep_waiting is used to recognize if buffer has been released by upper layer
+       *   or if port must wait for further actions before allowing for next packets reception
+       */
+      ep->out.is_ep_processed = USBD_FALSE;
+      ep->out.is_ep_waiting   = USBD_TRUE;
 
-         if(ep->out.dma.size > 0)
+      if(ep->out.dma.size > 0)
+      {
+         if(ep->out.buf.size >= ((USBD_IO_Inout_Data_Size_DT)(ep->out.mps) & 0xFFFF))
          {
-            if(ep->out.buf.size >= ((USBD_IO_Inout_Data_Size_DT)(ep->out.mps) & 0xFFFF))
-            {
-               size = port_stm32_cat_a_io_process_data_out(ep, ep->out.dma.data, ep->out.dma.size, USBD_TRUE);
+            size = port_stm32_cat_a_io_process_data_out(ep, ep->out.dma.data, ep->out.dma.size, USBD_TRUE);
 
-               ep->out.dma.size -= size;
-               ep->out.dma.data  = &((uint8_t*)(ep->out.dma.data))[size];
-            }
-            else
-            {
-               size = port_stm32_cat_a_io_process_data_out(ep, ep->out.dma.data, ep->out.dma.size, ep->out.dont_wait_for_ready);
-
-               ep->out.dma.size -= size;
-
-               ep->out.dma.total_size -= ep->out.dma.size;
-               ep->out.dma.size        = 0;
-            }
-
-            if(0 == ep->out.dma.size)
-            {
-               USBD_IO_SET_OUT_TRANSFERRED_SIZE(transaction, ep->out.dma.total_size);
-
-               ep->out.dma.total_size  = 0;
-
-               USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "data_event with size: %d", 0);
-
-               /**
-                * call with last parameter USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_Port_HT)
-                * instead of port_stm32_cat_a_io_out_memcpy because DMA transfer has been finished but nothing more - just
-                * declared space was filled by data. there is no data waiting in EP buffer so upper layer
-                * cannot perform memcpy operation.
-                */
-               USBD_IO_DOWN_Process_OUT_Data_Event(
-                  port_stm32_cat_a_usbd, ep_num, (-1), USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_Port_HT));
-            }
+            ep->out.dma.size -= size;
+            ep->out.dma.data  = &((uint8_t*)(ep->out.dma.data))[size];
          }
          else
          {
-            ep->out.dma.total_size  = 0;
+            size = port_stm32_cat_a_io_process_data_out(ep, ep->out.dma.data, ep->out.dma.size, ep->out.dont_wait_for_ready);
+
+            ep->out.dma.size -= size;
+
+            ep->out.dma.total_size -= ep->out.dma.size;
             ep->out.dma.size        = 0;
-
-            if(USBD_IO_CHECK_OUT_MEMCPY_HANDLER(transaction))
-            {
-               USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "memcpy OUT with size: %d", ep->out.buf.size);
-               USBD_IO_CALL_OUT_MEMCPY_HANDLER(
-                  port_stm32_cat_a_usbd,
-                  tp_params,
-                  transaction,
-                  ep->out.buf.packet_size,
-                  ep->out.buf.size,
-                  port_stm32_cat_a_io_out_memcpy);
-            }
-            else
-            {
-               USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "data_event with size: %d", ep->out.buf.size);
-               USBD_IO_DOWN_Process_OUT_Data_Event(port_stm32_cat_a_usbd, ep_num, ep->out.buf.size, port_stm32_cat_a_io_out_memcpy);
-            }
          }
 
-         if(USBD_BOOL_IS_FALSE(ep->out.is_ep_processed))
+         if(0 == ep->out.dma.size)
          {
-            USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "abort OUT packet on EP %d", ep_num);
+            USBD_IO_SET_OUT_TRANSFERRED_SIZE(transaction, ep->out.dma.total_size);
 
-            ep->out.is_ep_processed = USBD_TRUE;
+            ep->out.dma.total_size  = 0;
 
-            ep->out.buf.data        = USBD_MAKE_INVALID_PTR(void);
-            ep->out.is_ep_waiting   = USBD_FALSE;
+            USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "data_event with size: %d", 0);
 
-            /* set registers to allow receiving next packets */
-            port_stm32_cat_a_release_out_buffer(ep);
+            /**
+             * call with last parameter USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_Port_HT)
+             * instead of port_stm32_cat_a_io_out_memcpy because DMA transfer has been finished but nothing more - just
+             * declared space was filled by data. there is no data waiting in EP buffer so upper layer
+             * cannot perform memcpy operation.
+             */
+            USBD_IO_DOWN_Process_OUT_Data_Event(
+               port_stm32_cat_a_usbd, ep_num, (-1), USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_Port_HT));
          }
-#else
-         /* reads parameters of received OUT packet */
-         port_stm32_cat_a_read_out_packet_params(ep);
-
-         /**
-          * set two markers:
-          * - is_ep_processed is used to recognize if any action was performed on received data
-          *   (if not then packet is terminated by this function)
-          * - is_ep_waiting is used to recognize if buffer has been released by upper layer
-          *   of if port must wait for further actions before allowing for next packets reception
-          */
-         ep->out.is_ep_processed = USBD_FALSE;
-         ep->out.is_ep_waiting   = USBD_TRUE;
-
-         /* update size transferred by provide method (to by used by upper layer) */
-         USBD_IO_SET_OUT_TRANSFERRED_SIZE(transaction, 0);
+      }
+      else
+      {
+         ep->out.dma.total_size  = 0;
+         ep->out.dma.size        = 0;
 
          if(USBD_IO_CHECK_OUT_MEMCPY_HANDLER(transaction))
          {
@@ -1530,44 +1469,85 @@ static void port_stm32_cat_a_io_process_out(uint8_t ep_num)
             USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "data_event with size: %d", ep->out.buf.size);
             USBD_IO_DOWN_Process_OUT_Data_Event(port_stm32_cat_a_usbd, ep_num, ep->out.buf.size, port_stm32_cat_a_io_out_memcpy);
          }
+      }
 
-         if(USBD_BOOL_IS_FALSE(ep->out.is_ep_processed))
-         {
-            USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "abort OUT packet on EP %d", ep_num);
+      if(USBD_BOOL_IS_FALSE(ep->out.is_ep_processed))
+      {
+         USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "abort OUT packet on EP %d", ep_num);
 
-            ep->out.is_ep_processed = USBD_TRUE;
+         ep->out.is_ep_processed = USBD_TRUE;
 
-            ep->out.buf.data     = USBD_MAKE_INVALID_PTR(void);
-            ep->out.is_ep_waiting = USBD_FALSE;
+         ep->out.buf.data        = USBD_MAKE_INVALID_PTR(void);
+         ep->out.is_ep_waiting   = USBD_FALSE;
 
-            /* set registers to allow receiving next packets */
-            port_stm32_cat_a_release_out_buffer(ep);
-         }
-#endif
+         /* set registers to allow receiving next packets */
+         port_stm32_cat_a_release_out_buffer(ep);
+      }
+#else
+      /* reads parameters of received OUT packet */
+      port_stm32_cat_a_read_out_packet_params(ep);
+
+      /**
+       * set two markers:
+       * - is_ep_processed is used to recognize if any action was performed on received data
+       *   (if not then packet is terminated by this function)
+       * - is_ep_waiting is used to recognize if buffer has been released by upper layer
+       *   of if port must wait for further actions before allowing for next packets reception
+       */
+      ep->out.is_ep_processed = USBD_FALSE;
+      ep->out.is_ep_waiting   = USBD_TRUE;
+
+      /* update size transferred by provide method (to by used by upper layer) */
+      USBD_IO_SET_OUT_TRANSFERRED_SIZE(transaction, 0);
+
+      if(USBD_IO_CHECK_OUT_MEMCPY_HANDLER(transaction))
+      {
+         USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "memcpy OUT with size: %d", ep->out.buf.size);
+         USBD_IO_CALL_OUT_MEMCPY_HANDLER(
+            port_stm32_cat_a_usbd,
+            tp_params,
+            transaction,
+            ep->out.buf.packet_size,
+            ep->out.buf.size,
+            port_stm32_cat_a_io_out_memcpy);
       }
       else
       {
-         USBD_NOTICE_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] received data but EP is waiting", ep->out.hw.ep_reg_num);
-
-         /* clear RX IRQ flag */
-         USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
-            ep->out.hw.ep_reg_num,
-            USBD_STM32_REG->EP_REG[ep->out.hw.ep_reg_num],
-            temp,
-            temp_before,
-            temp_after,
-            /*_EX_OR*/0,
-            /*_AND  */USBDEP_STM32_CAT_A__ADDR_KIND_TYPE,
-            /*_OR   */USBDEP_STM32_CAT_A__CTR_TX);
-
-         ep->out.out_on_delay = USBD_TRUE;
-         port_stm32_cat_a_dev_prams.out_on_delay = USBD_TRUE;
+         USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "data_event with size: %d", ep->out.buf.size);
+         USBD_IO_DOWN_Process_OUT_Data_Event(port_stm32_cat_a_usbd, ep_num, ep->out.buf.size, port_stm32_cat_a_io_out_memcpy);
       }
+
+      if(USBD_BOOL_IS_FALSE(ep->out.is_ep_processed))
+      {
+         USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "abort OUT packet on EP %d", ep_num);
+
+         ep->out.is_ep_processed = USBD_TRUE;
+
+         ep->out.buf.data     = USBD_MAKE_INVALID_PTR(void);
+         ep->out.is_ep_waiting = USBD_FALSE;
+
+         /* set registers to allow receiving next packets */
+         port_stm32_cat_a_release_out_buffer(ep);
+      }
+#endif
    }
    else
    {
-      USBD_WARN_2(USBD_DBG_PORT_INVALID_PARAMS, "port test proc out - params invalid! ep_num = %d, port_stm32_cat_a_usbd = %p",
-         ep_num, port_stm32_cat_a_usbd);
+      USBD_NOTICE_1(USBD_DBG_PORT_IRQ, "EP_REG[%d] received data but EP is waiting", ep->out.hw.ep_reg_num);
+
+      /* clear RX IRQ flag */
+      USBDEP_REG_MODIFY( /* reg = ( (reg ^ _EX_OR) & _AND) | _OR */
+         ep->out.hw.ep_reg_num,
+         USBD_STM32_REG->EP_REG[ep->out.hw.ep_reg_num],
+         temp,
+         temp_before,
+         temp_after,
+         /*_EX_OR*/0,
+         /*_AND  */USBDEP_STM32_CAT_A__ADDR_KIND_TYPE,
+         /*_OR   */USBDEP_STM32_CAT_A__CTR_TX);
+
+      ep->out.out_on_delay = USBD_TRUE;
+      port_stm32_cat_a_dev_prams.out_on_delay = USBD_TRUE;
    }
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
@@ -3016,6 +2996,10 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 #endif
    uint8_t ep_reg_num = 0;
 
+#if((USBD_MAX_NUM_ENDPOINTS > 1) && (USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY > USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY))
+   USBD_Port_STM32_CAT_A_Disable_USB_HP_Irq();
+#endif
+
    USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_TRUE);
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IRQ);
@@ -3226,6 +3210,10 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
    USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);
 
    USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
+
+#if((USBD_MAX_NUM_ENDPOINTS > 1) && (USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY > USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY))
+   USBD_Port_STM32_CAT_A_Enable_USB_HP_Irq();
+#endif
 } /* USB_LP_CAN1_RX0_IRQHandler */
 
 
@@ -3234,6 +3222,10 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 void USB_HP_CAN1_TX_IRQHandler(void)
 {
    uint8_t ep_reg_num = 1;
+
+#if(USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY < USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY)
+   USBD_Port_STM32_CAT_A_Disable_USB_LP_Irq();
+#endif
 
    USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_TRUE);
 
@@ -3294,6 +3286,10 @@ void USB_HP_CAN1_TX_IRQHandler(void)
    USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);
 
    USBD_ATOMIC_BOOL_SET(port_stm32_cat_a_irq_active, USBD_FALSE);
+
+#if(USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY < USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY)
+   USBD_Port_STM32_CAT_A_Enable_USB_LP_Irq();
+#endif
 } /* USB_HP_CAN1_TX_IRQHandler */
 #endif
 

@@ -38,6 +38,14 @@
 #define USBD_PORT_STM32_CAT_A_USE_PULL_UP         USBD_FEATURE_PRESENT
 #endif
 
+#ifndef USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY
+#define USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY      3
+#endif
+
+#ifndef USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY
+#define USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY      3
+#endif
+
 
 #if (USBD_FEATURE_PRESENT == USBD_PORT_STM32_CAT_A_DETECT_VBUS_CHANGE)
 /**
@@ -94,6 +102,38 @@ extern void USBD_Port_STM32_CAT_A_Configure_USBCLKSource(void);
  * @param configure if USBD_TRUE then IRQs shall be enabled, disabled otherwise
  */
 extern void USBD_Port_STM32_CAT_A_Configure_USB_Irqs(USBD_Bool_DT configure);
+
+#if((USBD_MAX_NUM_ENDPOINTS > 1) && (USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY > USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY))
+/**
+ * @brief this function is called in LP IRQ to disable HP IRQ when its priority is higher
+ *
+ * @param configure if USBD_TRUE then IRQs shall be enabled, disabled otherwise
+ */
+extern void USBD_Port_STM32_CAT_A_Disable_USB_HP_Irq(void);
+
+/**
+ * @brief this function is called in LP IRQ to disable HP IRQ when its priority is higher
+ *
+ * @param configure if USBD_TRUE then IRQs shall be enabled, disabled otherwise
+ */
+extern void USBD_Port_STM32_CAT_A_Enable_USB_HP_Irq(void);
+#endif
+
+#if(USBD_PORT_STM32_CAT_A_LP_IRQ_PRIORITY < USBD_PORT_STM32_CAT_A_HP_IRQ_PRIORITY)
+/**
+ * @brief this function is called in HP IRQ to disable LP IRQ when its priority is higher
+ *
+ * @param configure if USBD_TRUE then IRQs shall be enabled, disabled otherwise
+ */
+extern void USBD_Port_STM32_CAT_A_Disable_USB_LP_Irq(void);
+
+/**
+ * @brief this function is called in HP IRQ to disable LP IRQ when its priority is higher
+ *
+ * @param configure if USBD_TRUE then IRQs shall be enabled, disabled otherwise
+ */
+extern void USBD_Port_STM32_CAT_A_Enable_USB_LP_Irq(void);
+#endif
 
 #if(USBD_FEATURE_PRESENT == USBD_SUSPEND_RESUME_SUPPORTED)
 /**
