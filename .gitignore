@@ -11,6 +11,17 @@
 !/examples/stm32f103/tripple_vcom/stm32cubemx_generated_stm32f103zet6/tripple_vcom_stm32f103zet6.ioc
 !/examples/stm32f103/tripple_vcom/stm32cubemx_generated_stm32f103zet6/.mxproject
 
+/examples/stm32f103/mouse/build
+/examples/stm32f103/mouse/stm32cubemx_generated_stm32f103c8t6_bluepill/
+!/examples/stm32f103/mouse/stm32cubemx_generated_stm32f103c8t6_bluepill/tripple_vcom_stm32f103c8t6_bluepill.ioc
+!/examples/stm32f103/mouse/stm32cubemx_generated_stm32f103c8t6_bluepill/.mxproject
+/examples/stm32f103/mouse/stm32cubemx_generated_stm32f103rbt6/
+!/examples/stm32f103/mouse/stm32cubemx_generated_stm32f103rbt6/tripple_vcom_stm32f103rbt6.ioc
+!/examples/stm32f103/mouse/stm32cubemx_generated_stm32f103rbt6/.mxproject
+/examples/stm32f103/mouse/stm32cubemx_generated_stm32f103zet6/
+!/examples/stm32f103/mouse/stm32cubemx_generated_stm32f103zet6/tripple_vcom_stm32f103zet6.ioc
+!/examples/stm32f103/mouse/stm32cubemx_generated_stm32f103zet6/.mxproject
+
 /examples/stm32f103/bootloader_dfu/build
 /examples/stm32f103/bootloader_dfu/stm32cubemx_generated_stm32f103c8t6_bluepill/
 !/examples/stm32f103/bootloader_dfu/stm32cubemx_generated_stm32f103c8t6_bluepill/tripple_vcom_stm32f103c8t6_bluepill.ioc
