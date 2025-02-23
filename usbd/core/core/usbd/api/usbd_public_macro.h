@@ -132,6 +132,10 @@
 #define USBD_CALL_HANDLER(type, handler)                          ((type)(handler))
 #endif
 
+#ifndef USBD_CHECK_AND_CALL_HANDLER
+#define USBD_CHECK_AND_CALL_HANDLER(type, handler)                if(USBD_CHECK_HANDLER(type, (handler)))    ((type)(handler))
+#endif
+
 #ifndef USBD_MAKE_INVALID_PTR
 #define USBD_MAKE_INVALID_PTR(type)                               ((type*)(NULL))
 #endif

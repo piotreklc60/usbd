@@ -237,6 +237,13 @@ typedef struct USBD_params_eXtended_Tag
 #endif
 
 
+#ifdef USBD_HID_PRESENT
+#ifndef HID_H_
+#include "hid.h"
+#endif
+#endif
+
+
 #ifdef USBD_CDC_VCOM_PRESENT
 #ifndef CDC_VCOM_H_
 #include "cdc_vcom.h"

@@ -2170,10 +2170,8 @@ static USBD_Bool_DT USBD_DEV_configure(USBD_Params_XT *usbd, USBDC_Params_XT *us
 
    if(USBD_BOOL_IS_TRUE(result))
    {
-      if(USBD_CHECK_HANDLER(USBD_DEV_Set_Configuration_Respond_HT, respond))
-      {
-         USBD_CALL_HANDLER(USBD_DEV_Set_Configuration_Respond_HT, respond)(usbd);
-      }
+      USBD_CHECK_AND_CALL_HANDLER(USBD_DEV_Set_Configuration_Respond_HT, respond)(usbd);
+
 #if(defined(USBD_EVENT_PRESENT) && (USBD_FEATURE_PRESENT == USBD_EVENT_REASON_CONFIGURED_SUPPORTED))
       USBD_EVENT_Process_Warm_Event(usbd, USBD_EVENT_REASON_CONFIGURED);
 #endif
@@ -2330,10 +2328,8 @@ USBD_Bool_DT USBD_DEV_Configured(
          }
          else
          {
-            if(USBD_CHECK_HANDLER(USBD_DEV_Set_Configuration_Respond_HT, respond))
-            {
-               USBD_CALL_HANDLER(USBD_DEV_Set_Configuration_Respond_HT, respond)(usbd);
-            }
+            USBD_CHECK_AND_CALL_HANDLER(USBD_DEV_Set_Configuration_Respond_HT, respond)(usbd);
+
             USBD_NOTICE_1(USBD_DBG_DEV_ONOFF, "DEV %sconfigured", "un");
             result = USBD_TRUE;
          }

@@ -1782,15 +1782,12 @@ static void USBD_IOTP_EVENT_io_abort(void *tp_params, USBD_IO_UP_DOWN_Transactio
             }
          }
 
-         if(USBD_IOTP_EVENT_CHECK_ABORT_HANDLER(tp))
-         {
-            USBD_IOTP_EVENT_CALL_ABORT(
-               USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-               USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-               USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp),
-               tp,
-               tp->up_link.data.size_transferred);
-         }
+         USBD_IOTP_EVENT_CHECK_AND_CALL_ABORT(
+            USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
+            USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
+            USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp),
+            tp,
+            tp->up_link.data.size_transferred);
       }
    }
 
@@ -1829,15 +1826,12 @@ static void USBD_IOTP_EVENT_io_error(
 
       USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_EVENT_GET_INVOKE_PARAMS(tp));
 
-      if(USBD_IOTP_EVENT_CHECK_ERROR_HANDLER(tp))
-      {
-         USBD_IOTP_EVENT_CALL_ERROR(
-            USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
-            USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
-            USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp),
-            tp,
-            size);
-      }
+      USBD_IOTP_EVENT_CHECK_AND_CALL_ERROR(
+         USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp),
+         USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp),
+         USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp),
+         tp,
+         size);
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);

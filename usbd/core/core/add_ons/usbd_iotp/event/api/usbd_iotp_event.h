@@ -199,8 +199,8 @@ USBD_Bool_DT USBD_IOTP_EVENT_Abort(
  * \param data pointer to data which shall be send
  * \param size size of data which shall be send. This function can be also used for sending data with size = 0.
  * \param size_left pointer to returned size - size of data which is still waiting to be sent.
- *      If 0 is returned then all data has been copied to the buffer.
- *      Zero is returned here in same situation like call of 'ready' handler.
+ *      If (-1) is returned then all data has been copied to the buffer.
+ *      (-1) is returned here in same situation like call of 'ready' handler.
  *      Unfortunately, this handler cannot be called from inside of @see USBD_IOTP_EVENT_Send
  *      to protect system against recursive calling of @see USBD_IOTP_EVENT_Send.
  *      This pointer can be USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT) - in this situation nothing will be returned.

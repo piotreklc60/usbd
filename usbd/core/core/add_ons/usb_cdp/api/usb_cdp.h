@@ -164,6 +164,9 @@
 #define USB_SUBCLASS_COMM_CAPI_CONTROL_MODEL             0x05
 #define USB_SUBCLASS_COMM_ETHERNET_NET_CONTROL_MODEL     0x06
 #define USB_SUBCLASS_COMM_ATM_NET_CONTROL_MODEL          0x07
+/* for USB_CLASS_HID */
+#define USB_SUBCLASS_HID_NOT_BOOTABLE                    0x00
+#define USB_SUBCLASS_HID_BOOTABLE                        0x01
 /* for USB_CLASS_IMAGE */
 #define USB_SUBCLASS_IMAGE_STILL_IMAGING                 0x01
 /* for USB_CLASS_HUB */
@@ -245,6 +248,10 @@
 #define USB_PROTOCOL_COMM_NO_CLASSS_SPECIFIC             0x00
 #define USB_PROTOCOL_COMM_COMMON_AT_COMMANDS             0x01
 #define USB_PROTOCOL_COMM_VENDOR_SPECIFIC                0xFF
+/* for USB_CLASS_HID */
+#define USB_PROTOCOL_HID_NOT_BOOTABLE                    0x00
+#define USB_PROTOCOL_HID_BOOTABLE_KEYBOARD               0x01
+#define USB_PROTOCOL_HID_BOOTABLE_MOUSE                  0x02
 /* for USB_CLASS_IMAGE */
 #define USB_PROTOCOL_IMAGE_STILL_IMAGING                 0x01
 /* for USB_CLASS_HUB */

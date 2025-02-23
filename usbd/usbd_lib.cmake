@@ -44,6 +44,7 @@ set(USBD_CORE_USBD_EVENT_PATH ${USBD_CORE_USBD_ELEMENTS_PATH}/usbd_event)
 set(USBD_CORE_USBDC_PATH ${USBD_CORE_USBD_ELEMENTS_PATH}/usbdc)
 
 set(CDC_VCOM_PATH ${USBD_PATH}/classes/cdc_vcom)
+set(HID_PATH ${USBD_PATH}/classes/hid)
 set(DFU_PATH ${USBD_PATH}/classes/dfu)
 
 set(USBD_PORT_PATH ${USBD_PATH}/core/port)
@@ -193,6 +194,19 @@ target_include_directories(usbd_lib INTERFACE
 )
 target_compile_definitions(usbd_lib INTERFACE
     USBD_DFU_PRESENT
+)
+endif()
+
+if(DEFINED USBD_USE_HID AND USBD_USE_HID MATCHES ON)
+target_sources(usbd_lib INTERFACE
+    ${HID_PATH}/imp/src/hid.c
+)
+target_include_directories(usbd_lib INTERFACE
+    ${HID_PATH}/api/
+    ${HID_PATH}/imp/inc/
+)
+target_compile_definitions(usbd_lib INTERFACE
+    USBD_HID_PRESENT
 )
 endif()
 

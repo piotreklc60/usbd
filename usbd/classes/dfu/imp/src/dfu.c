@@ -107,10 +107,7 @@ static void DFU_get_status(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
             DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_MANIFEST);
 
             /* Call MANIFEST_IMAGE event before sending status so that upper layer can set proper bwPollTimeout it needs for the manifestation */
-            if(USBD_CHECK_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event))
-            {
-               USBD_CALL_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event)(dfu, DFU_USER_EVENT_MANIFEST_IMAGE);
-            }
+            USBD_CHECK_AND_CALL_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event)(dfu, DFU_USER_EVENT_MANIFEST_IMAGE);
 
 #if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
             if(0 == dfu->core.bwPollTimeout)
@@ -211,11 +208,8 @@ static void DFU_detach_status_ready(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direct
    tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
    dfu = tp_vendor_data->pvoid;
 
-   if(USBD_CHECK_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event))
-   {
-      USBD_CALL_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event)(
-         dfu, (dfu->core.status.bState < DFU_BSTATE_DFU_IDLE) ? DFU_USER_EVENT_DETACH_GO_TO_DFU : DFU_USER_EVENT_DETACH_GO_TO_APP);
-   }
+   USBD_CHECK_AND_CALL_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event)(
+      dfu, (dfu->core.status.bState < DFU_BSTATE_DFU_IDLE) ? DFU_USER_EVENT_DETACH_GO_TO_DFU : DFU_USER_EVENT_DETACH_GO_TO_APP);
 
    USBD_EXIT_FUNC(DFU_REQ);
 } /* DFU_detach_status_ready */

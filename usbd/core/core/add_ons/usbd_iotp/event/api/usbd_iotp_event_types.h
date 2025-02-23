@@ -64,7 +64,7 @@ typedef struct USBD_IOTP_EVENT_Params_eXtended_Tag
       struct
       {
          USBD_IO_Inout_Data_Size_DT size_transferred;
-         USBD_Vendor_Data_XT        vendor_data;
+         USBD_Vendor_Data_XT        vendor_data[2];
       }data;
    }up_link;
    struct

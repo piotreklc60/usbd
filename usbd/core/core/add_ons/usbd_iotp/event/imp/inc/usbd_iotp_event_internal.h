@@ -38,7 +38,7 @@
 #define USBD_IOTP_EVENT_GET_BUF_EMPTY_HANDLER(tp)              USBD_GET_HANDLER(USBD_IOTP_EVENT_Callback_HT,   (tp)->up_link.handlers.buf_empty)
 #define USBD_IOTP_EVENT_GET_ERROR_HANDLER(tp)                  USBD_GET_HANDLER(USBD_IOTP_EVENT_Callback_HT,   (tp)->up_link.handlers.error)
 #define USBD_IOTP_EVENT_GET_ABORT_HANDLER(tp)                  USBD_GET_HANDLER(USBD_IOTP_EVENT_Callback_HT,   (tp)->up_link.handlers.abort)
-#define USBD_IOTP_EVENT_GET_VENDOR_DATA_PTR(tp)                (&((tp)->up_link.data.vendor_data))
+#define USBD_IOTP_EVENT_GET_VENDOR_DATA_PTR(tp)                (&((tp)->up_link.data.vendor_data[0]))
 
 
 
@@ -88,14 +88,14 @@
                (dir), \
                (size))
 
-#define USBD_IOTP_EVENT_CALL_ERROR(usbd, ep_num, dir, tp, size) \
-            USBD_CALL_HANDLER(USBD_IOTP_EVENT_Callback_HT, (tp)->up_link.handlers.error)( \
+#define USBD_IOTP_EVENT_CHECK_AND_CALL_ERROR(usbd, ep_num, dir, tp, size) \
+            USBD_CHECK_AND_CALL_HANDLER(USBD_IOTP_EVENT_Callback_HT, (tp)->up_link.handlers.error)( \
                ((USBD_IOTP_EVENT_Params_XT*)(tp)), \
                (dir), \
                (size))
 
-#define USBD_IOTP_EVENT_CALL_ABORT(usbd, ep_num, dir, tp, size) \
-            USBD_CALL_HANDLER(USBD_IOTP_EVENT_Callback_HT, (tp)->up_link.handlers.abort)( \
+#define USBD_IOTP_EVENT_CHECK_AND_CALL_ABORT(usbd, ep_num, dir, tp, size) \
+            USBD_CHECK_AND_CALL_HANDLER(USBD_IOTP_EVENT_Callback_HT, (tp)->up_link.handlers.abort)( \
                ((USBD_IOTP_EVENT_Params_XT*)(tp)), \
                (dir), \
                (size))

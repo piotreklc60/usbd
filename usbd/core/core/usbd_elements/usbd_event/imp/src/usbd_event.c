@@ -378,10 +378,7 @@ static void USBD_EVENT_process_events(
             tab[counter].proc_marker = params->marker;
             if(0 != (tab[counter].mask & reason))
             {
-               if(USBD_CHECK_HANDLER(USBD_EVENT_Event_HT, tab[counter].event))
-               {
-                  USBD_EVENT_CALL_EVENT(usbd, usbdc, tab, counter, reason);
-               }
+               USBD_EVENT_CHECK_AND_CALL_EVENT(usbd, usbdc, tab, counter, reason);
             }
          }
       }

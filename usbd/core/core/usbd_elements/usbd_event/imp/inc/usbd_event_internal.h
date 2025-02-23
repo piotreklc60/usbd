@@ -30,8 +30,8 @@
 
 #define USBDC_EVENT_GET_EVENT_TAB_PTR(usbdc)    USBD_GET_PTR(USBD_EVENT_Event_Header_XT,     (usbdc)->event.core.event_tab)
 
-#define USBD_EVENT_CALL_EVENT(usbd, usbdc, event_tab, event_num, reason) \
-            USBD_CALL_HANDLER(USBD_EVENT_Event_HT, ((event_tab)[event_num]).event)( \
+#define USBD_EVENT_CHECK_AND_CALL_EVENT(usbd, usbdc, event_tab, event_num, reason) \
+            USBD_CHECK_AND_CALL_HANDLER(USBD_EVENT_Event_HT, ((event_tab)[event_num]).event)( \
                (usbd), \
                (usbdc), \
                &((event_tab)[event_num]), \
