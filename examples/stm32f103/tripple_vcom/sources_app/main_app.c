@@ -133,6 +133,16 @@ void USART1_IRQHandler(void)
    }
 }
 
+static void usart_change_params(CDC_VCOM_Params_XT *vcom)
+{
+   const CDC_VCOM_Physical_Params_DT *params = CDC_VCOM_Get_Com_Physical_Params(vcom);
+
+   if(USBD_CHECK_PTR(CDC_VCOM_Physical_Params_DT, params))
+   {
+      configure_usart(IOCMD_EXE_USART_NUM, params->baudrate, UART_STOPBITS_1, UART_PARITY_NONE, 1, 0);
+   }
+} /* usart_change_params */
+
 // -----------------------------------------------------------------------------
 //  TASK_LED
 // -----------------------------------------------------------------------------
@@ -210,6 +220,8 @@ int main(void)
    configure_usart(IOCMD_EXE_USART_NUM, 115200, UART_STOPBITS_1, UART_PARITY_NONE, 1, 0);
 
    main_usbd_init();
+
+   CDC_VCOM_Set_Change_Params_Event(VCOM_UART, usart_change_params);
 
    out_buf = CDC_Vcom_Get_Out_Buf(VCOM_UART);
    if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, out_buf->extension))
