@@ -1,0 +1,45 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "REMOVE_PATHS_FROM_SYMBOLS": "true",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "c8t6_bluepill",
+            "inherits": "default",
+            "toolchainFile": "${sourceDir}/stm32cubemx_generated_stm32f103c8t6_bluepill/cmake/gcc-arm-none-eabi.cmake",
+            "cacheVariables": {
+                "VARIANT": "c8t6_bluepill",
+                "VENDOR_ID":  "0x????",
+                "PRODUCT_ID": "0x????"
+            }
+        },
+        {
+            "name": "rbt6",
+            "inherits": "default",
+            "toolchainFile": "${sourceDir}/stm32cubemx_generated_stm32f103rbt6/cmake/gcc-arm-none-eabi.cmake",
+            "cacheVariables": {
+                "VARIANT": "rbt6",
+                "VENDOR_ID":  "0x????",
+                "PRODUCT_ID": "0x????"
+            }
+        },
+        {
+            "name": "zet6",
+            "inherits": "default",
+            "toolchainFile": "${sourceDir}/stm32cubemx_generated_stm32f103zet6/cmake/gcc-arm-none-eabi.cmake",
+            "cacheVariables": {
+                "VARIANT": "zet6",
+                "VENDOR_ID":  "0x????",
+                "PRODUCT_ID": "0x????"
+            }
+        }
+    ]
+}
