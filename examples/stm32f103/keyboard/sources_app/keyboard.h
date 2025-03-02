@@ -56,4 +56,6 @@ void Keyboard_In_Report_Done(HID_Report_XT *report, USBD_Bool_DT is_feature);
 
 void Keyboard_Out_Report_Done(HID_Report_XT *report, USBD_Bool_DT is_feature);
 
+void Keybord_Send_Ascii_Char(char key);
+
 #endif

@@ -33,11 +33,17 @@
 
 static void usbd_dump(IOCMD_Arg_DT *arg);
 static void buff_dump(IOCMD_Arg_DT *arg);
+static void key(IOCMD_Arg_DT *arg);
 
 static const IOCMD_Command_Tree_XT vcom_cmds_tab[] =
 {
    IOCMD_ELEM(       "dump"                  , usbd_dump             , "USBD HW dump"),
-   IOCMD_ELEM(       "buff"                  , buff_dump             , "buffers dump")
+   IOCMD_ELEM(       "buff"                  , buff_dump             , "buffers dump"),
+   IOCMD_ELEM(       "key"                   , key                   , "sends key to the HOST via HID keyboard interface.\n"
+                                                                       "command syntax:\n"
+                                                                       "key <character>\n"
+                                                                       "example:\n"
+                                                                       "key d")
 };
 
 static const IOCMD_Command_Tree_List_XT cmds_tree[] =
@@ -123,6 +129,15 @@ static void buff_dump(IOCMD_Arg_DT *arg)
    IOCMD_Oprintf(arg->arg_out, "USART1->CR3:  0X%04X\n\r", USART1->CR3);
    IOCMD_Oprintf(arg->arg_out, "USART1->GTPR: 0X%04X\n\r", USART1->GTPR);
 
+}
+
+static void key(IOCMD_Arg_DT *arg)
+{
+   char key = IOCMD_Get_Char(arg);
+
+   IOCMD_Oprintf(arg->arg_out, "key is: \"%c\"\n\r", key);
+
+   Keybord_Send_Ascii_Char(key);
 }
 
 void Cmd_Parse_Bytes(const IOCMD_Print_Exe_Params_XT *exe, uint8_t *recv_bytes, size_t num_recv_bytes)

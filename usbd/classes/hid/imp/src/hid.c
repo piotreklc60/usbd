@@ -223,7 +223,8 @@ static USBD_Bool_DT HID_send_report(
    uint8_t                    *buffer,
    uint8_t                    *second_buffer,
    USBD_IO_Inout_Data_Size_DT *size_left,
-   USBD_IO_Inout_Data_Size_DT  size)
+   USBD_IO_Inout_Data_Size_DT  size,
+   USBD_Bool_DT                update_markers)
 {
    uint8_t *data;
    USBD_Bool_DT result = USBD_FALSE;
@@ -250,6 +251,12 @@ static USBD_Bool_DT HID_send_report(
       USBD_LOG_DATA_DEBUG_HI_3(HID_IO, data, size, "Report: %d (%s) send %s", report->report_id, report->name, report_type);
 
       result = USBD_IOTP_EVENT_Send(tp_in, data, size, size_left);
+
+      if(USBD_BOOL_IS_TRUE(update_markers))
+      {
+         USBD_ATOMIC_BOOL_SET(report->is_sending, USBD_TRUE);
+         USBD_ATOMIC_BOOL_SET(report->in_has_been_changed, USBD_FALSE);
+      }
 
       if(((-1) == *size_left) && USBD_CHECK_HANDLER(USBD_IOTP_EVENT_Callback_HT, ready))
       {
@@ -399,7 +406,8 @@ static USBD_Bool_DT HID_on_request (
                         report->report.in,
                         report->report_second_buffer.in,
                         &size_left,
-                        size);
+                        size,
+                        USBD_TRUE);
                      break;
 
                   case USBD_REPORT_REQ_OUTPUT:
@@ -414,7 +422,8 @@ static USBD_Bool_DT HID_on_request (
                         report->report.out,
                         report->report_second_buffer.out,
                         &size_left,
-                        size);
+                        size,
+                        USBD_FALSE);
                      break;
 
                   case USBD_REPORT_REQ_FEATURE:
@@ -429,7 +438,8 @@ static USBD_Bool_DT HID_on_request (
                         report->report.feature,
                         report->report_second_buffer.feature,
                         &size_left,
-                        size);
+                        size,
+                        USBD_FALSE);
                      break;
 
                   default:
@@ -598,10 +608,9 @@ static void HID_process_in_reports(
                      report->report.in,
                      report->report_second_buffer.in,
                      &size_left,
-                     (USBD_IO_Inout_Data_Size_DT)(report->report_size.in))))
+                     (USBD_IO_Inout_Data_Size_DT)(report->report_size.in),
+                     USBD_TRUE)))
                   {
-                     USBD_ATOMIC_BOOL_SET(report->is_sending, USBD_TRUE);
-                     USBD_ATOMIC_BOOL_SET(report->in_has_been_changed, USBD_FALSE);
                      report->last_report_time = hid->report_params.sof_tick;
                      hid->report_params.report_in_use = reports_counter;
                      if(size_left > 0)
