@@ -119,7 +119,7 @@
  *
  * @return 18 bytes of configuration descriptor part which describe fully DFU function
  *
- * @param _dfu_if_num number of Interface which is used by the HOST to commmunicate with DFU finctionality
+ * @param _dfu_if_num number of Interface which is used by the HOST to commmunicate with DFU functionality
  * @param _dfu_iInterface number of string which describes DFU interface. If not used, 0 shall be provided
  */
 #define DFU_APP_MODE_DESC_PART(_dfu_if_num, _dfu_iInterface) \
@@ -155,7 +155,7 @@
  *
  * @return 18 bytes of configuration descriptor part which describe fully DFU function
  *
- * @param _dfu_if_num number of Interface which is used by the HOST to commmunicate with DFU finctionality
+ * @param _dfu_if_num number of Interface which is used by the HOST to commmunicate with DFU functionality
  * @param _dfu_iInterface number of string which describes DFU interface. If not used, 0 shall be provided
  */
 #define DFU_DFU_MODE_DESC_PART(_dfu_memory_id, _dfu_iInterface) \

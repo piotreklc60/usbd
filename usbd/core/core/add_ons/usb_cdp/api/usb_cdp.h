@@ -169,6 +169,13 @@
 #define USB_SUBCLASS_HID_BOOTABLE                        0x01
 /* for USB_CLASS_IMAGE */
 #define USB_SUBCLASS_IMAGE_STILL_IMAGING                 0x01
+/* for MASS_STORAGE */
+#define USB_SUBCLASS_MASS_STORAGE_RBC                    0x01
+#define USB_SUBCLASS_MASS_STORAGE_ATAPI                  0x02
+#define USB_SUBCLASS_MASS_STORAGE_QIC_157                0x03
+#define USB_SUBCLASS_MASS_STORAGE_UFI                    0x04
+#define USB_SUBCLASS_MASS_STORAGE_SFF_8070I              0x05
+#define USB_SUBCLASS_MASS_STORAGE_SCSI                   0x06
 /* for USB_CLASS_HUB */
 #define USB_SUBCLASS_HUB                                 0x00
 /* for USB_CLASS_CDC_DATA */
@@ -254,6 +261,10 @@
 #define USB_PROTOCOL_HID_BOOTABLE_MOUSE                  0x02
 /* for USB_CLASS_IMAGE */
 #define USB_PROTOCOL_IMAGE_STILL_IMAGING                 0x01
+/* for MASS_STORAGE */
+#define USB_PROTOCOL_MASS_STORAGE_CBI_CMD_COMPLET        0x00
+#define USB_PROTOCOL_MASS_STORAGE_CBI_NO_CMD_COMPLET     0x01
+#define USB_PROTOCOL_MASS_STORAGE_BULK_ONLY              0x50
 /* for USB_CLASS_HUB */
 #define USB_PROTOCOL_HUB_FULL_SPEED_HUB                  0x00
 #define USB_PROTOCOL_HUB_HI_SPEED_HUB_WITH_SINGLE_TT     0x01

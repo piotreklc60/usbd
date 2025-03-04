@@ -126,7 +126,7 @@
  *
  * @return 25 bytes of configuration descriptor part which describe fully DFU function
  *
- * @param _hid_if_num number of Interface which is used by the HOST to commmunicate with DFU finctionality
+ * @param _hid_if_num number of Interface which is used by the HOST to commmunicate with DFU functionality
  * @param _hid_iInterface number of string which describes DFU interface. If not used, 0 shall be provided
  * @param _hid_protocol protocol used by the device. Possible: USB_PROTOCOL_HID_NOT_BOOTABLE, USB_PROTOCOL_HID_BOOTABLE_KEYBOARD and USB_PROTOCOL_HID_BOOTABLE_MOUSE.
  * @param _ep_in endpoint number used by to send reports to the HOST.
