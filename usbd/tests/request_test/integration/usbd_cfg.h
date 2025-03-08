@@ -41,7 +41,7 @@
 
 
 //#define USBD_IO_H_
-//#define USBD_IOTP_EVENT_H_
+//#define USBD_IOTP_H_
 //#define USBD_DEV_H_
 //#define USBD_INIT_H_
 //#define USBD_REQUEST_H_

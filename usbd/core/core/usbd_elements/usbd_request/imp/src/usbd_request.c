@@ -88,7 +88,7 @@ static USBD_Bool_DT USBD_REQUEST_process_other_standard_requests(
    USBDC_Params_XT *usbdc,
    uint8_t ep_num,
    USBD_REQUEST_Req_DT *req);
-static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
+static void USBD_REQUEST_set_addr_finish(USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
 
 static void USBD_REQUEST_fill_request(USBD_REQUEST_Req_DT *req)
 {
@@ -184,7 +184,7 @@ static USBD_Bool_DT USBD_REQUEST_process_other_standard_requests(
    return result;
 } /* USBD_REQUEST_process_other_standard_requests */
 
-static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void USBD_REQUEST_set_addr_finish(USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    USBD_Params_XT *usbd;
 #if(USBD_FEATURE_PRESENT == USBD_REQ_PORT_GUARD_SET_ADDRESS_SUPPORTED)
@@ -199,7 +199,7 @@ static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_D
 
    if(USBD_CHECK_PTR(void, tp))
    {
-      usbd = USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp);
+      usbd = USBD_IOTP_GET_USBD_FROM_TP(tp);
 
       if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
       {
@@ -217,7 +217,7 @@ static void USBD_REQUEST_set_addr_finish(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_D
                req.wLength = 0;
                USBD_REQUEST_fill_request(&req);
 
-               (void)USBD_REQUEST_CALL_PORT_SET_ADDRESS_HANDLER(usbd, USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp), &req);
+               (void)USBD_REQUEST_CALL_PORT_SET_ADDRESS_HANDLER(usbd, USBD_IOTP_GET_EP_NUM_FROM_TP(tp), &req);
             }
          }
 #endif
@@ -383,7 +383,7 @@ static void USBD_REQUEST_get_status(
 
    if(USBD_BOOL_IS_TRUE(send_ack))
    {
-      USBD_IOTP_EVENT_Send(
+      USBD_IOTP_Send(
          USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
          (uint8_t*)(&(usbd->request.core.data.req_data.u16)),
          2,
@@ -450,7 +450,7 @@ static void USBD_REQUEST_set_clear_feature(
                   {
                      result = USBD_TRUE;
 
-                     USBD_IOTP_EVENT_Send_Status(
+                     USBD_IOTP_Send_Status(
                         USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
                         USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                   }
@@ -460,7 +460,7 @@ static void USBD_REQUEST_set_clear_feature(
 
             if(USBD_BOOL_IS_FALSE(result))
             {
-               USBD_IOTP_EVENT_Send_Stall(USBD_REQUEST_GET_EP0_IN_IOTP(usbd));
+               USBD_IOTP_Send_Stall(USBD_REQUEST_GET_EP0_IN_IOTP(usbd));
             }
          }
          break;
@@ -542,7 +542,7 @@ static void USBD_REQUEST_set_clear_feature(
 #if(USBD_FEATURE_PRESENT == USBD_EP_HALT_SUPPORTED)
                      USBD_DEV_Set_EP_Halt(usbd, (uint8_t)(ep_num), dir, is_set);
 #endif
-                     USBD_IOTP_EVENT_Send_Status(
+                     USBD_IOTP_Send_Status(
                         USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
                         USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                   }
@@ -573,11 +573,11 @@ static void USBD_REQUEST_set_address(
    {
       if(req->wValue < 128)
       {
-         USBD_IOTP_EVENT_Set_Buf_Empty_Handler(USBD_REQUEST_GET_EP0_IN_IOTP(usbd), USBD_REQUEST_set_addr_finish);
+         USBD_IOTP_Set_Buf_Empty_Handler(USBD_REQUEST_GET_EP0_IN_IOTP(usbd), USBD_REQUEST_set_addr_finish);
 
          usbd->request.core.data.req_data.u8 = (uint8_t)(req->wValue);
 
-         USBD_IOTP_EVENT_Send_Status(USBD_REQUEST_GET_EP0_IN_IOTP(usbd), USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+         USBD_IOTP_Send_Status(USBD_REQUEST_GET_EP0_IN_IOTP(usbd), USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
       }
    }
    else
@@ -641,7 +641,7 @@ static void USBD_REQUEST_get_descrptor(
                   "send %d bytes of %s descriptor with size %d",
                   size, "DEVICE", USB_DESC_TYPE_DEVICE_SIZE);
 
-               USBD_IOTP_EVENT_Send(
+               USBD_IOTP_Send(
                   USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
                   (uint8_t*)(&(usbd->dev.core.data.dev_desc)),
                   size,
@@ -730,7 +730,7 @@ static void USBD_REQUEST_get_descrptor(
                            "send %d bytes of %s descriptor with size %d",
                            size, "DEVICE_QUALIFIER", USB_DESC_TYPE_DEVICE_QUALIFIER_SIZE);
 
-                        USBD_IOTP_EVENT_Send(
+                        USBD_IOTP_Send(
                            USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
                            (uint8_t*)(&(usbd->request.core.data.req_data.qual)),
                            size,
@@ -781,7 +781,7 @@ static void USBD_REQUEST_get_descrptor(
                      "send %d bytes of %s descriptor with size %d",
                      size, name, number);
 
-                  USBD_IOTP_EVENT_Send(
+                  USBD_IOTP_Send(
                      USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
                      desc,
                      size,
@@ -810,7 +810,7 @@ static void USBD_REQUEST_get_descrptor(
                      "send %d bytes of %s descriptor with size %d",
                      size, "STRING", desc[0]);
 
-                  USBD_IOTP_EVENT_Send(
+                  USBD_IOTP_Send(
                      USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
                      desc,
                      size,
@@ -886,7 +886,7 @@ static void USBD_REQUEST_get_configuration(
             usbd->request.core.data.req_data.u8 = 0;
          }
 
-         USBD_IOTP_EVENT_Send(
+         USBD_IOTP_Send(
             USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
             &(usbd->request.core.data.req_data.u8),
             1,
@@ -903,7 +903,7 @@ static void USBD_REQUEST_get_configuration(
 
 static void USBD_REQUEST_set_configuration_respond(USBD_Params_XT *usbd)
 {
-   USBD_IOTP_EVENT_Send_Status(
+   USBD_IOTP_Send_Status(
       USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
       USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
 }
@@ -981,7 +981,7 @@ static void USBD_REQUEST_get_interface(
          {
             usbd->request.core.data.req_data.u8 = desc->bAlternateSetting;
 
-            USBD_IOTP_EVENT_Send(
+            USBD_IOTP_Send(
                USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
                &(usbd->request.core.data.req_data.u8),
                1,
@@ -998,7 +998,7 @@ static void USBD_REQUEST_get_interface(
 
    usbd->request.core.data.req_data.u8 = 0;
 
-   USBD_IOTP_EVENT_Send(
+   USBD_IOTP_Send(
       USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
       &(usbd->request.core.data.req_data.u8),
       1,
@@ -1043,13 +1043,13 @@ static void USBD_REQUEST_set_interface(
 
          if(USBD_DEV_SET_INTERFACE_RESULT_OK == set_result)
          {
-            USBD_IOTP_EVENT_Send_Status(
+            USBD_IOTP_Send_Status(
                USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
                USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
          }
          else if(USBD_DEV_SET_INTERFACE_RESULT_ALT_SETTING_NOT_SUPPORTED == set_result)
          {
-            USBD_IOTP_EVENT_Send_Stall(USBD_REQUEST_GET_EP0_IN_IOTP(usbd));
+            USBD_IOTP_Send_Stall(USBD_REQUEST_GET_EP0_IN_IOTP(usbd));
          }
       }
    }
@@ -1062,13 +1062,13 @@ static void USBD_REQUEST_set_interface(
 
    if(0 == req->wValue)
    {
-      USBD_IOTP_EVENT_Send_Status(
+      USBD_IOTP_Send_Status(
          USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
          USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
    }
    else
    {
-      USBD_IOTP_EVENT_Send_Stall(USBD_REQUEST_GET_EP0_IN_IOTP(usbd));
+      USBD_IOTP_Send_Stall(USBD_REQUEST_GET_EP0_IN_IOTP(usbd));
    }
 
 #endif
@@ -1181,21 +1181,21 @@ void USBD_REQUEST_Process_Req(
 
       if(0 == ep_num)
       {
-         USBD_IOTP_EVENT_Abort(USBD_REQUEST_GET_EP0_IN_IOTP(usbd), USBD_TRUE);
-         USBD_IOTP_EVENT_Abort(USBD_REQUEST_GET_EP0_OUT_IOTP(usbd), USBD_TRUE);
+         USBD_IOTP_Abort(USBD_REQUEST_GET_EP0_IN_IOTP(usbd), USBD_TRUE);
+         USBD_IOTP_Abort(USBD_REQUEST_GET_EP0_OUT_IOTP(usbd), USBD_TRUE);
 
-         USBD_IOTP_EVENT_Set_Handlers(
+         USBD_IOTP_Set_Handlers(
             USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
-            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
-            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
-            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
-            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT));
-         USBD_IOTP_EVENT_Set_Handlers(
+            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
+            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
+            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
+            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT));
+         USBD_IOTP_Set_Handlers(
             USBD_REQUEST_GET_EP0_OUT_IOTP(usbd),
-            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
-            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
-            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
-            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT));
+            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
+            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
+            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
+            USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT));
       }
 
       if((USBD_BMREQUESTTYPE_STANDARD == (req->bmRequestType & USBD_BMREQUESTTYPE_TYPE_MASK))

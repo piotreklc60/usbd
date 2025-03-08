@@ -1274,6 +1274,6 @@ static void USBD_IOTP_BUFF_event(
 
 
 #ifdef USBD_IOTP_BUFF_POST_IMP_INCLUDE
-#include "usbd_iotp_event_post_imp.h"
+#include "usbd_iotp_post_imp.h"
 #endif
 

@@ -60,7 +60,7 @@ USBD_SRC  = $(USBD_CORE_USBD_PATH)/imp/src/usbd.c
 USBD_SRC += $(USBD_CORE_USBDC_PATH)/imp/src/usbdc.c
 USBD_SRC += $(USBD_CORE_USBD_DEV_PATH)/imp/src/usbd_dev.c
 USBD_SRC += $(USBD_CORE_USBD_IO_PATH)/imp/src/usbd_io.c
-USBD_SRC += $(USBD_CORE_IOTP_EVENT_PATH)/imp/src/usbd_iotp_event.c
+USBD_SRC += $(USBD_CORE_IOTP_EVENT_PATH)/imp/src/usbd_iotp.c
 USBD_SRC += $(USBD_CORE_ADD_ONS_CDP_PATH)/imp/src/usb_cdp.c
 USBD_SRC += $(USBD_PORT_TEST_PATH)/imp/src/port_test.c
 

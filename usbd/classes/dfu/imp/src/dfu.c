@@ -76,7 +76,7 @@ static void DFU_on_timeout(DFU_Params_XT *dfu)
 } /* DFU_on_timeout */
 #endif
 
-static void DFU_get_status(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
+static void DFU_get_status(DFU_Params_XT *dfu, USBD_IOTP_Params_XT *tp_in)
 {
 #if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
    uint32_t timeout;
@@ -146,18 +146,18 @@ static void DFU_get_status(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
       timeout /= 256;
       dfu->core.status.bwPollTimeout_H = (uint8_t)timeout;
 #endif
-      USBD_IOTP_EVENT_Send(
+      USBD_IOTP_Send(
          tp_in, (uint8_t*)(&(dfu->core.status)), sizeof(dfu->core.status), USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
    }
    else
    {
-      USBD_IOTP_EVENT_Send_Stall(tp_in);
+      USBD_IOTP_Send_Stall(tp_in);
    }
 
    USBD_EXIT_FUNC(DFU_REQ);
 } /* DFU_get_status */
 
-static void DFU_get_state(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
+static void DFU_get_state(DFU_Params_XT *dfu, USBD_IOTP_Params_XT *tp_in)
 {
    USBD_Bool_DT send_state = USBD_TRUE;
 
@@ -180,7 +180,7 @@ static void DFU_get_state(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
 
    if(USBD_BOOL_IS_TRUE(send_state))
    {
-      USBD_IOTP_EVENT_Send(
+      USBD_IOTP_Send(
          tp_in,
          (uint8_t*)(&(dfu->core.status.bState)),
          sizeof(dfu->core.status.bState),
@@ -188,14 +188,14 @@ static void DFU_get_state(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in)
    }
    else
    {
-      USBD_IOTP_EVENT_Send_Stall(tp_in);
+      USBD_IOTP_Send_Stall(tp_in);
    }
 
    USBD_EXIT_FUNC(DFU_REQ);
 } /* DFU_get_state */
 
 #if(USBD_FEATURE_PRESENT == DFU_WILL_DETACH_SUPPORT)
-static void DFU_detach_status_ready(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void DFU_detach_status_ready(USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    DFU_Params_XT *dfu;
    USBD_Vendor_Data_XT *tp_vendor_data;
@@ -205,7 +205,7 @@ static void DFU_detach_status_ready(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direct
 
    USBD_ENTER_FUNC(DFU_REQ);
 
-   tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
+   tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
    dfu = tp_vendor_data->pvoid;
 
    USBD_CHECK_AND_CALL_HANDLER(DFU_Event_HT, dfu->user_data.handlers.user_event)(
@@ -215,7 +215,7 @@ static void DFU_detach_status_ready(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direct
 } /* DFU_detach_status_ready */
 #endif
 
-static void DFU_detach(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in, uint32_t timeout)
+static void DFU_detach(DFU_Params_XT *dfu, USBD_IOTP_Params_XT *tp_in, uint32_t timeout)
 {
 #if(USBD_FEATURE_PRESENT == DFU_WILL_DETACH_SUPPORT)
    USBD_Vendor_Data_XT *tp_vendor_data;
@@ -251,8 +251,8 @@ static void DFU_detach(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in, uin
    if(USBD_BOOL_IS_TRUE(send_status))
    {
 #if(USBD_FEATURE_PRESENT == DFU_WILL_DETACH_SUPPORT)
-      USBD_IOTP_EVENT_Set_Buf_Empty_Handler(tp_in, DFU_detach_status_ready);
-      tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp_in);
+      USBD_IOTP_Set_Buf_Empty_Handler(tp_in, DFU_detach_status_ready);
+      tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_in);
       tp_vendor_data->pvoid =  dfu;
 #endif
 #if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
@@ -261,13 +261,13 @@ static void DFU_detach(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in, uin
       dfu->core.wait_for_reset = USBD_TRUE;
 #endif
 
-      USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+      USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
    }
    else
    {
       DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_ERROR);
       dfu->core.status.bStatus = DFU_BSTATUS_ERR_STALLEDPKT;
-      USBD_IOTP_EVENT_Send_Stall(tp_in);
+      USBD_IOTP_Send_Stall(tp_in);
    }
 
    USBD_EXIT_FUNC(DFU_REQ);
@@ -275,7 +275,7 @@ static void DFU_detach(DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in, uin
 
 #if(USBD_FEATURE_PRESENT == DFU_DFU_MODE_SUPPORT)
 #if(USBD_FEATURE_PRESENT == DFU_DNLOAD_SUPPORT)
-static void DFU_download_recv_ready(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void DFU_download_recv_ready(USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    DFU_Params_XT       *dfu;
    USBD_Vendor_Data_XT *tp_vendor_data;
@@ -287,7 +287,7 @@ static void DFU_download_recv_ready(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direct
 
    USBD_DEBUG_HI_2(DFU_REQ, "%s transfer with size %d DONE", "OUT", size);
 
-   tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
+   tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
    dfu = tp_vendor_data->pvoid;
 
    if(USBD_CHECK_HANDLER(DFU_Download_HT, dfu->user_data.handlers.part_download_ready))
@@ -300,10 +300,10 @@ static void DFU_download_recv_ready(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direct
          DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_ERROR);
       }
 
-      (void)USBD_IOTP_EVENT_Send_Status_For_Out_Tp(
+      (void)USBD_IOTP_Send_Status_For_Out_Tp(
          tp,
          USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT),
-         USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
+         USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
          USBD_MAKE_INVALID_PTR(USBD_Vendor_Data_XT));
    }
 
@@ -312,8 +312,8 @@ static void DFU_download_recv_ready(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direct
 
 static void DFU_download(
    DFU_Params_XT             *dfu,
-   USBD_IOTP_EVENT_Params_XT *tp_in,
-   USBD_IOTP_EVENT_Params_XT *tp_out,
+   USBD_IOTP_Params_XT *tp_in,
+   USBD_IOTP_Params_XT *tp_out,
    uint16_t                   length,
    uint16_t                   block_num)
 {
@@ -331,13 +331,13 @@ static void DFU_download(
          {
             DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_DNLOAD_SYNC);
             dfu->core.packet_number = block_num;
-            USBD_IOTP_EVENT_Set_Ready_Handler(tp_out, DFU_download_recv_ready);
-            tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp_out);
+            USBD_IOTP_Set_Ready_Handler(tp_out, DFU_download_recv_ready);
+            tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_out);
             tp_vendor_data->pvoid =  dfu;
             if(USBD_CHECK_PTR(uint8_t, dfu->core.transfer_buffer))
             {
                dfu->core.transfer_data_size = length;
-               if(USBD_BOOL_IS_FALSE(USBD_IOTP_EVENT_Recv_And_Ready(
+               if(USBD_BOOL_IS_FALSE(USBD_IOTP_Recv_And_Ready(
                   tp_out, dfu->core.transfer_buffer, length, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT))))
                {
                   USBD_ERROR_2(DFU_REQ, "unable to initiate %s transfer with size %d", "OUT", length);
@@ -351,7 +351,7 @@ static void DFU_download(
          else if((DFU_BSTATE_DFU_DNLOAD_IDLE == dfu->core.status.bState) && (0 == length))
          {
             DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_MANIFEST_SYNC);
-            USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+            USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
          }
          else
          {
@@ -367,7 +367,7 @@ static void DFU_download(
    if(DFU_BSTATUS_OK != dfu->core.status.bStatus)
    {
       DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_ERROR);
-      USBD_IOTP_EVENT_Send_Stall(tp_in);
+      USBD_IOTP_Send_Stall(tp_in);
    }
 
    USBD_EXIT_FUNC(DFU_REQ);
@@ -376,7 +376,7 @@ static void DFU_download(
 
 #if(USBD_FEATURE_PRESENT == DFU_UPLOAD_SUPPORT)
 static void DFU_upload(
-   DFU_Params_XT *dfu, USBD_IOTP_EVENT_Params_XT *tp_in, uint16_t *length, uint16_t block_num)
+   DFU_Params_XT *dfu, USBD_IOTP_Params_XT *tp_in, uint16_t *length, uint16_t block_num)
 {
    USBD_ENTER_FUNC(DFU_REQ);
 
@@ -398,7 +398,7 @@ static void DFU_upload(
                dfu->core.packet_number = block_num;
                if(USBD_CHECK_PTR(uint8_t, dfu->core.transfer_buffer))
                {
-                  if(USBD_BOOL_IS_FALSE(USBD_IOTP_EVENT_Send(
+                  if(USBD_BOOL_IS_FALSE(USBD_IOTP_Send(
                      tp_in,
                      dfu->core.transfer_buffer,
                      (USBD_IO_Inout_Data_Size_DT)(*length),
@@ -427,7 +427,7 @@ static void DFU_upload(
    if(DFU_BSTATUS_OK != dfu->core.status.bStatus)
    {
       DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_ERROR);
-      USBD_IOTP_EVENT_Send_Stall(tp_in);
+      USBD_IOTP_Send_Stall(tp_in);
    }
 
    USBD_EXIT_FUNC(DFU_REQ);
@@ -441,8 +441,8 @@ static USBD_Bool_DT DFU_APP_on_request(
    uint8_t ep_num,
    uint8_t if_num,
    USBD_REQUEST_Req_DT *req,
-   USBD_IOTP_EVENT_Params_XT *tp_in,
-   USBD_IOTP_EVENT_Params_XT *tp_out)
+   USBD_IOTP_Params_XT *tp_in,
+   USBD_IOTP_Params_XT *tp_out)
 {
    USBDC_Interface_Header_XT *if_params;
    DFU_Params_XT *dfu;
@@ -483,7 +483,7 @@ static USBD_Bool_DT DFU_APP_on_request(
                result = USBD_FALSE;
                DFU_STATE_CHANGE(dfu, DFU_BSTATE_DFU_ERROR);
                dfu->core.status.bStatus = DFU_BSTATUS_ERR_STALLEDPKT;
-               USBD_IOTP_EVENT_Send_Stall(tp_in);
+               USBD_IOTP_Send_Stall(tp_in);
                break;
          }
       }
@@ -501,8 +501,8 @@ static USBD_Bool_DT DFU_DFU_on_request(
    uint8_t ep_num,
    uint8_t if_num,
    USBD_REQUEST_Req_DT *req,
-   USBD_IOTP_EVENT_Params_XT *tp_in,
-   USBD_IOTP_EVENT_Params_XT *tp_out)
+   USBD_IOTP_Params_XT *tp_in,
+   USBD_IOTP_Params_XT *tp_out)
 {
    USBDC_Interface_Header_XT *if_params;
    DFU_Params_XT *dfu;
@@ -541,7 +541,7 @@ static USBD_Bool_DT DFU_DFU_on_request(
             case DFU_CLRSTATUS_INTERFACE:
             case DFU_ABORT_INTERFACE:
                USBD_DEBUG_HI_2(DFU_REQ, "DFU state: %2d; USBD_REQ_%s", dfu->core.status.bState, "CLR/ABORT");
-               USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+               USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                if((DFU_BSTATE_DFU_ERROR == dfu->core.status.bState)
                   || (DFU_ABORT_INTERFACE == req->request))
                {
@@ -572,7 +572,7 @@ static USBD_Bool_DT DFU_DFU_on_request(
 
             default:
                result = USBD_FALSE;
-               USBD_IOTP_EVENT_Send_Stall(tp_in);
+               USBD_IOTP_Send_Stall(tp_in);
                break;
          }
       }

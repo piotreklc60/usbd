@@ -43,7 +43,7 @@ static const uint8_t HID_one_const = 1;
 
 
 
-static void HID_get_report_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void HID_get_report_in_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    USBD_Vendor_Data_XT *tp_vendor_data;
    HID_Report_XT *report;
@@ -53,9 +53,9 @@ static void HID_get_report_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direc
 
    USBD_ENTER_FUNC(HID_IO);
 
-   tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
+   tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -69,7 +69,7 @@ static void HID_get_report_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direc
 
 
 
-static void HID_get_report_feature_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void HID_get_report_feature_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    USBD_Vendor_Data_XT *tp_vendor_data;
    HID_Report_XT *report;
@@ -79,9 +79,9 @@ static void HID_get_report_feature_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_
 
    USBD_ENTER_FUNC(HID_IO);
 
-   tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
+   tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -93,7 +93,7 @@ static void HID_get_report_feature_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_
 
 
 
-static void HID_set_report_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void HID_set_report_in_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    USBD_Vendor_Data_XT *tp_vendor_data;
    HID_Report_XT *report;
@@ -103,9 +103,9 @@ static void HID_set_report_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direc
 
    USBD_ENTER_FUNC(HID_IO);
 
-   tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
+   tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -116,10 +116,10 @@ static void HID_set_report_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direc
 
       USBD_DEBUG_MID_3(HID_IO, "Report: %d (%s) received %s", report->report_id, report->name, "IN");
 
-      (void)USBD_IOTP_EVENT_Send_Status_For_Out_Tp(
+      (void)USBD_IOTP_Send_Status_For_Out_Tp(
          tp,
          USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT),
-         USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
+         USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
          USBD_MAKE_INVALID_PTR(USBD_Vendor_Data_XT));
    }
 
@@ -128,7 +128,7 @@ static void HID_set_report_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direc
 
 
 
-static void HID_set_report_out_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void HID_set_report_out_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    USBD_Vendor_Data_XT *tp_vendor_data;
    HID_Report_XT *report;
@@ -138,9 +138,9 @@ static void HID_set_report_out_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Dire
 
    USBD_ENTER_FUNC(HID_IO);
 
-   tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
+   tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -153,10 +153,10 @@ static void HID_set_report_out_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Dire
 
       USBD_ATOMIC_BOOL_SET(report->out_has_been_changed, USBD_TRUE);
 
-      (void)USBD_IOTP_EVENT_Send_Status_For_Out_Tp(
+      (void)USBD_IOTP_Send_Status_For_Out_Tp(
          tp,
          USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT),
-         USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
+         USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
          USBD_MAKE_INVALID_PTR(USBD_Vendor_Data_XT));
 
       USBD_CHECK_AND_CALL_HANDLER(HID_On_Report_HT, report->report_events.out)(report, USBD_FALSE);
@@ -167,7 +167,7 @@ static void HID_set_report_out_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Dire
 
 
 
-static void HID_set_report_feature_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void HID_set_report_feature_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    USBD_Vendor_Data_XT *tp_vendor_data;
    HID_Report_XT *report;
@@ -177,9 +177,9 @@ static void HID_set_report_feature_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_
 
    USBD_ENTER_FUNC(HID_IO);
 
-   tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
+   tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -190,10 +190,10 @@ static void HID_set_report_feature_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_
 
       USBD_DEBUG_MID_3(HID_IO, "Report: %d (%s) received %s", report->report_id, report->name, "FEATURE");
 
-      (void)USBD_IOTP_EVENT_Send_Status_For_Out_Tp(
+      (void)USBD_IOTP_Send_Status_For_Out_Tp(
          tp,
          USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT),
-         USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
+         USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
          USBD_MAKE_INVALID_PTR(USBD_Vendor_Data_XT));
 
       USBD_CHECK_AND_CALL_HANDLER(HID_On_Report_HT, report->report_events.out)(report, USBD_TRUE);
@@ -216,8 +216,8 @@ static void HID_on_in_report_done(HID_Report_XT *report, USBD_Bool_DT is_feature
 
 
 static USBD_Bool_DT HID_send_report(
-   USBD_IOTP_EVENT_Params_XT  *tp_in,
-   USBD_IOTP_EVENT_Callback_HT ready,
+   USBD_IOTP_Params_XT  *tp_in,
+   USBD_IOTP_Callback_HT ready,
    HID_Report_XT              *report,
    const char                 *report_type,
    uint8_t                    *buffer,
@@ -243,14 +243,14 @@ static USBD_Bool_DT HID_send_report(
          data = buffer;
       }
 
-      if(USBD_CHECK_HANDLER(USBD_IOTP_EVENT_Callback_HT, ready))
+      if(USBD_CHECK_HANDLER(USBD_IOTP_Callback_HT, ready))
       {
-         USBD_IOTP_EVENT_Set_Ready_Handler(tp_in, ready);
+         USBD_IOTP_Set_Ready_Handler(tp_in, ready);
       }
 
       USBD_LOG_DATA_DEBUG_HI_3(HID_IO, data, size, "Report: %d (%s) send %s", report->report_id, report->name, report_type);
 
-      result = USBD_IOTP_EVENT_Send(tp_in, data, size, size_left);
+      result = USBD_IOTP_Send(tp_in, data, size, size_left);
 
       if(USBD_BOOL_IS_TRUE(update_markers))
       {
@@ -258,14 +258,14 @@ static USBD_Bool_DT HID_send_report(
          USBD_ATOMIC_BOOL_SET(report->in_has_been_changed, USBD_FALSE);
       }
 
-      if(((-1) == *size_left) && USBD_CHECK_HANDLER(USBD_IOTP_EVENT_Callback_HT, ready))
+      if(((-1) == *size_left) && USBD_CHECK_HANDLER(USBD_IOTP_Callback_HT, ready))
       {
          ready(tp_in, USB_EP_DIRECTION_IN, size);
       }
    }
    else
    {
-      USBD_IOTP_EVENT_Send_Stall(tp_in);
+      USBD_IOTP_Send_Stall(tp_in);
    }
 
    USBD_EXIT_FUNC(HID_IO);
@@ -276,9 +276,9 @@ static USBD_Bool_DT HID_send_report(
 
 
 static void HID_receive_report(
-   USBD_IOTP_EVENT_Params_XT  *tp_in,
-   USBD_IOTP_EVENT_Params_XT  *tp_out,
-   USBD_IOTP_EVENT_Callback_HT ready,
+   USBD_IOTP_Params_XT  *tp_in,
+   USBD_IOTP_Params_XT  *tp_out,
+   USBD_IOTP_Callback_HT ready,
    uint8_t                    *buffer,
    uint8_t                    *second_buffer,
    USBD_IO_Inout_Data_Size_DT  size)
@@ -295,13 +295,13 @@ static void HID_receive_report(
       {
          data = buffer;
       }
-      USBD_IOTP_EVENT_Set_Ready_Handler(tp_out, ready);
+      USBD_IOTP_Set_Ready_Handler(tp_out, ready);
 
-      USBD_IOTP_EVENT_Recv_And_Ready(tp_out, data, size, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+      USBD_IOTP_Recv_And_Ready(tp_out, data, size, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
    }
    else
    {
-      USBD_IOTP_EVENT_Send_Stall(tp_in);
+      USBD_IOTP_Send_Stall(tp_in);
    }
 } /* HID_receive_report */
 
@@ -312,8 +312,8 @@ static USBD_Bool_DT HID_on_request (
    uint8_t ep_num,
    uint8_t if_num,
    USBD_REQUEST_Req_DT *req,
-   USBD_IOTP_EVENT_Params_XT *tp_in,
-   USBD_IOTP_EVENT_Params_XT *tp_out)
+   USBD_IOTP_Params_XT *tp_in,
+   USBD_IOTP_Params_XT *tp_out)
 {
    USBDC_Interface_Header_XT *hid_if_params = USBDC_Get_Interface_Params(usbdc, if_num);
    HID_Params_XT             *hid = (HID_Params_XT *)(hid_if_params->vendor.pvoid);
@@ -345,7 +345,7 @@ static USBD_Bool_DT HID_on_request (
             // -------------------------------
                if(req->wValue == (USBD_DESC_TYPE_REPORT * 256))
                {
-                  USBD_IOTP_EVENT_Send(
+                  USBD_IOTP_Send(
                      tp_in,
                      hid->report_params.report_descriptor,
                      (req->wLength >= hid->report_params.report_descriptor_size) ?
@@ -358,7 +358,7 @@ static USBD_Bool_DT HID_on_request (
             // -------------------------------
             case HID_SET_DESCRIPTOR_INTERFACE:
             // -------------------------------
-               USBD_IOTP_EVENT_Send_Stall(tp_in);
+               USBD_IOTP_Send_Stall(tp_in);
                break;
 
 
@@ -386,7 +386,7 @@ static USBD_Bool_DT HID_on_request (
             // ---------------------------
             case HID_GET_REPORT_INTERFACE:
             // ---------------------------
-               tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp_in);
+               tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_in);
                if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
                {
                   tp_vendor_data[HID_TP_VENDOR_CONTAINER_HID].pvoid = hid;
@@ -416,7 +416,7 @@ static USBD_Bool_DT HID_on_request (
 
                      (void)HID_send_report(
                         tp_in,
-                        USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
+                        USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
                         report,
                         "OUT",
                         report->report.out,
@@ -451,7 +451,7 @@ static USBD_Bool_DT HID_on_request (
             // ---------------------------
             case HID_SET_REPORT_INTERFACE:
             // ---------------------------
-               tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp_out);
+               tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_out);
                if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
                {
                   tp_vendor_data[HID_TP_VENDOR_CONTAINER_HID].pvoid = hid;
@@ -498,7 +498,7 @@ static USBD_Bool_DT HID_on_request (
             // -------------------------
             case HID_GET_IDLE_INTERFACE:
             // -------------------------
-               USBD_IOTP_EVENT_Send(tp_in, &(report->idle_rate), 1, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+               USBD_IOTP_Send(tp_in, &(report->idle_rate), 1, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                break;
 
             // -------------------------
@@ -517,7 +517,7 @@ static USBD_Bool_DT HID_on_request (
                      hid->report_params.reports_table[report_id].idle_rate = idle_rate;
                   }
                }
-               USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+               USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                break;
 
             // -----------------------------
@@ -525,11 +525,11 @@ static USBD_Bool_DT HID_on_request (
             // -----------------------------
                if(hid->report_params.boot_protocol_value)
                {
-                  USBD_IOTP_EVENT_Send(tp_in, (uint8_t*) &HID_one_const, 1, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+                  USBD_IOTP_Send(tp_in, (uint8_t*) &HID_one_const, 1, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                }
                else
                {
-                  USBD_IOTP_EVENT_Send(tp_in, (uint8_t*) &HID_zero_const, 1, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+                  USBD_IOTP_Send(tp_in, (uint8_t*) &HID_zero_const, 1, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                }
                break;
 
@@ -544,11 +544,11 @@ static USBD_Bool_DT HID_on_request (
                {
                   hid->report_params.boot_protocol_value = 0;
                }
-               USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+               USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                break;
 
             default:
-               USBD_IOTP_EVENT_Send_Stall(tp_in);
+               USBD_IOTP_Send_Stall(tp_in);
                result = USBD_FALSE;
                break;
          }
@@ -563,7 +563,7 @@ static USBD_Bool_DT HID_on_request (
 
 
 static void HID_process_in_reports(
-   HID_Params_XT *hid, USBD_IOTP_EVENT_Params_XT *tp_in, uint8_t ending_report, uint8_t first_report)
+   HID_Params_XT *hid, USBD_IOTP_Params_XT *tp_in, uint8_t ending_report, uint8_t first_report)
 {
    USBD_Vendor_Data_XT       *tp_vendor_data;
    HID_Report_XT             *report;
@@ -578,7 +578,7 @@ static void HID_process_in_reports(
       reports_counter++;
    }
 
-   tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp_in);
+   tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_in);
 
    if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
@@ -597,7 +597,7 @@ static void HID_process_in_reports(
                ((0 == report->idle_rate)
                && USBD_ATOMIC_BOOL_IS_TRUE(report->in_has_been_changed)) )
             {
-               if(USBD_BOOL_IS_FALSE(USBD_IOTP_EVENT_Is_Transfer_Active(tp_in)))
+               if(USBD_BOOL_IS_FALSE(USBD_IOTP_Is_Transfer_Active(tp_in)))
                {
                   tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid = report;
                   if(USBD_BOOL_IS_TRUE(HID_send_report(
@@ -630,7 +630,7 @@ static void HID_process_in_reports(
 
 
 
-static void HID_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void HID_in_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    HID_Params_XT *hid;
 
@@ -639,9 +639,9 @@ static void HID_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir
 
    USBD_ENTER_FUNC(HID_IO);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp))
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
    {
-      hid = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp)[HID_TP_VENDOR_CONTAINER_HID].pvoid;
+      hid = USBD_IOTP_Get_Vendor_Data_Container(tp)[HID_TP_VENDOR_CONTAINER_HID].pvoid;
 
       HID_process_in_reports(hid, tp, hid->report_params.num_reports, hid->report_params.report_in_use);
    }
@@ -651,7 +651,7 @@ static void HID_in_ready (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir
 
 
 
-static void HID_in_abort (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void HID_in_abort (USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    HID_Params_XT *hid;
 
@@ -660,9 +660,9 @@ static void HID_in_abort (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir
 
    USBD_ENTER_FUNC(HID_IO);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp))
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
    {
-      hid = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp)[HID_TP_VENDOR_CONTAINER_HID].pvoid;
+      hid = USBD_IOTP_Get_Vendor_Data_Container(tp)[HID_TP_VENDOR_CONTAINER_HID].pvoid;
 
       USBD_ATOMIC_BOOL_SET(hid->report_params.reports_table[hid->report_params.report_in_use].is_sending, USBD_FALSE);
       hid->report_params.report_in_use = 0;
@@ -677,7 +677,7 @@ static void HID_on_event(
    USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_EVENT_Event_Header_XT *event_params, USBD_EVENT_Reason_ET reason)
 {
    HID_Params_XT             *hid   = event_params->vendor.pvoid;
-   USBD_IOTP_EVENT_Params_XT *tp_in = &(hid->hw.in_iotp);
+   USBD_IOTP_Params_XT *tp_in = &(hid->hw.in_iotp);
    uint8_t                    reports_counter;
 
    USBD_ENTER_FUNC(HID_EVENT);
@@ -690,11 +690,11 @@ static void HID_on_event(
    }
    else if(reason == USBD_EVENT_REASON_CONFIGURED)
    {
-      USBD_IOTP_EVENT_Init(usbd, usbdc, hid->hw.ep_in, USB_EP_DIRECTION_IN, tp_in);
-      (void)USBD_IOTP_EVENT_Install(tp_in);
-      USBD_IOTP_EVENT_Set_Ready_Handler(tp_in, HID_in_ready);
-      USBD_IOTP_EVENT_Set_Abort_Handler(tp_in, HID_in_abort);
-      USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp_in)[HID_TP_VENDOR_CONTAINER_HID].pvoid = hid;
+      USBD_IOTP_Init(usbd, usbdc, hid->hw.ep_in, USB_EP_DIRECTION_IN, tp_in);
+      (void)USBD_IOTP_Install(tp_in);
+      USBD_IOTP_Set_Ready_Handler(tp_in, HID_in_ready);
+      USBD_IOTP_Set_Abort_Handler(tp_in, HID_in_abort);
+      USBD_IOTP_Get_Vendor_Data_Container(tp_in)[HID_TP_VENDOR_CONTAINER_HID].pvoid = hid;
       hid->report_params.sof_tick = 0;
       for(reports_counter = 0; reports_counter < hid->report_params.num_reports; reports_counter++)
       {

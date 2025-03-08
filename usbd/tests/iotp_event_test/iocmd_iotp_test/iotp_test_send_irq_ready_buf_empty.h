@@ -43,7 +43,7 @@ typedef struct iotp_test_send_irq_transaction_req_eXtended_Tag
 
 void iotp_test_send_irq_ready_buf_empty(
     USBD_Params_XT *usbd,
-    USBD_IOTP_EVENT_Params_XT *tp,
+    USBD_IOTP_Params_XT *tp,
     uint8_t ep_num,
     USB_EP_Direction_ET dir,
     uint8_t num_bufs,

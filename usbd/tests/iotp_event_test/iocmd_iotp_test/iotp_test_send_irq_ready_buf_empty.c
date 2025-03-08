@@ -32,8 +32,8 @@
 #ifndef USBD_IO_INTERNAL_H_
 #include "usbd_io_internal.h"
 #endif
-#ifndef USBD_IOTP_EVENT_INTERNAL_H_
-#include "usbd_iotp_event_internal.h"
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 
 #include "cfg.h"
@@ -46,7 +46,7 @@ static void print_transactions_context(uint8_t ep_index, uint8_t ep_num);
 
 typedef struct
 {
-    USBD_IOTP_EVENT_Params_XT              *tp;
+    USBD_IOTP_Params_XT              *tp;
     USB_EP_Direction_ET                    dir;
     USBD_Bool_DT                            in_progress;
     USBD_Bool_DT                            is_tp_in;
@@ -65,7 +65,7 @@ typedef struct
 }test_params_T;
 
 /*
-static USBD_IOTP_EVENT_Params_XT *test_tp;
+static USBD_IOTP_Params_XT *test_tp;
 static USB_EP_Direction_ET test_dir;
 static USBD_Bool_DT test_in_progress;
 static USBD_Bool_DT test_is_tp_in;
@@ -101,9 +101,9 @@ static void report_error(void)
 }
 
 
-static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void test_ready(USBD_IOTP_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
-    uint8_t ep_num = USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP((USBD_IOTP_EVENT_Params_XT*)tp_params);
+    uint8_t ep_num = USBD_IOTP_GET_EP_NUM_FROM_TP((USBD_IOTP_Params_XT*)tp_params);
     uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
     test_params_T *test = &test_params[ep_index];
     USBD_IO_Inout_Data_Size_DT size_res;
@@ -136,7 +136,7 @@ static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
             if(IOTP_TEST_RESEND_ON_READY == test->transactions[test->num_executed_transactions].resend_time)
             {
                 port_test_set_data(ep_num, test->dir, &test->data_result[TEST_MAX_DATA_SIZE * (1 + test->num_executed_transactions)], test->transactions[test->num_executed_transactions].size, &test->size_result);
-                result = USBD_IOTP_EVENT_Send(
+                result = USBD_IOTP_Send(
                         test->tp,
                         test->transactions[test->num_executed_transactions].data,
                         test->transactions[test->num_executed_transactions].size,
@@ -176,9 +176,9 @@ static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
     USBD_EXIT_FUNC(MAIN_APP_TEST);
 }
 
-static void test_buf_empty(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void test_buf_empty(USBD_IOTP_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
-    uint8_t ep_num = USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP((USBD_IOTP_EVENT_Params_XT*)tp_params);
+    uint8_t ep_num = USBD_IOTP_GET_EP_NUM_FROM_TP((USBD_IOTP_Params_XT*)tp_params);
     uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
     test_params_T *test = &test_params[ep_index];
     const USB_Endpoint_Desc_DT *ep_desc;
@@ -190,7 +190,7 @@ static void test_buf_empty(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Directio
 
     USBD_DEBUG_HI_4(MAIN_APP_TEST, "%s; size = %d; num_executed_transactions = %d; num_transactions = %d", __FUNCTION__, size, test->num_executed_transactions, test->num_transactions);
 
-    ep_desc = USBD_DEV_Get_EP_Desc(USBD_IOTP_EVENT_Get_USBD(tp_params), ep_num, test->dir);
+    ep_desc = USBD_DEV_Get_EP_Desc(USBD_IOTP_Get_USBD(tp_params), ep_num, test->dir);
 
     if(USBD_CHECK_PTR(const USB_Endpoint_Desc_DT, ep_desc))
     {
@@ -228,7 +228,7 @@ static void test_buf_empty(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Directio
             if(IOTP_TEST_RESEND_ON_BUF_EMPTY == test->transactions[test->num_executed_transactions].resend_time)
             {
                 port_test_set_data(ep_num, test->dir, &test->data_result[TEST_MAX_DATA_SIZE * (1 + test->num_executed_transactions)], test->transactions[test->num_executed_transactions].size, &test->size_result);
-                result = USBD_IOTP_EVENT_Send(
+                result = USBD_IOTP_Send(
                         test->tp,
                         test->transactions[test->num_executed_transactions].data,
                         test->transactions[test->num_executed_transactions].size,
@@ -269,7 +269,7 @@ static void test_buf_empty(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Directio
     USBD_EXIT_FUNC(MAIN_APP_TEST);
 }
 
-static void test_error(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void test_error(USBD_IOTP_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
@@ -278,7 +278,7 @@ static void test_error(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
     USBD_EXIT_FUNC(MAIN_APP_TEST);
 }
 
-static void test_abort(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void test_abort(USBD_IOTP_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
@@ -398,7 +398,7 @@ static void prepare_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-    USBD_IOTP_EVENT_Set_Handlers(
+    USBD_IOTP_Set_Handlers(
         test->tp,
         test_ready,
         test_buf_empty,
@@ -424,9 +424,9 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-    USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_EVENT_GET_INVOKE_PARAMS(test->tp));
+    USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
-    result = USBD_IOTP_EVENT_Send(test->tp, test->data, test->size, &size_res);
+    result = USBD_IOTP_Send(test->tp, test->data, test->size, &size_res);
 
     if((size_res < 0) && USBD_BOOL_IS_TRUE(result))
     {
@@ -454,7 +454,7 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
         }while(USBD_BOOL_IS_TRUE(test->in_progress/*port_test_is_transfer_active(ep_num, test->dir)*/));
     }
 
-    USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_EVENT_GET_INVOKE_PARAMS(test->tp));
+    USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
     USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* perform_test */
@@ -835,7 +835,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
 void iotp_test_send_irq_ready_buf_empty(
     USBD_Params_XT *usbd,
-    USBD_IOTP_EVENT_Params_XT *tp,
+    USBD_IOTP_Params_XT *tp,
     uint8_t ep_num,
     USB_EP_Direction_ET dir,
     uint8_t num_bufs,

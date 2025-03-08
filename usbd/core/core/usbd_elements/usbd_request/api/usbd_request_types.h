@@ -217,7 +217,7 @@ typedef struct USBD_REQUEST_Req_Data_Tag
  * \param tp_out if request is processed on endpoint number 0 then points to OUT TP params. For non-zero endpoints this pointer is invalid
  * \return USBD_TRUE if request consumed, USBD_FALSE otherwise
  */
-typedef USBD_Bool_DT (*USBD_REQUEST_Interface_HT) (struct USBDC_params_eXtended_Tag *usbdc, uint8_t ep_num, uint8_t if_num, USBD_REQUEST_Req_DT *req, USBD_IOTP_EVENT_Params_XT *tp_in, USBD_IOTP_EVENT_Params_XT *tp_out);
+typedef USBD_Bool_DT (*USBD_REQUEST_Interface_HT) (struct USBDC_params_eXtended_Tag *usbdc, uint8_t ep_num, uint8_t if_num, USBD_REQUEST_Req_DT *req, USBD_IOTP_Params_XT *tp_in, USBD_IOTP_Params_XT *tp_out);
 
 /**
  * \typedef USBD_REQUEST_Vendor_HT
@@ -230,7 +230,7 @@ typedef USBD_Bool_DT (*USBD_REQUEST_Interface_HT) (struct USBDC_params_eXtended_
  * \param tp_out if request is processed on endpoint number 0 then points to OUT TP params. For non-zero endpoints this pointer is invalid
  * \return USBD_TRUE if request consumed, USBD_FALSE otherwise
  */
-typedef USBD_Bool_DT (*USBD_REQUEST_Vendor_HT) (struct USBDC_params_eXtended_Tag *usbdc, uint8_t ep_num, USBD_REQUEST_Req_DT *req, USBD_IOTP_EVENT_Params_XT *tp_in, USBD_IOTP_EVENT_Params_XT *tp_out);
+typedef USBD_Bool_DT (*USBD_REQUEST_Vendor_HT) (struct USBDC_params_eXtended_Tag *usbdc, uint8_t ep_num, USBD_REQUEST_Req_DT *req, USBD_IOTP_Params_XT *tp_in, USBD_IOTP_Params_XT *tp_out);
 
 /**
  * \typedef USBD_REQUEST_Port_Callback_HT
@@ -298,8 +298,8 @@ typedef struct USBD_REQUEST_Params_eXtended_Tag
       struct
       {
          const USBD_REQUEST_Port_Callbacks_XT  *port_cbk;
-         USBD_IOTP_EVENT_Params_XT              ep0_in_iotp;
-         USBD_IOTP_EVENT_Params_XT              ep0_out_iotp;
+         USBD_IOTP_Params_XT                    ep0_in_iotp;
+         USBD_IOTP_Params_XT                    ep0_out_iotp;
          union
          {
             uint8_t u8;

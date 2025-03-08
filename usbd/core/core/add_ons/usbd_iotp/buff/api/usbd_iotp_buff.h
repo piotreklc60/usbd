@@ -110,7 +110,7 @@ Buff_Ring_XT *USBD_IOTP_BUFF_Get_Buff(
 /**
  * Aborts transfer on specified endpoint
  *
- * \param tp pointer to USBD_IOTP_EVENT_Params_XT structure - EVENT-type TP params container
+ * \param tp pointer to USBD_IOTP_BUFF_Params_XT structure - Ring buffer-type TP params container
  * \param flush_hw_bufs if USBD_TRUE then hardware buffers will be cleared by port, USBD_FALSE otherwise.
  * \return USBD_TRUE when "abort" requested successfully, USBD_FALSE otherwise
  */

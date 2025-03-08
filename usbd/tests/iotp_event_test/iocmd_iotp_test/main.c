@@ -34,8 +34,8 @@
 #include "usbd_dev_internal.h"
 #endif
 
-#ifndef USBD_IOTP_EVENT_INTERNAL_H_
-#include "usbd_iotp_event_internal.h"
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 
 #include "cfg.h"
@@ -79,7 +79,7 @@
 
 typedef struct main_test_iotp_collection_eXtended_Tag
 {
-    USBD_IOTP_EVENT_Params_XT  *iotp;
+    USBD_IOTP_Params_XT  *iotp;
     USB_EP_Direction_ET        dir;
     uint8_t                     ep_num;
 }main_test_iotp_collection_XT;
@@ -203,25 +203,25 @@ static USBDC_Params_XT *usbdc2 = &usbdcp2;
 static USBDC_Params_XT *usbdc3 = &usbdcp3;
 static USBDC_Params_XT *usbdc4 = &usbdcp4;
 
-USBD_IOTP_EVENT_Params_XT tp_ep0in;
-USBD_IOTP_EVENT_Params_XT tp_ep0out;
-USBD_IOTP_EVENT_Params_XT tp_ep1in;
-USBD_IOTP_EVENT_Params_XT tp_ep2out;
+USBD_IOTP_Params_XT tp_ep0in;
+USBD_IOTP_Params_XT tp_ep0out;
+USBD_IOTP_Params_XT tp_ep1in;
+USBD_IOTP_Params_XT tp_ep2out;
 
-USBD_IOTP_EVENT_Params_XT tp_ep3in;
-USBD_IOTP_EVENT_Params_XT tp_ep3out;
-USBD_IOTP_EVENT_Params_XT tp_ep4in;
-USBD_IOTP_EVENT_Params_XT tp_ep5out;
+USBD_IOTP_Params_XT tp_ep3in;
+USBD_IOTP_Params_XT tp_ep3out;
+USBD_IOTP_Params_XT tp_ep4in;
+USBD_IOTP_Params_XT tp_ep5out;
 
-USBD_IOTP_EVENT_Params_XT tp_ep6in;
-USBD_IOTP_EVENT_Params_XT tp_ep6out;
-USBD_IOTP_EVENT_Params_XT tp_ep7in;
-USBD_IOTP_EVENT_Params_XT tp_ep8out;
+USBD_IOTP_Params_XT tp_ep6in;
+USBD_IOTP_Params_XT tp_ep6out;
+USBD_IOTP_Params_XT tp_ep7in;
+USBD_IOTP_Params_XT tp_ep8out;
 
-USBD_IOTP_EVENT_Params_XT tp_ep9in;
-USBD_IOTP_EVENT_Params_XT tp_ep9out;
-USBD_IOTP_EVENT_Params_XT tp_ep10in;
-USBD_IOTP_EVENT_Params_XT tp_ep11out;
+USBD_IOTP_Params_XT tp_ep9in;
+USBD_IOTP_Params_XT tp_ep9out;
+USBD_IOTP_Params_XT tp_ep10in;
+USBD_IOTP_Params_XT tp_ep11out;
 
 #ifdef X_ADD_IOTP
 #undef X_ADD_IOTP
@@ -594,44 +594,44 @@ void prepare_device(USBD_Params_XT *usbd, uint8_t step)
 
         for(i = 2; i < NUM_ELEMS(iotp_collection); i++)
         {
-            USBD_IOTP_EVENT_Init(usbd, usbdc1, iotp_collection[i].ep_num, iotp_collection[i].dir, iotp_collection[i].iotp);
+            USBD_IOTP_Init(usbd, usbdc1, iotp_collection[i].ep_num, iotp_collection[i].dir, iotp_collection[i].iotp);
         }
         /*
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 1,  USB_EP_DIRECTION_IN,  &tp_ep1in);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 2,  USB_EP_DIRECTION_OUT, &tp_ep2out);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 3,  USB_EP_DIRECTION_IN,  &tp_ep3in);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 3,  USB_EP_DIRECTION_OUT, &tp_ep3out);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 4,  USB_EP_DIRECTION_IN,  &tp_ep4in);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 5,  USB_EP_DIRECTION_OUT, &tp_ep5out);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 6,  USB_EP_DIRECTION_IN,  &tp_ep6in);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 6,  USB_EP_DIRECTION_OUT, &tp_ep6out);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 7,  USB_EP_DIRECTION_IN,  &tp_ep7in);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 8,  USB_EP_DIRECTION_OUT, &tp_ep8out);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 9,  USB_EP_DIRECTION_IN,  &tp_ep9in);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 9,  USB_EP_DIRECTION_OUT, &tp_ep9out);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 10, USB_EP_DIRECTION_IN,  &tp_ep10in);
-        USBD_IOTP_EVENT_Init(usbd, usbdc1, 11, USB_EP_DIRECTION_OUT, &tp_ep11out);*/
+        USBD_IOTP_Init(usbd, usbdc1, 1,  USB_EP_DIRECTION_IN,  &tp_ep1in);
+        USBD_IOTP_Init(usbd, usbdc1, 2,  USB_EP_DIRECTION_OUT, &tp_ep2out);
+        USBD_IOTP_Init(usbd, usbdc1, 3,  USB_EP_DIRECTION_IN,  &tp_ep3in);
+        USBD_IOTP_Init(usbd, usbdc1, 3,  USB_EP_DIRECTION_OUT, &tp_ep3out);
+        USBD_IOTP_Init(usbd, usbdc1, 4,  USB_EP_DIRECTION_IN,  &tp_ep4in);
+        USBD_IOTP_Init(usbd, usbdc1, 5,  USB_EP_DIRECTION_OUT, &tp_ep5out);
+        USBD_IOTP_Init(usbd, usbdc1, 6,  USB_EP_DIRECTION_IN,  &tp_ep6in);
+        USBD_IOTP_Init(usbd, usbdc1, 6,  USB_EP_DIRECTION_OUT, &tp_ep6out);
+        USBD_IOTP_Init(usbd, usbdc1, 7,  USB_EP_DIRECTION_IN,  &tp_ep7in);
+        USBD_IOTP_Init(usbd, usbdc1, 8,  USB_EP_DIRECTION_OUT, &tp_ep8out);
+        USBD_IOTP_Init(usbd, usbdc1, 9,  USB_EP_DIRECTION_IN,  &tp_ep9in);
+        USBD_IOTP_Init(usbd, usbdc1, 9,  USB_EP_DIRECTION_OUT, &tp_ep9out);
+        USBD_IOTP_Init(usbd, usbdc1, 10, USB_EP_DIRECTION_IN,  &tp_ep10in);
+        USBD_IOTP_Init(usbd, usbdc1, 11, USB_EP_DIRECTION_OUT, &tp_ep11out);*/
 
-        USBD_IOTP_EVENT_Install_Default_Control_Pipe(usbd, &tp_ep0in, &tp_ep0out);
+        USBD_IOTP_Install_Default_Control_Pipe(usbd, &tp_ep0in, &tp_ep0out);
         for(i = 2; i < NUM_ELEMS(iotp_collection); i++)
         {
-            USBD_IOTP_EVENT_Install(iotp_collection[i].iotp);
+            USBD_IOTP_Install(iotp_collection[i].iotp);
         }
         /*
-        USBD_IOTP_EVENT_Install(&tp_ep1in);
-        USBD_IOTP_EVENT_Install(&tp_ep2out);
-        USBD_IOTP_EVENT_Install(&tp_ep3in);
-        USBD_IOTP_EVENT_Install(&tp_ep3out);
-        USBD_IOTP_EVENT_Install(&tp_ep4in);
-        USBD_IOTP_EVENT_Install(&tp_ep5out);
-        USBD_IOTP_EVENT_Install(&tp_ep6in);
-        USBD_IOTP_EVENT_Install(&tp_ep6out);
-        USBD_IOTP_EVENT_Install(&tp_ep7in);
-        USBD_IOTP_EVENT_Install(&tp_ep8out);
-        USBD_IOTP_EVENT_Install(&tp_ep9in);
-        USBD_IOTP_EVENT_Install(&tp_ep9out);
-        USBD_IOTP_EVENT_Install(&tp_ep10in);
-        USBD_IOTP_EVENT_Install(&tp_ep11out);*/
+        USBD_IOTP_Install(&tp_ep1in);
+        USBD_IOTP_Install(&tp_ep2out);
+        USBD_IOTP_Install(&tp_ep3in);
+        USBD_IOTP_Install(&tp_ep3out);
+        USBD_IOTP_Install(&tp_ep4in);
+        USBD_IOTP_Install(&tp_ep5out);
+        USBD_IOTP_Install(&tp_ep6in);
+        USBD_IOTP_Install(&tp_ep6out);
+        USBD_IOTP_Install(&tp_ep7in);
+        USBD_IOTP_Install(&tp_ep8out);
+        USBD_IOTP_Install(&tp_ep9in);
+        USBD_IOTP_Install(&tp_ep9out);
+        USBD_IOTP_Install(&tp_ep10in);
+        USBD_IOTP_Install(&tp_ep11out);*/
     }
 #if(FUNC_ENTER_NOTIF)
     printf("%s, state = 0x%X\n\r", __FUNCTION__, USBD_DEV_Get_State(usbd));
@@ -6366,7 +6366,7 @@ int main(int argc, char* argv[])
     printf("\n\n\rsize of USBD_Params_XT: %d\n\r", (sizeof(USBD_Params_XT) / sizeof(uint8_t)));
     printf("size of USBDC_Params_XT: %d\n\r", (sizeof(USBDC_Params_XT) / sizeof(uint8_t)));
     printf("size of USBD_IO_Params_XT: %d\n\r", (sizeof(USBD_IO_Params_XT) / sizeof(uint8_t)));
-    printf("size of USBD_IOTP_EVENT_Params_XT: %d\n\r", (sizeof(USBD_IOTP_EVENT_Params_XT) / sizeof(uint8_t)));
+    printf("size of USBD_IOTP_Params_XT: %d\n\r", (sizeof(USBD_IOTP_Params_XT) / sizeof(uint8_t)));
     printf("size of USBD_IO_UP_IN_Data_Event_HT: %d\n\r", (sizeof(USBD_IO_UP_IN_Data_Event_HT) / sizeof(uint8_t)));
     printf("size of string1: %d, from descriptor: %d\n\r", sizeof(string1), string1[0] & 0xFF);
     printf("size of string2: %d, from descriptor: %d\n\r", sizeof(string2), string2[0] & 0xFF);

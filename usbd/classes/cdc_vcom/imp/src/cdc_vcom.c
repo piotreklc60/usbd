@@ -65,33 +65,33 @@ static const char* const cdc_vcom_set_line_coding_parity[] =
 };
 #endif
 
-typedef void (*CDC_VCOM_check_params_execute) (CDC_VCOM_Params_XT *cdc_vcom, USBD_IOTP_EVENT_Params_XT *tp_in);
+typedef void (*CDC_VCOM_check_params_execute) (CDC_VCOM_Params_XT *cdc_vcom, USBD_IOTP_Params_XT *tp_in);
 
 static void CDC_VCOM_check_params_and_execute(
-   USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size, CDC_VCOM_check_params_execute execute)
+   USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size, CDC_VCOM_check_params_execute execute)
 {
    USBD_Vendor_Data_XT *tp_vendor_data;
    USBDC_Interface_Header_XT *if_params;
    CDC_VCOM_Params_XT *cdc_vcom;
    USBD_Params_XT *usbd;
-   USBD_IOTP_EVENT_Params_XT *tp_in;
+   USBD_IOTP_Params_XT *tp_in;
 
    USBD_UNUSED_PARAM(dir);
    USBD_UNUSED_PARAM(size);
 
    USBD_ENTER_FUNC(CDC_VCOM_REQ);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp))
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
    {
-      tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp);
-      usbd = USBD_IOTP_EVENT_Get_USBD(tp);
+      tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
+      usbd = USBD_IOTP_Get_USBD(tp);
 
       if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data) && USBD_CHECK_PTR(void, usbd))
       {
          if_params   = (USBDC_Interface_Header_XT*)(tp_vendor_data->pvoid);
-         tp_in       = (USBD_IOTP_EVENT_Params_XT*)USBD_IO_UP_Get_IN_TP_Params(usbd, 0);
+         tp_in       = (USBD_IOTP_Params_XT*)USBD_IO_UP_Get_IN_TP_Params(usbd, 0);
 
-         if(USBD_CHECK_PTR(USBDC_Interface_Header_XT, if_params) && USBD_CHECK_PTR(USBD_IOTP_EVENT_Params_XT, tp_in))
+         if(USBD_CHECK_PTR(USBDC_Interface_Header_XT, if_params) && USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp_in))
          {
             cdc_vcom = (CDC_VCOM_Params_XT*)(if_params->vendor.pvoid);
 
@@ -122,7 +122,7 @@ static void CDC_VCOM_check_params_and_execute(
 
 #if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
 
-static void CDC_VCOM_send_notif_done_action(CDC_VCOM_Params_XT *cdc_vcom, USBD_IOTP_EVENT_Params_XT *tp_in)
+static void CDC_VCOM_send_notif_done_action(CDC_VCOM_Params_XT *cdc_vcom, USBD_IOTP_Params_XT *tp_in)
 {
    USBD_ENTER_FUNC(CDC_VCOM_REQ);
 
@@ -133,18 +133,18 @@ static void CDC_VCOM_send_notif_done_action(CDC_VCOM_Params_XT *cdc_vcom, USBD_I
    USBD_EXIT_FUNC(CDC_VCOM_REQ);
 } /* CDC_VCOM_send_notif_done_action */
 
-static void CDC_VCOM_send_notif_done(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void CDC_VCOM_send_notif_done(USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    CDC_VCOM_check_params_and_execute(tp, dir, size, CDC_VCOM_send_notif_done_action);
 } /* CDC_VCOM_send_notif_done */
 
 #endif
 
-void CDC_VCOM_on_ready_params_change_action(CDC_VCOM_Params_XT *cdc_vcom, USBD_IOTP_EVENT_Params_XT *tp_in)
+void CDC_VCOM_on_ready_params_change_action(CDC_VCOM_Params_XT *cdc_vcom, USBD_IOTP_Params_XT *tp_in)
 {
    USBD_ENTER_FUNC(CDC_VCOM_REQ);
 
-   (void)USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+   (void)USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
 
    USBD_DEBUG_MID_4(CDC_VCOM_ONOFF, "%s.LINE_CODING.%-9s:  %d - %s",
       cdc_vcom->data.name, "baudrate", cdc_vcom->data.comm_physical_params.baudrate, "");
@@ -173,12 +173,12 @@ void CDC_VCOM_on_ready_params_change_action(CDC_VCOM_Params_XT *cdc_vcom, USBD_I
    USBD_EXIT_FUNC(CDC_VCOM_REQ);
 } /* CDC_VCOM_on_ready_params_change_action */
 
-static void CDC_VCOM_on_ready_params_change(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void CDC_VCOM_on_ready_params_change(USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    CDC_VCOM_check_params_and_execute(tp, dir, size, CDC_VCOM_on_ready_params_change_action);
 } /* CDC_VCOM_on_ready_params_change */
 
-static void CDC_VCOM_on_ready_send_status(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void CDC_VCOM_on_ready_send_status(USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
    USBD_UNUSED_PARAM(dir);
    USBD_UNUSED_PARAM(size);
@@ -187,10 +187,10 @@ static void CDC_VCOM_on_ready_send_status(USBD_IOTP_EVENT_Params_XT *tp, USB_EP_
 
    USBD_DEBUG_HI(CDC_VCOM_REQ, "on_ready_send_status");
 
-   (void)USBD_IOTP_EVENT_Send_Status_For_Out_Tp(
+   (void)USBD_IOTP_Send_Status_For_Out_Tp(
       tp,
       USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT),
-      USBD_MAKE_INVALID_HANDLER(USBD_IOTP_EVENT_Callback_HT),
+      USBD_MAKE_INVALID_HANDLER(USBD_IOTP_Callback_HT),
       USBD_MAKE_INVALID_PTR(USBD_Vendor_Data_XT));
 
    USBD_EXIT_FUNC(CDC_VCOM_REQ);
@@ -201,8 +201,8 @@ static USBD_Bool_DT CDC_VCOM_on_request(
    uint8_t ep_num,
    uint8_t if_num,
    USBD_REQUEST_Req_DT *req,
-   USBD_IOTP_EVENT_Params_XT *tp_in,
-   USBD_IOTP_EVENT_Params_XT *tp_out)
+   USBD_IOTP_Params_XT *tp_in,
+   USBD_IOTP_Params_XT *tp_out)
 {
    USBD_Vendor_Data_XT *tp_vendor_data;
    USBDC_Interface_Header_XT *if_params;
@@ -280,13 +280,13 @@ static USBD_Bool_DT CDC_VCOM_on_request(
 
             if(USBD_CHECK_PTR(uint16_t, ptr16))
             {
-               USBD_IOTP_EVENT_Set_Ready_Handler(tp_out, CDC_VCOM_on_ready_send_status);
+               USBD_IOTP_Set_Ready_Handler(tp_out, CDC_VCOM_on_ready_send_status);
 
-               if(USBD_BOOL_IS_TRUE(USBD_IOTP_EVENT_Recv_And_Ready(tp_out, ptr16, sizeof(uint16_t), &size)))
+               if(USBD_BOOL_IS_TRUE(USBD_IOTP_Recv_And_Ready(tp_out, ptr16, sizeof(uint16_t), &size)))
                {
                   if(size < 0)
                   {
-                     (void)USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+                     (void)USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                   }
                }
             }
@@ -298,13 +298,13 @@ static USBD_Bool_DT CDC_VCOM_on_request(
                case CDC_VCOM_COMM_FEATURE_ABSTRACT_STATE:
                   /* send abstract state */
                   USBD_DEBUG_HI_2(CDC_VCOM_REQ, "get %s %s", cdc_vcom->data.name, "ABSTRACT_STATE");
-                  (void)USBD_IOTP_EVENT_Send(tp_in, &(cdc_vcom->data.abstract_state), sizeof(uint16_t), USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+                  (void)USBD_IOTP_Send(tp_in, &(cdc_vcom->data.abstract_state), sizeof(uint16_t), USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                   break;
 
                case CDC_VCOM_COMM_FEATURE_COUNTRY_SETTING:
                   /* send country setting */
                   USBD_DEBUG_HI_2(CDC_VCOM_REQ, "get %s %s", cdc_vcom->data.name, "COUNTRY_SETTING");
-                  (void)USBD_IOTP_EVENT_Send(tp_in, &(cdc_vcom->data.country_setting), sizeof(uint16_t), USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+                  (void)USBD_IOTP_Send(tp_in, &(cdc_vcom->data.country_setting), sizeof(uint16_t), USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                   break;
 
                default:
@@ -320,14 +320,14 @@ static USBD_Bool_DT CDC_VCOM_on_request(
                   /* clear abstract state */
                   USBD_DEBUG_HI_2(CDC_VCOM_REQ, "clear %s %s", cdc_vcom->data.name, "ABSTRACT_STATE");
                   cdc_vcom->data.abstract_state = 0;
-                  (void)USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+                  (void)USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                   break;
 
                case CDC_VCOM_COMM_FEATURE_COUNTRY_SETTING:
                   /* clear country setting */
                   USBD_DEBUG_HI_2(CDC_VCOM_REQ, "clear %s %s", cdc_vcom->data.name, "COUNTRY_SETTING");
                   cdc_vcom->data.country_setting = 0;
-                  (void)USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+                  (void)USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
                   break;
 
                default:
@@ -338,16 +338,16 @@ static USBD_Bool_DT CDC_VCOM_on_request(
 
          case CDC_SET_LINE_CODING_INTERFACE:
             USBD_DEBUG_HI_2(CDC_VCOM_REQ, "set %s %s", cdc_vcom->data.name, "LINE_CODING");
-            tp_vendor_data = USBD_IOTP_EVENT_Get_Vendor_Data_Container(tp_out);
+            tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_out);
 
             if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data) && (req->wLength >= CDC_VCOM_LINE_CODING_CONTAINER_SIZE))
             {
                tp_vendor_data->pvoid = if_params;
                if_params->vendor_data.pvoid = cdc_vcom;
 
-               USBD_IOTP_EVENT_Set_Ready_Handler(tp_out, CDC_VCOM_on_ready_params_change);
+               USBD_IOTP_Set_Ready_Handler(tp_out, CDC_VCOM_on_ready_params_change);
 
-               if(USBD_BOOL_IS_TRUE(USBD_IOTP_EVENT_Recv_And_Ready(tp_out, &(cdc_vcom->data.comm_physical_params), req->wLength, &size)))
+               if(USBD_BOOL_IS_TRUE(USBD_IOTP_Recv_And_Ready(tp_out, &(cdc_vcom->data.comm_physical_params), req->wLength, &size)))
                {
                   if(size < 0)
                   {
@@ -359,13 +359,13 @@ static USBD_Bool_DT CDC_VCOM_on_request(
             {
                USBD_WARN_2(CDC_VCOM_REQ, "%d bytes delivered too small, expected: %d",
                   req->wLength, CDC_VCOM_LINE_CODING_CONTAINER_SIZE);
-               (void)USBD_IOTP_EVENT_Send_Stall(tp_in);
+               (void)USBD_IOTP_Send_Stall(tp_in);
             }
             break;
 
          case CDC_GET_LINE_CODING_INTERFACE:
             USBD_DEBUG_HI_2(CDC_VCOM_REQ, "get %s %s", cdc_vcom->data.name, "LINE_CODING");
-            (void)USBD_IOTP_EVENT_Send(
+            (void)USBD_IOTP_Send(
                tp_in, &(cdc_vcom->data.comm_physical_params), req->wLength, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
             break;
 
@@ -407,19 +407,19 @@ static USBD_Bool_DT CDC_VCOM_on_request(
             }
 #endif
 
-            (void)USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+            (void)USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
             break;
 
          case CDC_SEND_BREAK_INTERFACE:
             USBD_DEBUG_HI_2(CDC_VCOM_REQ, "set %s %s", cdc_vcom->data.name, "BREAK");
             cdc_vcom->data.duration_of_break = req->wValue;
             USBD_DEBUG_MID_2(CDC_VCOM_ONOFF, "%s BREAK duration: %d ms", cdc_vcom->data.name, cdc_vcom->data.duration_of_break);
-            (void)USBD_IOTP_EVENT_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
+            (void)USBD_IOTP_Send_Status(tp_in, USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT));
             break;
 
          default:
             result = USBD_FALSE;
-            USBD_IOTP_EVENT_Send_Stall(tp_in);
+            USBD_IOTP_Send_Stall(tp_in);
             break;
       }
 
@@ -457,8 +457,8 @@ static void CDC_VCOM_on_event(
          USBD_IOTP_BUFF_Init(usbd, usbdc, cdc_vcom->data.hw.ep_out, USB_EP_DIRECTION_OUT, &(cdc_vcom->data.iotp.out), buff);
          USBD_IOTP_BUFF_Install(&(cdc_vcom->data.iotp.out));
          USBD_DEBUG_HI_3(CDC_VCOM_EVENT, "init %s %s TP on EP: %d", cdc_vcom->data.name, "EVENT IN", cdc_vcom->data.hw.ep_notif);
-         USBD_IOTP_EVENT_Init(usbd, usbdc, cdc_vcom->data.hw.ep_notif, USB_EP_DIRECTION_IN, &(cdc_vcom->data.iotp.notif));
-         (void)USBD_IOTP_EVENT_Install(&(cdc_vcom->data.iotp.notif));
+         USBD_IOTP_Init(usbd, usbdc, cdc_vcom->data.hw.ep_notif, USB_EP_DIRECTION_IN, &(cdc_vcom->data.iotp.notif));
+         (void)USBD_IOTP_Install(&(cdc_vcom->data.iotp.notif));
 
          USBDC_REQUEST_Interface_Irq_Install(usbdc, CDC_VCOM_on_request, cdc_vcom->data.hw.if_notif);
       }
@@ -497,8 +497,8 @@ static void CDC_VCOM_on_event(
             cdc_vcom->data.serial_state_notification.data |= CDC_VCOM_SERIAL_STATE_NOTIFICATION_DCD;
          }
 
-         USBD_IOTP_EVENT_Set_Ready_Handler(&(cdc_vcom->data.iotp.notif), CDC_VCOM_send_notif_done);
-         if(USBD_BOOL_IS_TRUE(USBD_IOTP_EVENT_Send(
+         USBD_IOTP_Set_Ready_Handler(&(cdc_vcom->data.iotp.notif), CDC_VCOM_send_notif_done);
+         if(USBD_BOOL_IS_TRUE(USBD_IOTP_Send(
             &(cdc_vcom->data.iotp.notif),
             &(cdc_vcom->data.serial_state_notification.req),
             sizeof(cdc_vcom->data.serial_state_notification.req) + sizeof(cdc_vcom->data.serial_state_notification.data),
@@ -523,7 +523,7 @@ void CDC_VCOM_Init(CDC_VCOM_Params_XT *cdc_vcom, Buff_Ring_XT *buff_in, Buff_Rin
 
    USBD_IOTP_BUFF_Init(USBD_MAKE_INVALID_PTR(void), USBD_MAKE_INVALID_PTR(void), 0, 0, &(cdc_vcom->data.iotp.in), buff_in);
    USBD_IOTP_BUFF_Init(USBD_MAKE_INVALID_PTR(void), USBD_MAKE_INVALID_PTR(void), 0, 0, &(cdc_vcom->data.iotp.out), buff_out);
-   USBD_IOTP_EVENT_Init(USBD_MAKE_INVALID_PTR(void), USBD_MAKE_INVALID_PTR(void), 0, 0, &(cdc_vcom->data.iotp.notif));
+   USBD_IOTP_Init(USBD_MAKE_INVALID_PTR(void), USBD_MAKE_INVALID_PTR(void), 0, 0, &(cdc_vcom->data.iotp.notif));
 
    if(!USBD_CHECK_PTR(const char, name))
    {

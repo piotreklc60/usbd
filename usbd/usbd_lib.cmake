@@ -34,7 +34,7 @@ set(USBD_PATH ${CMAKE_CURRENT_LIST_DIR})
 set(USBD_CORE_USBD_PATH ${USBD_PATH}/core/core/usbd)
 set(USBD_CORE_ADD_ONS_PATH ${USBD_PATH}/core/core/add_ons)
 set(USBD_CORE_ADD_ONS_CDP_PATH ${USBD_CORE_ADD_ONS_PATH}/usb_cdp)
-set(USBD_CORE_IOTP_EVENT_PATH ${USBD_CORE_ADD_ONS_PATH}/usbd_iotp/event)
+set(USBD_CORE_IOTP_PATH ${USBD_CORE_ADD_ONS_PATH}/usbd_iotp/event)
 set(USBD_CORE_IOTP_BUFF_PATH ${USBD_CORE_ADD_ONS_PATH}/usbd_iotp/buff)
 set(USBD_CORE_USBD_ELEMENTS_PATH ${USBD_PATH}/core/core/usbd_elements)
 set(USBD_CORE_USBD_DEV_PATH ${USBD_CORE_USBD_ELEMENTS_PATH}/usbd_dev)
@@ -43,6 +43,7 @@ set(USBD_CORE_USBD_IO_PATH ${USBD_CORE_USBD_ELEMENTS_PATH}/usbd_io)
 set(USBD_CORE_USBD_EVENT_PATH ${USBD_CORE_USBD_ELEMENTS_PATH}/usbd_event)
 set(USBD_CORE_USBDC_PATH ${USBD_CORE_USBD_ELEMENTS_PATH}/usbdc)
 
+set(MASS_STORAGE_PATH ${USBD_PATH}/classes/mass_storage)
 set(CDC_VCOM_PATH ${USBD_PATH}/classes/cdc_vcom)
 set(HID_PATH ${USBD_PATH}/classes/hid)
 set(DFU_PATH ${USBD_PATH}/classes/dfu)
@@ -70,8 +71,8 @@ target_include_directories(usbd_lib INTERFACE
     ${USBD_CORE_USBDC_PATH}/api/
     ${USBD_CORE_USBDC_PATH}/imp/inc/
     ${USBD_CORE_ADD_ONS_CDP_PATH}/api/
-    ${USBD_CORE_IOTP_EVENT_PATH}/api/
-    ${USBD_CORE_IOTP_EVENT_PATH}/imp/inc/
+    ${USBD_CORE_IOTP_PATH}/api/
+    ${USBD_CORE_IOTP_PATH}/imp/inc/
     ${USBD_CORE_IOTP_BUFF_PATH}/api/
     ${USBD_CORE_IOTP_BUFF_PATH}/imp/inc/
 )
@@ -140,7 +141,7 @@ target_compile_definitions(usbd_lib INTERFACE
 )
 else()
 target_sources(usbd_lib INTERFACE
-    ${USBD_CORE_IOTP_EVENT_PATH}/imp/src/usbd_iotp_event.c
+    ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp.c
 )
 endif()
 
@@ -170,6 +171,19 @@ endif()
 # ------------------------------------- USBD INTERFACE source files - by default NOTHING ADDED, -------------------------------
 # ------------------------------------- can be added by defining USBD_USE_<module name> ---------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------------
+
+if(DEFINED USBD_USE_MASS_STORAGE AND USBD_USE_MASS_STORAGE MATCHES ON)
+target_sources(usbd_lib INTERFACE
+    ${MASS_STORAGE_PATH}/imp/src/mass_storage.c
+)
+target_include_directories(usbd_lib INTERFACE
+    ${MASS_STORAGE_PATH}/api/
+    ${MASS_STORAGE_PATH}/imp/inc/
+)
+target_compile_definitions(usbd_lib INTERFACE
+    USBD_MASS_STORAGE_PRESENT
+)
+endif()
 
 if(DEFINED USBD_USE_CDC_VCOM AND USBD_USE_CDC_VCOM MATCHES ON)
 target_sources(usbd_lib INTERFACE

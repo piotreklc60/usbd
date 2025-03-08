@@ -243,7 +243,7 @@ typedef struct CDC_VCOM_Params_eXtendedTag
       {
          USBD_IOTP_BUFF_Params_XT in;
          USBD_IOTP_BUFF_Params_XT out;
-         USBD_IOTP_EVENT_Params_XT notif;
+         USBD_IOTP_Params_XT notif;
       }iotp;
       struct
       {

@@ -129,8 +129,8 @@ struct USBDC_params_eXtended_Tag;
 #include "usbd_event_types.h"
 #endif
 
-#ifndef USBD_IOTP_EVENT_TYPES_H_
-#include "usbd_iotp_event_types.h"
+#ifndef USBD_IOTP_TYPES_H_
+#include "usbd_iotp_types.h"
 #endif
 
 #ifndef USBD_IOTP_BUFF_TYPES_H_
@@ -178,8 +178,8 @@ typedef struct USBD_params_eXtended_Tag
 #include "usbd_event.h"
 #endif
 
-#ifndef USBD_IOTP_EVENT_H_
-#include "usbd_iotp_event.h"
+#ifndef USBD_IOTP_H_
+#include "usbd_iotp.h"
 #endif
 
 #ifndef USBD_IOTP_BUFF_H_
@@ -224,7 +224,7 @@ typedef struct USBD_params_eXtended_Tag
 #error "USBD IO module required for USBD REQUEST module is missing!"
 #endif
 
-#if (!defined(USBD_IOTP_EVENT_PRESENT))
+#if (!defined(USBD_IOTP_PRESENT))
 #error "USBD IOTP EVENT module required for USBD REQUEST module is missing!"
 #endif
 #endif
@@ -247,6 +247,13 @@ typedef struct USBD_params_eXtended_Tag
 #ifdef USBD_CDC_VCOM_PRESENT
 #ifndef CDC_VCOM_H_
 #include "cdc_vcom.h"
+#endif
+#endif
+
+
+#ifdef USBD_MASS_STORAGE_PRESENT
+#ifndef MASS_STORAGE_H_
+#include "mass_storage.h"
 #endif
 #endif
 

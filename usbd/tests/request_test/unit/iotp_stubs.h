@@ -30,7 +30,7 @@
 
 typedef void (*stubs_send_from_irq) (USBD_Params_XT *usbd, uint8_t ep_num, const void *data, USBD_IO_Inout_Data_Size_DT size);
 typedef void (*stubs_send_status_stall_abort_from_irq)(USBD_Params_XT *usbd, uint8_t ep_num);
-typedef void (*stubs_set_ready_handler)(void *tp_params, USBD_IOTP_EVENT_Callback_HT ready);
+typedef void (*stubs_set_ready_handler)(void *tp_params, USBD_IOTP_Callback_HT ready);
 
 typedef struct iotp_stubs_tag
 {

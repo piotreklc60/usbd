@@ -40,13 +40,13 @@
 typedef struct
 {
     USBDC_Params_XT                         usbdc;
-    USBD_IOTP_EVENT_Params_XT               tp;
+    USBD_IOTP_Params_XT               tp;
     USB_EP_Direction_ET                    dir;
 }test_params_T;
 
 /*
 static USBDC_Params_XT test_usbdc;
-static USBD_IOTP_EVENT_Params_XT test_tp;
+static USBD_IOTP_Params_XT test_tp;
 static USB_EP_Direction_ET test_dir;
 // static uint8_t test_ep_num;
 */
@@ -76,51 +76,51 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 {
     test_params_T *test = &test_params[ep_index];
 
-    USBD_IOTP_EVENT_Init(usbd, &(test->usbdc), ep_num, test->dir, &(test->tp));
+    USBD_IOTP_Init(usbd, &(test->usbdc), ep_num, test->dir, &(test->tp));
 } /* perform_test */
 
 static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 {
     test_params_T *test = &test_params[ep_index];
 
-    if(!USBD_COMPARE_PTRS(void, USBD_IOTP_EVENT_GET_USBD_FROM_TP(&(test->tp)), void, usbd))
+    if(!USBD_COMPARE_PTRS(void, USBD_IOTP_GET_USBD_FROM_TP(&(test->tp)), void, usbd))
     {
         USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"usbd\" pointer inside of TP");
         REPORT_ERROR();
     }
-    if(!USBD_COMPARE_PTRS(void, USBD_IOTP_EVENT_Get_USBD(&(test->tp)), void, usbd))
+    if(!USBD_COMPARE_PTRS(void, USBD_IOTP_Get_USBD(&(test->tp)), void, usbd))
     {
-        USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"usbd\" pointer inside of TP / read by USBD_IOTP_EVENT_Get_USBD");
+        USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"usbd\" pointer inside of TP / read by USBD_IOTP_Get_USBD");
         REPORT_ERROR();
     }
-    if(!USBD_COMPARE_PTRS(void, USBD_IOTP_EVENT_GET_USBDC_FROM_TP(&(test->tp)), void, &(test->usbdc)))
+    if(!USBD_COMPARE_PTRS(void, USBD_IOTP_GET_USBDC_FROM_TP(&(test->tp)), void, &(test->usbdc)))
     {
         USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"(test->usbdc)\" pointer inside of TP");
         REPORT_ERROR();
     }
-    if(!USBD_COMPARE_PTRS(void, USBD_IOTP_EVENT_Get_USBDC(&(test->tp)), void, &(test->usbdc)))
+    if(!USBD_COMPARE_PTRS(void, USBD_IOTP_Get_USBDC(&(test->tp)), void, &(test->usbdc)))
     {
-        USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"(test->usbdc)\" pointer inside of TP / read by USBD_IOTP_EVENT_Get_USBDC");
+        USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"(test->usbdc)\" pointer inside of TP / read by USBD_IOTP_Get_USBDC");
         REPORT_ERROR();
     }
-    if(USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(&(test->tp)) != ep_num)
+    if(USBD_IOTP_GET_EP_NUM_FROM_TP(&(test->tp)) != ep_num)
     {
         USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"ep_num\" inside of TP");
         REPORT_ERROR();
     }
-    if(USBD_IOTP_EVENT_Get_EP_Num(&(test->tp)) != ep_num)
+    if(USBD_IOTP_Get_EP_Num(&(test->tp)) != ep_num)
     {
-        USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"ep_num\" inside of TP / read by USBD_IOTP_EVENT_Get_EP_Num");
+        USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"ep_num\" inside of TP / read by USBD_IOTP_Get_EP_Num");
         REPORT_ERROR();
     }
-    if(USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(&(test->tp)) != test->dir)
+    if(USBD_IOTP_GET_EP_DIR_FROM_TP(&(test->tp)) != test->dir)
     {
         USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"dir\" inside of TP");
         REPORT_ERROR();
     }
-    if(USBD_IOTP_EVENT_Get_Dir(&(test->tp)) != test->dir)
+    if(USBD_IOTP_Get_Dir(&(test->tp)) != test->dir)
     {
-        USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"dir\" inside of TP / read by USBD_IOTP_EVENT_Get_Dir");
+        USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"dir\" inside of TP / read by USBD_IOTP_Get_Dir");
         REPORT_ERROR();
     }
 } /* check_result */

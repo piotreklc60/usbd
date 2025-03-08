@@ -305,7 +305,7 @@ typedef struct HID_Params_eXtendedTag
 
    struct
    {
-      USBD_IOTP_EVENT_Params_XT in_iotp;
+      USBD_IOTP_Params_XT in_iotp;
       uint8_t ep_in;
       uint8_t ep_out;
       uint8_t if_num;

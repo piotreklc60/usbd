@@ -32,8 +32,8 @@
 #ifndef USBD_IO_INTERNAL_H_
 #include "usbd_io_internal.h"
 #endif
-#ifndef USBD_IOTP_EVENT_INTERNAL_H_
-#include "usbd_iotp_event_internal.h"
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 
 #include "cfg.h"
@@ -42,7 +42,7 @@
 
 typedef struct
 {
-    USBD_IOTP_EVENT_Params_XT              *tp;
+    USBD_IOTP_Params_XT              *tp;
     USB_EP_Direction_ET                    dir;
     USBD_Bool_DT                            in_progress;
     USBD_Bool_DT                            is_tp_in;
@@ -73,9 +73,9 @@ static void report_error(void)
 }
 
 
-static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void test_ready(USBD_IOTP_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
-    uint8_t ep_num = USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP((USBD_IOTP_EVENT_Params_XT*)tp_params);
+    uint8_t ep_num = USBD_IOTP_GET_EP_NUM_FROM_TP((USBD_IOTP_Params_XT*)tp_params);
     uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
     test_params_T *test = &test_params[ep_index];
 
@@ -86,7 +86,7 @@ static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
 
     USBD_DEBUG_HI_2(MAIN_APP_TEST, "%s; size = %d", __FUNCTION__, size);
 
-    if((size >= 0) && ((-1) == USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(USBD_IOTP_EVENT_Get_USBD(tp_params), ep_num, USBD_FALSE)))
+    if((size >= 0) && ((-1) == USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(USBD_IOTP_Get_USBD(tp_params), ep_num, USBD_FALSE)))
     {
         USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
                test->size,
@@ -97,7 +97,7 @@ static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
         REPORT_ERROR();
     }
 
-    if((size < 0) && ((-1) != USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(USBD_IOTP_EVENT_Get_USBD(tp_params), ep_num, USBD_FALSE)))
+    if((size < 0) && ((-1) != USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(USBD_IOTP_Get_USBD(tp_params), ep_num, USBD_FALSE)))
     {
         USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
               test->size,
@@ -119,18 +119,18 @@ static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
             size_req = test->size / 4;
         }
 
-        if(USBD_BOOL_IS_FALSE(USBD_IOTP_EVENT_Recv_And_Ready(test->tp, &test->data_result[test->size_result], size_req, &size_res)))
+        if(USBD_BOOL_IS_FALSE(USBD_IOTP_Recv_And_Ready(test->tp, &test->data_result[test->size_result], size_req, &size_res)))
         {
             USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
                   size_req,
                   ep_num,
                   (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
                   test->ep_num_bufs);
-            USBD_WARN(MAIN_APP_TEST_ERROR, "USBD_IOTP_EVENT_Recv_And_Ready failed!");
+            USBD_WARN(MAIN_APP_TEST_ERROR, "USBD_IOTP_Recv_And_Ready failed!");
             REPORT_ERROR();
         }
 
-        test->in_progress = /*USBD_TRUE*/USBD_IOTP_EVENT_Is_Transfer_Active(tp_params);
+        test->in_progress = /*USBD_TRUE*/USBD_IOTP_Is_Transfer_Active(tp_params);
     }
     else
     {
@@ -140,9 +140,9 @@ static void test_ready(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
     USBD_EXIT_FUNC(MAIN_APP_TEST);
 }
 
-static void test_buf_empty(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void test_buf_empty(USBD_IOTP_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
-    uint8_t ep_num = USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP((USBD_IOTP_EVENT_Params_XT*)tp_params);
+    uint8_t ep_num = USBD_IOTP_GET_EP_NUM_FROM_TP((USBD_IOTP_Params_XT*)tp_params);
     uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
     test_params_T *test = &test_params[ep_index];
 
@@ -154,7 +154,7 @@ static void test_buf_empty(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Directio
     USBD_EXIT_FUNC(MAIN_APP_TEST);
 }
 
-static void test_error(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void test_error(USBD_IOTP_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
@@ -163,7 +163,7 @@ static void test_error(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET
     USBD_EXIT_FUNC(MAIN_APP_TEST);
 }
 
-static void test_abort(USBD_IOTP_EVENT_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
+static void test_abort(USBD_IOTP_Params_XT *tp_params, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size)
 {
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
@@ -259,7 +259,7 @@ static void prepare_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-    USBD_IOTP_EVENT_Set_Handlers(
+    USBD_IOTP_Set_Handlers(
         test->tp,
         test_ready,
         test_buf_empty,
@@ -286,9 +286,9 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-    USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_EVENT_GET_INVOKE_PARAMS(test->tp));
+    USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
-    result = USBD_IOTP_EVENT_Recv_And_Ready(test->tp, test->data_result, test->size/4, &size_res);
+    result = USBD_IOTP_Recv_And_Ready(test->tp, test->data_result, test->size/4, &size_res);
 
     if(USBD_BOOL_IS_TRUE(result))
     {
@@ -316,11 +316,11 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
                ep_num,
                (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
                test->ep_num_bufs);
-        USBD_WARN(MAIN_APP_TEST_ERROR, "USBD_IOTP_EVENT_Recv_And_Ready failed!");
+        USBD_WARN(MAIN_APP_TEST_ERROR, "USBD_IOTP_Recv_And_Ready failed!");
         REPORT_ERROR();
     }
 
-    USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_EVENT_GET_INVOKE_PARAMS(test->tp));
+    USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
     USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* perform_test */
@@ -490,7 +490,7 @@ void printf_ep_desc(const USB_Endpoint_Desc_DT *ep_desc)
     USBD_WARN_1(MAIN_APP_TEST, "bInterval = %d", ep_desc->bInterval);
 }
 
-void iotp_test_recv_ready_irq_too_less_space(USBD_Params_XT *usbd, USBD_IOTP_EVENT_Params_XT *tp, uint8_t ep_num, USB_EP_Direction_ET dir, uint8_t num_bufs, uint8_t *data, USBD_IO_Inout_Data_Size_DT size)
+void iotp_test_recv_ready_irq_too_less_space(USBD_Params_XT *usbd, USBD_IOTP_Params_XT *tp, uint8_t ep_num, USB_EP_Direction_ET dir, uint8_t num_bufs, uint8_t *data, USBD_IO_Inout_Data_Size_DT size)
 {
     uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
     test_params_T *test = &test_params[ep_index];
@@ -499,7 +499,7 @@ void iotp_test_recv_ready_irq_too_less_space(USBD_Params_XT *usbd, USBD_IOTP_EVE
 
     USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-    ep_desc = USBD_DEV_Get_EP_Desc(USBD_IOTP_EVENT_Get_USBD(tp), ep_num, dir);
+    ep_desc = USBD_DEV_Get_EP_Desc(USBD_IOTP_Get_USBD(tp), ep_num, dir);
 
     if(USBD_CHECK_PTR(const USB_Endpoint_Desc_DT, ep_desc))
     {

@@ -30,7 +30,7 @@
 
 void iotp_test_send_irq_abort_by_user(
     USBD_Params_XT *usbd,
-    USBD_IOTP_EVENT_Params_XT *tp,
+    USBD_IOTP_Params_XT *tp,
     uint8_t ep_num,
     USB_EP_Direction_ET dir,
     uint8_t num_bufs,

@@ -25,7 +25,7 @@
 
 #include "iotp_stubs.h"
 
-#include "usbd_iotp_event_internal.h"
+#include "usbd_iotp_internal.h"
 
 
 static iotp_stubs_t *iotp_stubs = NULL;
@@ -46,26 +46,26 @@ void set_stubs(iotp_stubs_t *stubs)
 
 
 
-#define USBD_IOTP_EVENT_Init                            USBD_IOTP_EVENT_Init_stub
-#define USBD_IOTP_EVENT_Install                         USBD_IOTP_EVENT_Install_stub
-#define USBD_IOTP_EVENT_Install_Default_Control_Pipe    USBD_IOTP_EVENT_Install_Default_Control_Pipe_stub
-#define USBD_IOTP_EVENT_Send                            USBD_IOTP_EVENT_Send_stub
-#define USBD_IOTP_EVENT_Send_Status                     USBD_IOTP_EVENT_Send_Status_stub
-#define USBD_IOTP_EVENT_Send_Stall                      USBD_IOTP_EVENT_Send_Stall_stub
-#define USBD_IOTP_EVENT_Abort                           USBD_IOTP_EVENT_Abort_stub
-#define USBD_IOTP_EVENT_Set_Buf_Empty_Handler           USBD_IOTP_EVENT_Set_Buf_Empty_Handler_stub
+#define USBD_IOTP_Init                            USBD_IOTP_Init_stub
+#define USBD_IOTP_Install                         USBD_IOTP_Install_stub
+#define USBD_IOTP_Install_Default_Control_Pipe    USBD_IOTP_Install_Default_Control_Pipe_stub
+#define USBD_IOTP_Send                            USBD_IOTP_Send_stub
+#define USBD_IOTP_Send_Status                     USBD_IOTP_Send_Status_stub
+#define USBD_IOTP_Send_Stall                      USBD_IOTP_Send_Stall_stub
+#define USBD_IOTP_Abort                           USBD_IOTP_Abort_stub
+#define USBD_IOTP_Set_Buf_Empty_Handler           USBD_IOTP_Set_Buf_Empty_Handler_stub
 
-#include "usbd_iotp_event.c"
+#include "usbd_iotp.c"
 
 
-#undef USBD_IOTP_EVENT_Init
-#undef USBD_IOTP_EVENT_Install
-#undef USBD_IOTP_EVENT_Install_Default_Control_Pipe
-#undef USBD_IOTP_EVENT_Send
-#undef USBD_IOTP_EVENT_Send_Status
-#undef USBD_IOTP_EVENT_Send_Stall
-#undef USBD_IOTP_EVENT_Abort
-#undef USBD_IOTP_EVENT_Set_Buf_Empty_Handler
+#undef USBD_IOTP_Init
+#undef USBD_IOTP_Install
+#undef USBD_IOTP_Install_Default_Control_Pipe
+#undef USBD_IOTP_Send
+#undef USBD_IOTP_Send_Status
+#undef USBD_IOTP_Send_Stall
+#undef USBD_IOTP_Abort
+#undef USBD_IOTP_Set_Buf_Empty_Handler
 
 #define USE_NATIVE_IOTP_METHODS     1
 
@@ -73,53 +73,53 @@ void set_stubs(iotp_stubs_t *stubs)
 
 
 
-USBD_Bool_DT USBD_IOTP_EVENT_Install(
-        USBD_IOTP_EVENT_Params_XT *tp_params)
+USBD_Bool_DT USBD_IOTP_Install(
+        USBD_IOTP_Params_XT *tp_params)
 {
     USBD_Bool_DT result;
 
     USBD_ENTER_FUNC(USBD_DBG_PORT_REQ);
 
-    result = USBD_IOTP_EVENT_Install_stub(tp_params);
+    result = USBD_IOTP_Install_stub(tp_params);
 
     USBD_EXIT_FUNC(USBD_DBG_PORT_REQ);
 
     return result;
 }
 
-void USBD_IOTP_EVENT_Init(
+void USBD_IOTP_Init(
       USBD_Params_XT *usbd,
       USBDC_Params_XT *usbdc,
       uint8_t ep_num,
       USB_EP_Direction_ET dir,
-      USBD_IOTP_EVENT_Params_XT *tp)
+      USBD_IOTP_Params_XT *tp)
 {
     USBD_ENTER_FUNC(USBD_DBG_PORT_REQ);
 
-    USBD_IOTP_EVENT_Init_stub(usbd, usbdc, ep_num, dir, tp);
+    USBD_IOTP_Init_stub(usbd, usbdc, ep_num, dir, tp);
     stub_usbd = usbd;
 
     USBD_EXIT_FUNC(USBD_DBG_PORT_REQ);
 }
 
-USBD_Bool_DT USBD_IOTP_EVENT_Install_Default_Control_Pipe(
+USBD_Bool_DT USBD_IOTP_Install_Default_Control_Pipe(
       USBD_Params_XT *usbd,
-      USBD_IOTP_EVENT_Params_XT *tp_in,
-      USBD_IOTP_EVENT_Params_XT *tp_out)
+      USBD_IOTP_Params_XT *tp_in,
+      USBD_IOTP_Params_XT *tp_out)
 {
     USBD_Bool_DT result;
 
     USBD_ENTER_FUNC(USBD_DBG_PORT_REQ);
 
-    result = USBD_IOTP_EVENT_Install_Default_Control_Pipe_stub(usbd, tp_in, tp_out);
+    result = USBD_IOTP_Install_Default_Control_Pipe_stub(usbd, tp_in, tp_out);
 
     USBD_EXIT_FUNC(USBD_DBG_PORT_REQ);
 
     return result;
 }
 
-USBD_Bool_DT USBD_IOTP_EVENT_Send(
-      USBD_IOTP_EVENT_Params_XT *tp,
+USBD_Bool_DT USBD_IOTP_Send(
+      USBD_IOTP_Params_XT *tp,
       const void *data,
       USBD_IO_Inout_Data_Size_DT size,
       USBD_IO_Inout_Data_Size_DT *size_left)
@@ -136,7 +136,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send(
 
     if(call_state)
     {
-        result = USBD_IOTP_EVENT_Send_stub(tp, data, size, size_left);
+        result = USBD_IOTP_Send_stub(tp, data, size, size_left);
     }
 
     if((NULL != iotp_stubs) && (NULL != stub_usbd))
@@ -152,8 +152,8 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send(
     return result;
 }
 
-USBD_Bool_DT USBD_IOTP_EVENT_Send_Status(
-      USBD_IOTP_EVENT_Params_XT *tp,
+USBD_Bool_DT USBD_IOTP_Send_Status(
+      USBD_IOTP_Params_XT *tp,
       USBD_IO_Inout_Data_Size_DT *size_left)
 {
     bool call_state = true;
@@ -168,7 +168,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send_Status(
 
     if(call_state)
     {
-        result = USBD_IOTP_EVENT_Send_Status_stub(tp, size_left);
+        result = USBD_IOTP_Send_Status_stub(tp, size_left);
     }
 
     if((NULL != iotp_stubs) && (NULL != stub_usbd))
@@ -184,8 +184,8 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send_Status(
     return result;
 }
 
-USBD_Bool_DT USBD_IOTP_EVENT_Send_Stall(
-      USBD_IOTP_EVENT_Params_XT *tp)
+USBD_Bool_DT USBD_IOTP_Send_Stall(
+      USBD_IOTP_Params_XT *tp)
 {
     bool call_state = true;
     USBD_Bool_DT result = USBD_TRUE;
@@ -199,7 +199,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send_Stall(
 
     if(call_state)
     {
-        result = USBD_IOTP_EVENT_Send_Stall_stub(tp);
+        result = USBD_IOTP_Send_Stall_stub(tp);
     }
 
     if((NULL != iotp_stubs) && (NULL != stub_usbd))
@@ -215,8 +215,8 @@ USBD_Bool_DT USBD_IOTP_EVENT_Send_Stall(
     return result;
 }
 
-USBD_Bool_DT USBD_IOTP_EVENT_Abort(
-      USBD_IOTP_EVENT_Params_XT *tp,
+USBD_Bool_DT USBD_IOTP_Abort(
+      USBD_IOTP_Params_XT *tp,
       USBD_Bool_DT flush_hw_bufs)
 {
     bool call_state = true;
@@ -231,7 +231,7 @@ USBD_Bool_DT USBD_IOTP_EVENT_Abort(
 
     if(call_state)
     {
-        result = USBD_IOTP_EVENT_Abort_stub(tp, flush_hw_bufs);
+        result = USBD_IOTP_Abort_stub(tp, flush_hw_bufs);
     }
 
     if((NULL != iotp_stubs) && (NULL != stub_usbd))
@@ -248,9 +248,9 @@ USBD_Bool_DT USBD_IOTP_EVENT_Abort(
 }
 
 
-void USBD_IOTP_EVENT_Set_Buf_Empty_Handler(
-      USBD_IOTP_EVENT_Params_XT *tp,
-      USBD_IOTP_EVENT_Callback_HT buf_empty)
+void USBD_IOTP_Set_Buf_Empty_Handler(
+      USBD_IOTP_Params_XT *tp,
+      USBD_IOTP_Callback_HT buf_empty)
 {
     bool call_state = true;
 
@@ -263,7 +263,7 @@ void USBD_IOTP_EVENT_Set_Buf_Empty_Handler(
 
     if(call_state)
     {
-        USBD_IOTP_EVENT_Set_Buf_Empty_Handler_stub(tp, buf_empty);
+        USBD_IOTP_Set_Buf_Empty_Handler_stub(tp, buf_empty);
     }
 
     if(NULL != iotp_stubs)
@@ -275,5 +275,5 @@ void USBD_IOTP_EVENT_Set_Buf_Empty_Handler(
     }
 
     USBD_EXIT_FUNC(USBD_DBG_IOTPEV_STATE);
-} /* USBD_IOTP_EVENT_Set_Buf_Empty_Handler */
+} /* USBD_IOTP_Set_Buf_Empty_Handler */
 

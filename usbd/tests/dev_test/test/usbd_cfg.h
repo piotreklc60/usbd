@@ -41,8 +41,8 @@
 
 
 //#define USBD_IO_H_
-#define USBD_IOTP_EVENT_TYPES_H_
-#define USBD_IOTP_EVENT_H_
+#define USBD_IOTP_TYPES_H_
+#define USBD_IOTP_H_
 #define USBD_INIT_H_
 #define USBD_REQUEST_TYPES_H_
 #define USBD_REQUEST_H_

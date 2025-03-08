@@ -58,9 +58,9 @@
 #include "usbd_request_internal.h"
 #endif
 
-#ifdef USBD_IOTP_EVENT_PRESENT
-#ifndef USBD_IOTP_EVENT_INTERNAL_H_
-#include "usbd_iotp_event_internal.h"
+#ifdef USBD_IOTP_PRESENT
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 #endif
 
@@ -2016,7 +2016,7 @@ void USBD_DEV_Reset(
 #ifdef USBD_REQUEST_PRESENT
          USBD_IO_IN_UNLOCK_TP(usbd, 0);
          USBD_IO_OUT_UNLOCK_TP(usbd, 0);
-         (void)USBD_IOTP_EVENT_Install_Default_Control_Pipe(
+         (void)USBD_IOTP_Install_Default_Control_Pipe(
             usbd,
             USBD_REQUEST_GET_EP0_IN_IOTP(usbd),
             USBD_REQUEST_GET_EP0_OUT_IOTP(usbd));

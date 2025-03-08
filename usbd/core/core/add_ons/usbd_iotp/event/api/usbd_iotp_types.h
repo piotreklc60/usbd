@@ -23,10 +23,10 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-#ifndef USBD_IOTP_EVENT_TYPES_H_
-#define USBD_IOTP_EVENT_TYPES_H_
+#ifndef USBD_IOTP_TYPES_H_
+#define USBD_IOTP_TYPES_H_
 
-#define USBD_IOTP_EVENT_PRESENT      1
+#define USBD_IOTP_PRESENT      1
 
 
 #ifndef STD_LIBS_H_
@@ -39,27 +39,27 @@
 
 
 
-#define USBD_IOTP_EVENT_GET_USBD_FROM_TP(tp)       USBD_GET_PTR(USBD_Params_XT, (tp)->core.pipe_params.data.usbd)
-#define USBD_IOTP_EVENT_GET_USBDC_FROM_TP(tp)      USBD_GET_PTR(USBDC_Params_XT, (tp)->core.pipe_params.data.usbdc)
-#define USBD_IOTP_EVENT_GET_EP_NUM_FROM_TP(tp)     ((tp)->core.pipe_params.data.ep_num)
-#define USBD_IOTP_EVENT_GET_EP_DIR_FROM_TP(tp)     ((tp)->core.pipe_params.data.dir)
-#define USBD_IOTP_EVENT_GET_SIZE_TRANSFERRED(tp)   ((tp)->up_link.data.size_transferred)
+#define USBD_IOTP_GET_USBD_FROM_TP(tp)       USBD_GET_PTR(USBD_Params_XT, (tp)->core.pipe_params.data.usbd)
+#define USBD_IOTP_GET_USBDC_FROM_TP(tp)      USBD_GET_PTR(USBDC_Params_XT, (tp)->core.pipe_params.data.usbdc)
+#define USBD_IOTP_GET_EP_NUM_FROM_TP(tp)     ((tp)->core.pipe_params.data.ep_num)
+#define USBD_IOTP_GET_EP_DIR_FROM_TP(tp)     ((tp)->core.pipe_params.data.dir)
+#define USBD_IOTP_GET_SIZE_TRANSFERRED(tp)   ((tp)->up_link.data.size_transferred)
 
 
 
-typedef uint8_t USBD_IOTP_EVENT_Data_DT;
+typedef uint8_t USBD_IOTP_Data_DT;
 
 
-typedef struct USBD_IOTP_EVENT_Params_eXtended_Tag
+typedef struct USBD_IOTP_Params_eXtended_Tag
 {
    struct
    {
       struct
       {
-         void (*ready)     (struct USBD_IOTP_EVENT_Params_eXtended_Tag *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
-         void (*buf_empty) (struct USBD_IOTP_EVENT_Params_eXtended_Tag *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
-         void (*error)     (struct USBD_IOTP_EVENT_Params_eXtended_Tag *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
-         void (*abort)     (struct USBD_IOTP_EVENT_Params_eXtended_Tag *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
+         void (*ready)     (struct USBD_IOTP_Params_eXtended_Tag *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
+         void (*buf_empty) (struct USBD_IOTP_Params_eXtended_Tag *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
+         void (*error)     (struct USBD_IOTP_Params_eXtended_Tag *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
+         void (*abort)     (struct USBD_IOTP_Params_eXtended_Tag *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
       }handlers;
       struct
       {
@@ -75,7 +75,7 @@ typedef struct USBD_IOTP_EVENT_Params_eXtended_Tag
          {
             struct
             {
-               const USBD_IOTP_EVENT_Data_DT   *data;
+               const USBD_IOTP_Data_DT   *data;
                USBD_IO_Inout_Data_Size_DT       size_left;
                USBD_IO_Inout_Data_Size_DT       last_packet_size;
                USBD_Bool_DT                     req_in_progress;
@@ -86,7 +86,7 @@ typedef struct USBD_IOTP_EVENT_Params_eXtended_Tag
             struct
             {
                USBD_IO_OUT_Data_Method_Port_HT  mem_cpy;
-               USBD_IOTP_EVENT_Data_DT         *data;
+               USBD_IOTP_Data_DT         *data;
                USBD_IO_Inout_Data_Size_DT       size_left;
                USBD_IO_Inout_Data_Size_DT       size_in_progress;
                USBD_Bool_DT                     dont_wait_for_ready;
@@ -110,8 +110,8 @@ typedef struct USBD_IOTP_EVENT_Params_eXtended_Tag
       /* when 0 then transfer is not present, when 1 then transfer is in progress */
       USBD_Atomic_Bool_DT transfer_active;
    }core;
-}USBD_IOTP_EVENT_Params_XT;
+}USBD_IOTP_Params_XT;
 
-typedef void (*USBD_IOTP_EVENT_Callback_HT) (USBD_IOTP_EVENT_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
+typedef void (*USBD_IOTP_Callback_HT) (USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size);
 
 #endif

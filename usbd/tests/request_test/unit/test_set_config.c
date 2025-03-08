@@ -54,8 +54,8 @@
 #endif
 #endif
 
-#ifndef USBD_IOTP_EVENT_INTERNAL_H_
-#include "usbd_iotp_event_internal.h"
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 
 #include "main_get_exe.h"
@@ -68,7 +68,7 @@ static void tsend(USBD_Params_XT *usbd, uint8_t ep_num, const void *data, USBD_I
 static void tstatus(USBD_Params_XT *usbd, uint8_t ep_num);
 static void tstall(USBD_Params_XT *usbd, uint8_t ep_num);
 static void tabort(USBD_Params_XT *usbd, uint8_t ep_num);
-static void tset_ready(void *tp_params, USBD_IOTP_EVENT_Callback_HT ready);
+static void tset_ready(void *tp_params, USBD_IOTP_Callback_HT ready);
 static USBD_Bool_DT tset_port(USBD_Params_XT *usbd, uint8_t ep_num, USBD_REQUEST_Req_DT *req);
 
 static iotp_stubs_t stubs =
@@ -156,7 +156,7 @@ static void tabort(USBD_Params_XT *usbd, uint8_t ep_num)
    USBD_EXIT_FUNC(MAIN_APP_TEST);
 }
 
-static void tset_ready(void *tp_params, USBD_IOTP_EVENT_Callback_HT ready)
+static void tset_ready(void *tp_params, USBD_IOTP_Callback_HT ready)
 {
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 

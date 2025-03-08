@@ -30,7 +30,7 @@
 
 void iotp_test_recv_wait_irq_too_less_space(
     USBD_Params_XT *usbd,
-    USBD_IOTP_EVENT_Params_XT *tp,
+    USBD_IOTP_Params_XT *tp,
     uint8_t ep_num,
     USB_EP_Direction_ET dir,
     uint8_t num_bufs,

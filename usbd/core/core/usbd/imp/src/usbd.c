@@ -43,9 +43,9 @@
 #endif
 #endif
 
-#ifdef USBD_IOTP_EVENT_PRESENT
-#ifndef USBD_IOTP_EVENT_PRESENT
-#include "usbd_iotp_event_internal.h"
+#ifdef USBD_IOTP_PRESENT
+#ifndef USBD_IOTP_PRESENT
+#include "usbd_iotp_internal.h"
 #endif
 #endif
 
@@ -111,8 +111,8 @@ void USBD_Init(
 #if (USBD_FEATURE_NOT_PRESENT != USBD_USE_INVALIDATION_ON_INIT)
       USBD_INVALIDATE_PTR_ON_INIT(USBD_REQUEST_Port_Callbacks_XT  ,usbd->request.core.data.port_cbk);
 #endif
-      USBD_IOTP_EVENT_Init(usbd, USBD_MAKE_INVALID_PTR(void), 0, USB_EP_DIRECTION_IN, USBD_REQUEST_GET_EP0_IN_IOTP(usbd));
-      USBD_IOTP_EVENT_Init(usbd, USBD_MAKE_INVALID_PTR(void), 0, USB_EP_DIRECTION_OUT, USBD_REQUEST_GET_EP0_OUT_IOTP(usbd));
+      USBD_IOTP_Init(usbd, USBD_MAKE_INVALID_PTR(void), 0, USB_EP_DIRECTION_IN, USBD_REQUEST_GET_EP0_IN_IOTP(usbd));
+      USBD_IOTP_Init(usbd, USBD_MAKE_INVALID_PTR(void), 0, USB_EP_DIRECTION_OUT, USBD_REQUEST_GET_EP0_OUT_IOTP(usbd));
 #endif
    }
 
