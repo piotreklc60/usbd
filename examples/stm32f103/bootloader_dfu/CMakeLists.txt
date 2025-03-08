@@ -81,6 +81,7 @@ add_subdirectory(sources_app)
 # usbd source files
 set(USBD_PATH ../../../usbd)
 set(USBD_USE_DFU ON)
+set(USBD_IOTP_LIGHT_ONLY ON)
 set(USBD_DO_NOT_USE_IOTP_BUFF ON)
 set(USBD_USE_PORT_STM32_CATEGORY_A ON)
 include(${USBD_PATH}/usbd_lib.cmake)
