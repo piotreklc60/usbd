@@ -41,12 +41,10 @@
 
 
 
-#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 static void USBD_IOTP_io_data_provide_in(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
    USBD_IO_IN_Data_Method_Port_HT data_method);
-#endif
 static void USBD_IOTP_io_data_memcpy_in(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
@@ -56,14 +54,12 @@ static void USBD_IOTP_io_evdata_in(
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
    USBD_IO_Inout_Data_Size_DT size,
    USBD_IO_IN_Data_Method_Port_HT mem_cpy);
-#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 static void USBD_IOTP_io_provide_out(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
    USBD_IO_Inout_Data_Size_DT packet_size,
    USBD_IO_Inout_Data_Size_DT left_size,
    USBD_IO_OUT_Data_Method_Port_HT provide);
-#endif
 static void USBD_IOTP_io_memcpy_out(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
@@ -167,8 +163,9 @@ USBD_Bool_DT USBD_IOTP_Install(
                USBD_IO_UP_SET_IN_DATA_EVENT_HANDLER(
                   &(tp->core.pipe_params.handlers),USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_IN_Data_Event_HT));
 
-               tp->core.transfer_params.in.proc.data                 = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
-               tp->core.transfer_params.in.proc.size_left            = 0;
+               tp->core.transfer_params.in.proc.data.data.linear     = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
+               tp->core.transfer_params.in.proc.data.offset          = 0;
+               tp->core.transfer_params.in.proc.data.size            = 0;
                tp->core.transfer_params.in.proc.last_packet_size     = 0;
                tp->core.transfer_params.in.proc.req_in_progress      = USBD_FALSE;
             }
@@ -581,9 +578,9 @@ USBD_Bool_DT USBD_IOTP_Send(
       if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data)
          && (USB_EP_DIRECTION_IN == USBD_IOTP_GET_EP_DIR_FROM_TP(tp)))
       {
-         USBD_DEBUG_HI_6(
+         USBD_DEBUG_HI_7(
             USBD_DBG_IOTPEV_PROCESSING,
-            "send before::ep: %d::%s; size = %d; tr_active = %s; size_left = %d; last_packet_size = %d",
+            "send before::ep: %d::%s; req size = %d; tr_active = %s; size = %d; offset = %d; last_packet_size = %d",
             USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
             USBD_IO_UP_Is_EP_Active(
                USBD_IOTP_GET_USBD_FROM_TP(tp),
@@ -591,10 +588,12 @@ USBD_Bool_DT USBD_IOTP_Send(
                USB_EP_DIRECTION_IN) ? "active" : "passive",
             size,
             USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-            tp->core.transfer_params.in.proc.size_left,
+            tp->core.transfer_params.in.proc.data.size,
+            tp->core.transfer_params.in.proc.data.offset,
             tp->core.transfer_params.in.proc.last_packet_size);
 
-         if(USBD_ATOMIC_BOOL_IS_FALSE(tp->core.transfer_active) || (0 == tp->core.transfer_params.in.proc.size_left))
+         if(USBD_ATOMIC_BOOL_IS_FALSE(tp->core.transfer_active)
+            || (tp->core.transfer_params.in.proc.data.size <= tp->core.transfer_params.in.proc.data.offset))
          {
             /* check if transaction can be processed or if request must be synchronizes to USBD task/irq */
             if(USBD_BOOL_IS_FALSE(USBD_IS_INVOKE_NEEDED(USBD_IOTP_GET_INVOKE_PARAMS(tp))))
@@ -609,8 +608,10 @@ USBD_Bool_DT USBD_IOTP_Send(
                {
                   result = USBD_TRUE;
                   tp->up_link.data.size_transferred                  = 0;
-                  tp->core.transfer_params.in.proc.data              = data;
-                  tp->core.transfer_params.in.proc.size_left         = size;
+                  tp->core.transfer_params.in.proc.data.data.linear  = data;
+                  tp->core.transfer_params.in.proc.data.offset       = 0;
+                  tp->core.transfer_params.in.proc.data.size         = size;
+                  tp->core.transfer_params.in.proc.data_type         = USBD_IOTP_DATA_LINEAR;
                   tp->core.transfer_params.in.proc.last_packet_size  = size % tp->core.pipe_params.data.mps;
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
                   if(USB_EP_DESC_TRANSFER_TYPE_CONTROL != tp->core.pipe_params.data.ep_type)
@@ -683,10 +684,9 @@ USBD_Bool_DT USBD_IOTP_Send(
 
                if(USBD_CHECK_PTR(USBD_IO_Inout_Data_Size_DT, size_left))
                {
-                  *size_left = tp->core.transfer_params.in.proc.size_left;
+                  *size_left = tp->core.transfer_params.in.proc.data.size - tp->core.transfer_params.in.proc.data.offset;
 
-                  if((0 == tp->core.transfer_params.in.proc.size_left)
-                     && (0 != tp->core.transfer_params.in.proc.last_packet_size))
+                  if((0 == *size_left) && (0 != tp->core.transfer_params.in.proc.last_packet_size))
                   {
                      *size_left = (-1);
                   }
@@ -704,9 +704,9 @@ USBD_Bool_DT USBD_IOTP_Send(
             USBD_WARN(USBD_DBG_IOTPEV_PROCESSING, "transfer is active! pls stop previous transfer at frst!");
          }
 
-         USBD_DEBUG_HI_6(
+         USBD_DEBUG_HI_7(
             USBD_DBG_IOTPEV_PROCESSING,
-            "send after ::ep: %d::%s; size = %d; tr_active = %s; size_left = %d; last_packet_size = %d",
+            "send after ::ep: %d::%s; req size = %d; tr_active = %s; size = %d; offset = %d; last_packet_size = %d",
             USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
             USBD_IO_UP_Is_EP_Active(
                USBD_IOTP_GET_USBD_FROM_TP(tp),
@@ -714,7 +714,8 @@ USBD_Bool_DT USBD_IOTP_Send(
                USB_EP_DIRECTION_IN) ? "active" : "passive",
             size,
             USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-            tp->core.transfer_params.in.proc.size_left,
+            tp->core.transfer_params.in.proc.data.size,
+            tp->core.transfer_params.in.proc.data.offset,
             tp->core.transfer_params.in.proc.last_packet_size);
       }
    }
@@ -786,7 +787,6 @@ USBD_Bool_DT USBD_IOTP_Send_Status_For_Out_Tp(
 
 
 
-#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 static void USBD_IOTP_io_data_provide_in(
    void *tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
@@ -794,42 +794,45 @@ static void USBD_IOTP_io_data_provide_in(
 {
    USBD_IOTP_Params_XT *tp   = (USBD_IOTP_Params_XT*)tp_params;
    USBD_IO_Inout_Data_Size_DT size = 0;
+   USBD_IO_Inout_Data_Size_DT size_left;
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 
    if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction)
       && USBD_CHECK_HANDLER(USBD_IO_IN_Data_Method_Port_HT, data_method))
    {
-      USBD_DEBUG_HI_5(
+      USBD_DEBUG_HI_6(
          USBD_DBG_IOTPEV_PROCESSING,
-         "provide_in before::ep: %d::%s; tr_active = %s; size_left = %d; last_packet_size = %d",
+         "provide_in before::ep: %d::%s; tr_active = %s; size = %d; offset = %d; last_packet_size = %d",
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IO_UP_Is_EP_Active(
             USBD_IOTP_GET_USBD_FROM_TP(tp),
             USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
             USB_EP_DIRECTION_IN) ? "active" : "passive",
          USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-         tp->core.transfer_params.in.proc.size_left,
+         tp->core.transfer_params.in.proc.data.size,
+         tp->core.transfer_params.in.proc.data.offset,
          tp->core.transfer_params.in.proc.last_packet_size);
 
       if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active))
       {
-         if(tp->core.transfer_params.in.proc.size_left > 1)
+         size_left = tp->core.transfer_params.in.proc.data.size - tp->core.transfer_params.in.proc.data.offset;
+         if(size_left > 1)
          {
             size = USBD_CALL_HANDLER(USBD_IO_IN_Data_Method_Port_HT, data_method)(
                USBD_IOTP_GET_USBD_FROM_TP(tp),
                USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
                USBD_IOTP_GET_EP_DIR_FROM_TP(tp),
-               tp->core.transfer_params.in.proc.data,
-               tp->core.transfer_params.in.proc.size_left - 1,
+               &tp->core.transfer_params.in.proc.data.data.linear[tp->core.transfer_params.in.proc.data.offset],
+               size_left - 1,
                USBD_TRUE);
          }
 
-         tp->up_link.data.size_transferred           += size;
-         tp->core.transfer_params.in.proc.size_left  -= size;
-         tp->core.transfer_params.in.proc.data       += size;
+         tp->up_link.data.size_transferred            += size;
+         tp->core.transfer_params.in.proc.data.offset += size;
 
-         if(tp->core.transfer_params.in.proc.size_left <= tp->core.pipe_params.data.mps)
+         if((tp->core.transfer_params.in.proc.data.size - tp->core.transfer_params.in.proc.data.offset)
+            <= tp->core.pipe_params.data.mps)
          {
             USBD_IO_SET_IN_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
             USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_io_data_memcpy_in);
@@ -841,22 +844,22 @@ static void USBD_IOTP_io_data_provide_in(
          }
       }
 
-      USBD_DEBUG_HI_5(
+      USBD_DEBUG_HI_6(
          USBD_DBG_IOTPEV_PROCESSING,
-         "provide_in after ::ep: %d::%s; tr_active = %s; size_left = %d; last_packet_size = %d",
+         "provide_in after ::ep: %d::%s; tr_active = %s; size = %d; offset = %d; last_packet_size = %d",
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IO_UP_Is_EP_Active(
             USBD_IOTP_GET_USBD_FROM_TP(tp),
             USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
             USB_EP_DIRECTION_IN) ? "active" : "passive",
          USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-         tp->core.transfer_params.in.proc.size_left,
+         tp->core.transfer_params.in.proc.data.size,
+         tp->core.transfer_params.in.proc.data.offset,
          tp->core.transfer_params.in.proc.last_packet_size);
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 } /* USBD_IOTP_io_data_provide_in */
-#endif
 
 static void USBD_IOTP_io_data_memcpy_in(
    void *tp_params,
@@ -865,55 +868,60 @@ static void USBD_IOTP_io_data_memcpy_in(
 {
    USBD_IOTP_Params_XT *tp   = (USBD_IOTP_Params_XT*)tp_params;
    USBD_IO_Inout_Data_Size_DT size = 0;
+   USBD_IO_Inout_Data_Size_DT size_left;
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 
    if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction)
       && USBD_CHECK_HANDLER(USBD_IO_IN_Data_Method_Port_HT, data_method))
    {
-      USBD_DEBUG_HI_5(
+      USBD_DEBUG_HI_6(
          USBD_DBG_IOTPEV_PROCESSING,
-         "memcpy_in  before::ep: %d::%s; tr_active = %s; size_left = %d; last_packet_size = %d",
+         "memcpy_in  before::ep: %d::%s; tr_active = %s; size = %d; offset = %d; last_packet_size = %d",
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IO_UP_Is_EP_Active(
             USBD_IOTP_GET_USBD_FROM_TP(tp),
             USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
             USB_EP_DIRECTION_IN) ? "active" : "passive",
          USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-         tp->core.transfer_params.in.proc.size_left,
+         tp->core.transfer_params.in.proc.data.size,
+         tp->core.transfer_params.in.proc.data.offset,
          tp->core.transfer_params.in.proc.last_packet_size);
 
       if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active))
       {
-         if((tp->core.transfer_params.in.proc.size_left > 0) || (0 == tp->core.transfer_params.in.proc.last_packet_size))
+         size_left = tp->core.transfer_params.in.proc.data.size - tp->core.transfer_params.in.proc.data.offset;
+
+         if((size_left > 0) || (0 == tp->core.transfer_params.in.proc.last_packet_size))
          {
             size = USBD_CALL_HANDLER(USBD_IO_IN_Data_Method_Port_HT, data_method)(
                USBD_IOTP_GET_USBD_FROM_TP(tp),
                USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
                USBD_IOTP_GET_EP_DIR_FROM_TP(tp),
-               tp->core.transfer_params.in.proc.data,
-               tp->core.transfer_params.in.proc.size_left,
+               &tp->core.transfer_params.in.proc.data.data.linear[tp->core.transfer_params.in.proc.data.offset],
+               size_left,
                USBD_TRUE);
          }
 
-         if((0 == tp->core.transfer_params.in.proc.size_left) && (0 == tp->core.transfer_params.in.proc.last_packet_size))
+         if((0 == size_left) && (0 == tp->core.transfer_params.in.proc.last_packet_size))
          {
             tp->core.transfer_params.in.proc.last_packet_size = tp->core.pipe_params.data.mps;
          }
 
          tp->up_link.data.size_transferred += size;
 
-         if(size <= tp->core.transfer_params.in.proc.size_left)
+         if(size <= size_left)
          {
-            tp->core.transfer_params.in.proc.size_left  -= size;
-            tp->core.transfer_params.in.proc.data       += size;
+            tp->core.transfer_params.in.proc.data.offset += size;
+            size_left                                    -= size;
          }
          else
          {
-            tp->core.transfer_params.in.proc.size_left   = 0;
+            tp->core.transfer_params.in.proc.data.offset  = tp->core.transfer_params.in.proc.data.size;
+            size_left                                     = 0;
          }
 
-         if((0 == tp->core.transfer_params.in.proc.size_left) && (0 != tp->core.transfer_params.in.proc.last_packet_size))
+         if((0 == size_left) && (0 != tp->core.transfer_params.in.proc.last_packet_size))
          {
             /** call ready handler */
             if(USBD_IOTP_CHECK_READY_HANDLER(tp)
@@ -928,14 +936,16 @@ static void USBD_IOTP_io_data_memcpy_in(
             }
          }
 
-         if((0 == tp->core.transfer_params.in.proc.size_left) && (0 != tp->core.transfer_params.in.proc.last_packet_size))
+         if((tp->core.transfer_params.in.proc.data.size == tp->core.transfer_params.in.proc.data.offset)
+            && (0 != tp->core.transfer_params.in.proc.last_packet_size))
          {
             USBD_IO_SET_IN_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
             USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
 
             USBD_ATOMIC_BOOL_SET(tp->core.transfer_active, USBD_FALSE);
          }
-         else if(tp->core.transfer_params.in.proc.size_left <= tp->core.pipe_params.data.mps)
+         else if((tp->core.transfer_params.in.proc.data.size - tp->core.transfer_params.in.proc.data.offset)
+            <= tp->core.pipe_params.data.mps)
          {
             USBD_IO_SET_IN_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
             USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_IOTP_io_data_memcpy_in);
@@ -947,16 +957,17 @@ static void USBD_IOTP_io_data_memcpy_in(
          }
       }
 
-      USBD_DEBUG_HI_5(
+      USBD_DEBUG_HI_6(
          USBD_DBG_IOTPEV_PROCESSING,
-         "memcpy_in  after ::ep: %d::%s; tr_active = %s; size_left = %d; last_packet_size = %d",
+         "memcpy_in  after ::ep: %d::%s; tr_active = %s; size = %d; offset = %d; last_packet_size = %d",
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IO_UP_Is_EP_Active(
             USBD_IOTP_GET_USBD_FROM_TP(tp),
             USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
             USB_EP_DIRECTION_IN) ? "active" : "passive",
          USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-         tp->core.transfer_params.in.proc.size_left,
+         tp->core.transfer_params.in.proc.data.size,
+         tp->core.transfer_params.in.proc.data.offset,
          tp->core.transfer_params.in.proc.last_packet_size);
    }
 
@@ -975,9 +986,9 @@ static void USBD_IOTP_io_evdata_in(
 
    if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction))
    {
-      USBD_DEBUG_HI_6(
+      USBD_DEBUG_HI_7(
          USBD_DBG_IOTPEV_PROCESSING,
-         "evdata_in before::ep: %d::%s; size = %d; tr_active = %s; size_left = %d; last_packet_size = %d",
+         "evdata_in before::ep: %d::%s; req size = %d; tr_active = %s; size = %d; offset = %d; last_packet_size = %d",
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IO_UP_Is_EP_Active(
             USBD_IOTP_GET_USBD_FROM_TP(tp),
@@ -985,7 +996,8 @@ static void USBD_IOTP_io_evdata_in(
             USB_EP_DIRECTION_IN) ? "active" : "passive",
          size,
          USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-         tp->core.transfer_params.in.proc.size_left,
+         tp->core.transfer_params.in.proc.data.size,
+         tp->core.transfer_params.in.proc.data.offset,
          tp->core.transfer_params.in.proc.last_packet_size);
 
       if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active))
@@ -1025,9 +1037,9 @@ static void USBD_IOTP_io_evdata_in(
          }
       }
 
-      USBD_DEBUG_HI_6(
+      USBD_DEBUG_HI_7(
          USBD_DBG_IOTPEV_PROCESSING,
-         "evdata_in after ::ep: %d::%s; size = %d; tr_active = %s; size_left = %d; last_packet_size = %d",
+         "evdata_in after ::ep: %d::%s; req size = %d; tr_active = %s; size = %d; offset = %d; last_packet_size = %d",
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IO_UP_Is_EP_Active(
             USBD_IOTP_GET_USBD_FROM_TP(tp),
@@ -1035,7 +1047,8 @@ static void USBD_IOTP_io_evdata_in(
             USB_EP_DIRECTION_IN) ? "active" : "passive",
          size,
          USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false",
-         tp->core.transfer_params.in.proc.size_left,
+         tp->core.transfer_params.in.proc.data.size,
+         tp->core.transfer_params.in.proc.data.offset,
          tp->core.transfer_params.in.proc.last_packet_size);
    }
 
@@ -1408,7 +1421,6 @@ USBD_Bool_DT USBD_IOTP_Send_Stall(
 
 
 
-#if(USBD_FEATURE_PRESENT == USBD_IO_PROVIDE_METHODS_SUPPORTED)
 static void USBD_IOTP_io_provide_out(
    void* tp_params,
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
@@ -1497,7 +1509,6 @@ static void USBD_IOTP_io_provide_out(
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 } /* USBD_IOTP_io_provide_out */
-#endif
 
 
 
@@ -1770,8 +1781,9 @@ static void USBD_IOTP_io_abort(void *tp_params, USBD_IO_UP_DOWN_Transaction_Para
          }
          else
          {
-            tp->core.transfer_params.in.proc.data                 = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
-            tp->core.transfer_params.in.proc.size_left            = 0;
+            tp->core.transfer_params.in.proc.data.data.linear     = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
+            tp->core.transfer_params.in.proc.data.offset          = 0;
+            tp->core.transfer_params.in.proc.data.size            = 0;
             tp->core.transfer_params.in.proc.last_packet_size     = 0;
             tp->core.transfer_params.in.proc.req_in_progress      = USBD_FALSE;
 
@@ -1891,8 +1903,9 @@ static void USBD_IOTP_io_reinit(
          USBD_IO_UP_SET_IN_DATA_EVENT_HANDLER(
             &(tp->core.pipe_params.handlers),USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_IN_Data_Event_HT));
 
-         tp->core.transfer_params.in.proc.data                 = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
-         tp->core.transfer_params.in.proc.size_left            = 0;
+         tp->core.transfer_params.in.proc.data.data.linear     = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
+         tp->core.transfer_params.in.proc.data.offset          = 0;
+         tp->core.transfer_params.in.proc.data.size            = 0;
          tp->core.transfer_params.in.proc.last_packet_size     = 0;
          tp->core.transfer_params.in.proc.req_in_progress      = USBD_FALSE;
       }

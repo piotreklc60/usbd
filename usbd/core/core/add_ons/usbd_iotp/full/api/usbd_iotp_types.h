@@ -39,6 +39,20 @@
 
 
 
+#ifndef USBD_IOTP_SUPPORT_COMPLEX_BUFFERS
+#define USBD_IOTP_SUPPORT_COMPLEX_BUFFERS    USBD_FEATURE_PRESENT
+#endif
+
+
+
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_COMPLEX_BUFFERS)
+#ifndef BUFF_H_
+#include "buff.h"
+#endif
+#endif
+
+
+
 #define USBD_IOTP_GET_USBD_FROM_TP(tp)       USBD_GET_PTR(USBD_Params_XT, (tp)->core.pipe_params.data.usbd)
 #define USBD_IOTP_GET_USBDC_FROM_TP(tp)      USBD_GET_PTR(USBDC_Params_XT, (tp)->core.pipe_params.data.usbdc)
 #define USBD_IOTP_GET_EP_NUM_FROM_TP(tp)     ((tp)->core.pipe_params.data.ep_num)
@@ -46,6 +60,11 @@
 #define USBD_IOTP_GET_SIZE_TRANSFERRED(tp)   ((tp)->up_link.data.size_transferred)
 
 
+
+#define USBD_IOTP_DATA_LINEAR    0
+#define USBD_IOTP_DATA_VECTOR    1
+#define USBD_IOTP_DATA_TREE      2
+#define USBD_IOTP_DATA_RING      3
 
 typedef uint8_t USBD_IOTP_Data_DT;
 
@@ -75,9 +94,30 @@ typedef struct USBD_IOTP_Params_eXtended_Tag
          {
             struct
             {
-               const USBD_IOTP_Data_DT   *data;
-               USBD_IO_Inout_Data_Size_DT       size_left;
+               struct
+               {
+                  union
+                  {
+                     const USBD_IOTP_Data_DT         *linear;
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_COMPLEX_BUFFERS)
+                     struct
+                     {
+                        const Buff_Readable_Vector_XT*data;
+                        Buff_Num_Elems_DT             num_elems;
+                     }vector;
+                     struct
+                     {
+                        const Buff_Readable_Tree_XT  *data;
+                        Buff_Num_Elems_DT             num_elems;
+                     }tree;
+                     Buff_Ring_XT                    *ring;
+#endif
+                  }data;
+                  USBD_IO_Inout_Data_Size_DT    offset;
+                  USBD_IO_Inout_Data_Size_DT    size;
+               }data;
                USBD_IO_Inout_Data_Size_DT       last_packet_size;
+               uint8_t                          data_type;
                USBD_Bool_DT                     req_in_progress;
             }proc;
          }in;
@@ -86,7 +126,7 @@ typedef struct USBD_IOTP_Params_eXtended_Tag
             struct
             {
                USBD_IO_OUT_Data_Method_Port_HT  mem_cpy;
-               USBD_IOTP_Data_DT         *data;
+               USBD_IOTP_Data_DT               *data;
                USBD_IO_Inout_Data_Size_DT       size_left;
                USBD_IO_Inout_Data_Size_DT       size_in_progress;
                USBD_Bool_DT                     dont_wait_for_ready;
