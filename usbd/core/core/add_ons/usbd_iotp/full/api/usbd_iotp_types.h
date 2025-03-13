@@ -66,8 +66,14 @@
 #define USBD_IOTP_DATA_TREE      2
 #define USBD_IOTP_DATA_RING      3
 
-typedef uint8_t USBD_IOTP_Data_DT;
+typedef enum USBD_IOTP_Ring_Invoke_Requests_Enum_Tag
+{
+   USBD_IOTP_RING_INVOKE_REQ_NONE = 0,
+   USBD_IOTP_RING_INVOKE_REQ_ABORT_NO_FLUSH_HW,
+   USBD_IOTP_RING_INVOKE_REQ_ABORT_FLUSH_HW
+}USBD_IOTP_Ring_Invoke_Requests_ET;
 
+typedef uint8_t USBD_IOTP_Data_DT;
 
 typedef struct USBD_IOTP_Params_eXtended_Tag
 {
@@ -125,6 +131,18 @@ typedef struct USBD_IOTP_Params_eXtended_Tag
          {
             struct
             {
+           /*    struct
+               {
+                  union
+                  {
+                     const USBD_IOTP_Data_DT         *linear;
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_COMPLEX_BUFFERS)
+                     Buff_Ring_XT                    *ring;
+#endif
+                  }data;
+                  USBD_IO_Inout_Data_Size_DT    offset;
+                  USBD_IO_Inout_Data_Size_DT    size;
+               }data;*/
                USBD_IO_OUT_Data_Method_Port_HT  mem_cpy;
                USBD_IOTP_Data_DT               *data;
                USBD_IO_Inout_Data_Size_DT       size_left;
@@ -140,7 +158,11 @@ typedef struct USBD_IOTP_Params_eXtended_Tag
          {
             struct USBD_params_eXtended_Tag *usbd;
             struct USBDC_params_eXtended_Tag *usbdc;
-            USBD_DECLARE_INVOKE_PARAMS(invoke)
+            struct
+            {
+               USBD_DECLARE_INVOKE_PARAMS(invoke)
+               USBD_Atomic_Uint8_DT          req;
+            }invoke;
             uint16_t mps;
             uint8_t ep_num;
             uint8_t ep_type;

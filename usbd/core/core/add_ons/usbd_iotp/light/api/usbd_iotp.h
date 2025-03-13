@@ -232,6 +232,15 @@ USBD_Bool_DT USBD_IOTP_Send_Status_For_Out_Tp(
       USBD_Vendor_Data_XT       *vendor_data);
 
 /**
+ * Sends stall packet over specified endpoint
+ *
+ * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
+ * \return USBD_TRUE when response stall requested successfully, USBD_FALSE otherwise
+ */
+USBD_Bool_DT USBD_IOTP_Send_Stall(
+      USBD_IOTP_Params_XT *tp);
+
+/**
  * Sends data over specified endpoint from linear buffer (single, contineout memory area).
  *
  * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
@@ -251,86 +260,6 @@ USBD_Bool_DT USBD_IOTP_Send(
       const void                   *data,
       USBD_IO_Inout_Data_Size_DT    size,
       USBD_IO_Inout_Data_Size_DT   *size_left);
-
-/**
- * Sends data over specified endpoint from a vector (list of linear data pieces).
- *
- * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
- * \param data pointer to data vector which shall be send
- * \patam data_num_elems number of elements in data vector
- * \param size size of data which shall be send. This function can be also used for sending data with size = 0.
- * \param size_left pointer to returned size - size of data which is still waiting to be sent.
- *      If (-1) is returned then all data has been copied to the buffer.
- *      (-1) is returned here in same situation like call of 'ready' handler.
- *      Unfortunately, this handler cannot be called from inside of @see USBD_IOTP_Send
- *      to protect system against recursive calling of @see USBD_IOTP_Send.
- *      This pointer can be USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT) - in this situation nothing will be returned.
- * \return USBD_TRUE when "send" requested successfully, USBD_FALSE otherwise
- *
- */
-USBD_Bool_DT USBD_IOTP_Send_From_Vector(
-      USBD_IOTP_Params_XT          *tp,
-      const Buff_Readable_Vector_XT*data,
-      Buff_Num_Elems_DT             data_num_elems,
-      USBD_IO_Inout_Data_Size_DT    size,
-      USBD_IO_Inout_Data_Size_DT   *size_left);
-
-/**
- * Sends data over specified endpoint from a tree (list of vectors).
- *
- * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
- * \param data pointer to data tree which shall be send
- * \patam data_num_elems number of elements in data vector
- * \param size size of data which shall be send. This function can be also used for sending data with size = 0.
- * \param size_left pointer to returned size - size of data which is still waiting to be sent.
- *      If (-1) is returned then all data has been copied to the buffer.
- *      (-1) is returned here in same situation like call of 'ready' handler.
- *      Unfortunately, this handler cannot be called from inside of @see USBD_IOTP_Send
- *      to protect system against recursive calling of @see USBD_IOTP_Send.
- *      This pointer can be USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT) - in this situation nothing will be returned.
- * \return USBD_TRUE when "send" requested successfully, USBD_FALSE otherwise
- *
- */
-USBD_Bool_DT USBD_IOTP_Send_From_Tree(
-      USBD_IOTP_Params_XT          *tp,
-      const Buff_Readable_Tree_XT  *data,
-      Buff_Num_Elems_DT             data_num_elems,
-      USBD_IO_Inout_Data_Size_DT    size,
-      USBD_IO_Inout_Data_Size_DT   *size_left);
-
-/**
- * Sends data over specified endpoint from a ring buffer.
- *
- * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
- * \param ring pointer to ring buffer from which data shall be sent
- * \param size size of data which shall be send.
- * \param size_left pointer to returned size - size of data which is still waiting to be sent.
- *      If (-1) is returned then all data has been copied to the buffer.
- *      (-1) is returned here in same situation like call of 'ready' handler.
- *      Unfortunately, this handler cannot be called from inside of @see USBD_IOTP_Send
- *      to protect system against recursive calling of @see USBD_IOTP_Send.
- *      This pointer can be USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT) - in this situation nothing will be returned.
- * \return USBD_TRUE when "send" requested successfully, USBD_FALSE otherwise
- *
- */
-USBD_Bool_DT USBD_IOTP_Send_From_Ring(
-      USBD_IOTP_Params_XT          *tp,
-      Buff_Ring_XT                 *ring,
-      USBD_IO_Inout_Data_Size_DT    size,
-      USBD_IO_Inout_Data_Size_DT   *size_left);
-
-/**
- * Keeps sending data over specified endpoint from a ring buffer.
- * When there is no data in the buffer, NAK is responded until more dat awill be added to the buffer.
- *
- * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
- * \param ring pointer to ring buffer from which data shall be sent
- * \return USBD_TRUE when "send" requested successfully, USBD_FALSE otherwise
- *
- */
-USBD_Bool_DT USBD_IOTP_Send_From_Ring_Infinitely(
-      USBD_IOTP_Params_XT          *tp,
-      Buff_Ring_XT                 *ring);
 
 
 /**
@@ -382,15 +311,6 @@ USBD_Bool_DT USBD_IOTP_Recv_And_Wait(
  * \return USBD_TRUE when OUT PIPE unlocked successfully, USBD_FALSE otherwise
  */
 USBD_Bool_DT USBD_IOTP_Recv_Ready(
-      USBD_IOTP_Params_XT *tp);
-
-/**
- * Sends stall packet over specified endpoint
- *
- * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
- * \return USBD_TRUE when response stall requested successfully, USBD_FALSE otherwise
- */
-USBD_Bool_DT USBD_IOTP_Send_Stall(
       USBD_IOTP_Params_XT *tp);
 
 #endif

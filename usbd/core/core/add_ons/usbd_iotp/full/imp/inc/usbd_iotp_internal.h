@@ -48,7 +48,8 @@
 #define USBD_IOTP_SET_EP_DIR_INSIDE_TP(tp, new_value)    (tp)->core.pipe_params.data.dir = (new_value)
 
 
-#define USBD_IOTP_GET_INVOKE_PARAMS(tp)                  (tp)->core.pipe_params.data.invoke
+#define USBD_IOTP_GET_INVOKE_PARAMS(tp)                  (tp)->core.pipe_params.data.invoke.invoke
+#define USBD_IOTP_GET_INVOKE_REQ(tp)                     (tp)->core.pipe_params.data.invoke.req
 
 
 #define USBD_IOTP_SET_READY_HANDLER(tp, new_value) \

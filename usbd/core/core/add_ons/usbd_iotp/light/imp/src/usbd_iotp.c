@@ -527,6 +527,109 @@ USBD_Bool_DT USBD_IOTP_Abort(
    return result;
 } /* USBD_IOTP_Abort */
 
+USBD_Bool_DT USBD_IOTP_Send_Status(
+   USBD_IOTP_Params_XT  *tp,
+   USBD_IO_Inout_Data_Size_DT *size_left)
+{
+   return USBD_IOTP_Send(tp, tp, 0, size_left);
+} /* USBD_IOTP_Send_Status */
+
+
+
+USBD_Bool_DT USBD_IOTP_Send_Status_For_Out_Tp(
+   USBD_IOTP_Params_XT  *tp_out,
+   USBD_IO_Inout_Data_Size_DT *size_left,
+   USBD_IOTP_Callback_HT buf_empty,
+   USBD_Vendor_Data_XT        *vendor_data)
+{
+   USBD_Params_XT            *usbd;
+   USBD_IOTP_Params_XT *tp_in;
+   USBD_Vendor_Data_XT       *tp_vendor_data;
+   USBD_Bool_DT               result = USBD_FALSE;
+
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp_out))
+   {
+      usbd = USBD_IOTP_Get_USBD(tp_out);
+
+      if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
+      {
+         tp_in = (USBD_IOTP_Params_XT*)USBD_IO_UP_Get_IN_TP_Params(usbd, 0);
+
+         if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp_in))
+         {
+            USBD_IOTP_Set_Buf_Empty_Handler(tp_in, buf_empty);
+            if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, vendor_data))
+            {
+               tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_in);
+               memcpy(tp_vendor_data, vendor_data, sizeof(tp_vendor_data[0]));
+            }
+            result = USBD_IOTP_Send_Status(tp_in, size_left);
+         }
+         else
+         {
+            USBD_WARN_2(USBD_DBG_IOTPEV_INVALID_PARAMS, "wrong %s (%p)", "tp_in", tp_in);
+         }
+      }
+      else
+      {
+         USBD_WARN_2(USBD_DBG_IOTPEV_INVALID_PARAMS, "wrong %s (%p)", "usbd", usbd);
+      }
+   }
+   else
+   {
+      USBD_WARN_2(USBD_DBG_IOTPEV_INVALID_PARAMS, "wrong %s (%p)", "tp_out", tp_out);
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   return result;
+} /* USBD_IOTP_Send_Status_For_Out_Tp */
+
+
+
+USBD_Bool_DT USBD_IOTP_Send_Stall(
+      USBD_IOTP_Params_XT *tp)
+{
+   void *tp_owner;
+   USBD_Bool_DT result;
+
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   result = USBD_FALSE;
+
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
+   {
+      tp_owner = USBD_IO_UP_Get_TP_Owner(
+         USBD_IOTP_GET_USBD_FROM_TP(tp),
+         0,
+         USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
+
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data))
+      {
+         /* check if transaction can be processed or if request must be synchronizes to USBD task/irq */
+         if(USBD_BOOL_IS_FALSE(USBD_IS_INVOKE_NEEDED(USBD_IOTP_GET_INVOKE_PARAMS(tp))))
+         {
+            result = USBD_TRUE;
+
+            USBD_IO_UP_Respond_Stall(
+               USBD_IOTP_GET_USBD_FROM_TP(tp),
+               0,
+               USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
+         }
+         else
+         {
+            USBD_EMERG(USBD_DBG_IOTPEV_PROCESSING, "Invoke not implemented!");
+         }
+      }
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   return result;
+} /* USBD_IOTP_Send_Stall */
+
 
 
 USBD_Bool_DT USBD_IOTP_Send(
@@ -672,66 +775,6 @@ USBD_Bool_DT USBD_IOTP_Send(
 
    return result;
 } /* USBD_IOTP_Send */
-
-USBD_Bool_DT USBD_IOTP_Send_Status(
-   USBD_IOTP_Params_XT  *tp,
-   USBD_IO_Inout_Data_Size_DT *size_left)
-{
-   return USBD_IOTP_Send(tp, tp, 0, size_left);
-} /* USBD_IOTP_Send_Status */
-
-
-
-USBD_Bool_DT USBD_IOTP_Send_Status_For_Out_Tp(
-   USBD_IOTP_Params_XT  *tp_out,
-   USBD_IO_Inout_Data_Size_DT *size_left,
-   USBD_IOTP_Callback_HT buf_empty,
-   USBD_Vendor_Data_XT        *vendor_data)
-{
-   USBD_Params_XT            *usbd;
-   USBD_IOTP_Params_XT *tp_in;
-   USBD_Vendor_Data_XT       *tp_vendor_data;
-   USBD_Bool_DT               result = USBD_FALSE;
-
-   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
-
-   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp_out))
-   {
-      usbd = USBD_IOTP_Get_USBD(tp_out);
-
-      if(USBD_CHECK_PTR(USBD_Params_XT, usbd))
-      {
-         tp_in = (USBD_IOTP_Params_XT*)USBD_IO_UP_Get_IN_TP_Params(usbd, 0);
-
-         if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp_in))
-         {
-            USBD_IOTP_Set_Buf_Empty_Handler(tp_in, buf_empty);
-            if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, vendor_data))
-            {
-               tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_in);
-               memcpy(tp_vendor_data, vendor_data, sizeof(tp_vendor_data[0]));
-            }
-            result = USBD_IOTP_Send_Status(tp_in, size_left);
-         }
-         else
-         {
-            USBD_WARN_2(USBD_DBG_IOTPEV_INVALID_PARAMS, "wrong %s (%p)", "tp_in", tp_in);
-         }
-      }
-      else
-      {
-         USBD_WARN_2(USBD_DBG_IOTPEV_INVALID_PARAMS, "wrong %s (%p)", "usbd", usbd);
-      }
-   }
-   else
-   {
-      USBD_WARN_2(USBD_DBG_IOTPEV_INVALID_PARAMS, "wrong %s (%p)", "tp_out", tp_out);
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
-
-   return result;
-} /* USBD_IOTP_Send_Status_For_Out_Tp */
 
 
 
@@ -1195,49 +1238,6 @@ USBD_Bool_DT USBD_IOTP_Recv_Ready(
 
    return result;
 } /* USBD_IOTP_Recv_Ready */
-
-
-
-USBD_Bool_DT USBD_IOTP_Send_Stall(
-      USBD_IOTP_Params_XT *tp)
-{
-   void *tp_owner;
-   USBD_Bool_DT result;
-
-   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
-
-   result = USBD_FALSE;
-
-   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
-   {
-      tp_owner = USBD_IO_UP_Get_TP_Owner(
-         USBD_IOTP_GET_USBD_FROM_TP(tp),
-         0,
-         USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
-
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data))
-      {
-         /* check if transaction can be processed or if request must be synchronizes to USBD task/irq */
-         if(USBD_BOOL_IS_FALSE(USBD_IS_INVOKE_NEEDED(USBD_IOTP_GET_INVOKE_PARAMS(tp))))
-         {
-            result = USBD_TRUE;
-
-            USBD_IO_UP_Respond_Stall(
-               USBD_IOTP_GET_USBD_FROM_TP(tp),
-               0,
-               USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
-         }
-         else
-         {
-            USBD_EMERG(USBD_DBG_IOTPEV_PROCESSING, "Invoke not implemented!");
-         }
-      }
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
-
-   return result;
-} /* USBD_IOTP_Send_Stall */
 
 
 

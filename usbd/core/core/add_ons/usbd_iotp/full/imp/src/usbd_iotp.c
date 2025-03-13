@@ -616,6 +616,49 @@ USBD_Bool_DT USBD_IOTP_Send_Status_For_Out_Tp(
 
 
 
+USBD_Bool_DT USBD_IOTP_Send_Stall(
+      USBD_IOTP_Params_XT *tp)
+{
+   void *tp_owner;
+   USBD_Bool_DT result;
+
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   result = USBD_FALSE;
+
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
+   {
+      tp_owner = USBD_IO_UP_Get_TP_Owner(
+         USBD_IOTP_GET_USBD_FROM_TP(tp),
+         USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+         USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
+
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data))
+      {
+         /* check if transaction can be processed or if request must be synchronizes to USBD task/irq */
+         if(USBD_BOOL_IS_FALSE(USBD_IS_INVOKE_NEEDED(USBD_IOTP_GET_INVOKE_PARAMS(tp))))
+         {
+            result = USBD_TRUE;
+
+            USBD_IO_UP_Respond_Stall(
+               USBD_IOTP_GET_USBD_FROM_TP(tp),
+               USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+               USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
+         }
+         else
+         {
+            USBD_EMERG(USBD_DBG_IOTPEV_PROCESSING, "Invoke not implemented!");
+         }
+      }
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   return result;
+} /* USBD_IOTP_Send_Stall */
+
+
+
 static USBD_Bool_DT USBD_IOTP_send_invoked(
    USBD_IOTP_Params_XT *tp,
    const void *data,
@@ -1435,49 +1478,6 @@ USBD_Bool_DT USBD_IOTP_Recv_Ready(
 
    return result;
 } /* USBD_IOTP_Recv_Ready */
-
-
-
-USBD_Bool_DT USBD_IOTP_Send_Stall(
-      USBD_IOTP_Params_XT *tp)
-{
-   void *tp_owner;
-   USBD_Bool_DT result;
-
-   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
-
-   result = USBD_FALSE;
-
-   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
-   {
-      tp_owner = USBD_IO_UP_Get_TP_Owner(
-         USBD_IOTP_GET_USBD_FROM_TP(tp),
-         USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
-         USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
-
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data))
-      {
-         /* check if transaction can be processed or if request must be synchronizes to USBD task/irq */
-         if(USBD_BOOL_IS_FALSE(USBD_IS_INVOKE_NEEDED(USBD_IOTP_GET_INVOKE_PARAMS(tp))))
-         {
-            result = USBD_TRUE;
-
-            USBD_IO_UP_Respond_Stall(
-               USBD_IOTP_GET_USBD_FROM_TP(tp),
-               USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
-               USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
-         }
-         else
-         {
-            USBD_EMERG(USBD_DBG_IOTPEV_PROCESSING, "Invoke not implemented!");
-         }
-      }
-   }
-
-   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
-
-   return result;
-} /* USBD_IOTP_Send_Stall */
 
 
 
