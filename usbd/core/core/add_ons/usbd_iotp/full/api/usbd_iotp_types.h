@@ -131,22 +131,21 @@ typedef struct USBD_IOTP_Params_eXtended_Tag
          {
             struct
             {
-           /*    struct
+               struct
                {
                   union
                   {
-                     const USBD_IOTP_Data_DT         *linear;
+                     USBD_IOTP_Data_DT               *linear;
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_COMPLEX_BUFFERS)
                      Buff_Ring_XT                    *ring;
 #endif
                   }data;
                   USBD_IO_Inout_Data_Size_DT    offset;
                   USBD_IO_Inout_Data_Size_DT    size;
-               }data;*/
+               }data;
                USBD_IO_OUT_Data_Method_Port_HT  mem_cpy;
-               USBD_IOTP_Data_DT               *data;
-               USBD_IO_Inout_Data_Size_DT       size_left;
                USBD_IO_Inout_Data_Size_DT       size_in_progress;
+               uint8_t                          data_type;
                USBD_Bool_DT                     dont_wait_for_ready;
             }proc;
          }out;
