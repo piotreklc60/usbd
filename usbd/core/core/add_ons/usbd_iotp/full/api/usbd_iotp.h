@@ -261,6 +261,7 @@ USBD_Bool_DT USBD_IOTP_Send(
       USBD_IO_Inout_Data_Size_DT  size,
       USBD_IO_Inout_Data_Size_DT *size_left);
 
+#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
 /**
  * Sends data over specified endpoint from a vector (list of linear data pieces).
  *
@@ -283,7 +284,9 @@ USBD_Bool_DT USBD_IOTP_Send_From_Vector(
       Buff_Num_Elems_DT             data_num_elems,
       USBD_IO_Inout_Data_Size_DT    size,
       USBD_IO_Inout_Data_Size_DT   *size_left);
+#endif
 
+#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
 /**
  * Sends data over specified endpoint from a tree (list of vectors).
  *
@@ -306,6 +309,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Tree(
       Buff_Num_Elems_DT             data_num_elems,
       USBD_IO_Inout_Data_Size_DT    size,
       USBD_IO_Inout_Data_Size_DT   *size_left);
+#endif
 
 /**
  * Sends data over specified endpoint from a ring buffer.
