@@ -311,6 +311,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Tree(
       USBD_IO_Inout_Data_Size_DT   *size_left);
 #endif
 
+#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
 /**
  * Sends data over specified endpoint from a ring buffer.
  *
@@ -331,6 +332,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Ring(
       Buff_Ring_XT                 *ring,
       USBD_IO_Inout_Data_Size_DT    size,
       USBD_IO_Inout_Data_Size_DT   *size_left);
+#endif
 
 /**
  * Keeps sending data over specified endpoint from a ring buffer.
@@ -350,8 +352,8 @@ USBD_Bool_DT USBD_IOTP_Send_From_Ring_Infinitely(
  * Receives data over specified endpoint and allows for next reception
  *
  * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
- * \param data pointer to data which shall be send
- * \param size size of data which shall be send
+ * \param data pointer to the buffer to which data shall be received
+ * \param size size of data which shall be received (size of the buffer, no more data can be received than indicated by size)
  * \param size_left pointer to returned size - size of data which is still waiting to be received.
  *      If -1 is returned then whole buffer has been filled with received data
  *      It is same situation like call of @see ready handler.
@@ -370,8 +372,8 @@ USBD_Bool_DT USBD_IOTP_Recv_And_Ready(
  * Receives data over specified endpoint and waits for confirmation before allows for next reception
  *
  * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
- * \param data pointer to data which shall be send
- * \param size size of data which shall be send
+ * \param data pointer to the buffer to which data shall be received
+ * \param size size of data which shall be received (size of the buffer, no more data can be received than indicated by size)
  * \param size_left pointer to returned size - size of data which is still waiting to be received.
  *      If -1 is returned then whole buffer has been filled with received data
  *      It is same situation like call of @see ready handler.
@@ -385,6 +387,60 @@ USBD_Bool_DT USBD_IOTP_Recv_And_Wait(
       void                *data,
       USBD_IO_Inout_Data_Size_DT  size,
       USBD_IO_Inout_Data_Size_DT *size_left);
+
+
+#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+/**
+ * Receives data over specified endpoint and allows for next reception
+ *
+ * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
+ * \param data pointer to the ring buffer to which data shall be received
+ * \param size size of data which shall be received (size of the buffer, no more data can be received than indicated by size)
+ * \param size_left pointer to returned size - size of data which is still waiting to be received.
+ *      If -1 is returned then whole buffer has been filled with received data
+ *      It is same situation like call of @see ready handler.
+ *      Unfortunately, this handler is not called now from inside of @see USBD_IOTP_Recv_And_Ready
+ *      to protect system from recursive calling of @see USBD_IOTP_Recv_And_Ready.
+ *      This pointer can be USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT) - in this situation nothing will be returned.
+ * \return USBD_TRUE when "recv" requested successfully, USBD_FALSE otherwise
+ */
+USBD_Bool_DT USBD_IOTP_Recv_And_Ready_To_Ring(
+      USBD_IOTP_Params_XT        *tp,
+      Buff_Ring_XT               *ring,
+      USBD_IO_Inout_Data_Size_DT  size,
+      USBD_IO_Inout_Data_Size_DT *size_left);
+
+/**
+ * Receives data over specified endpoint and waits for confirmation before allows for next reception
+ *
+ * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
+ * \param data pointer to the ring buffer to which data shall be received
+ * \param size size of data which shall be received (size of the buffer, no more data can be received than indicated by size)
+ * \param size_left pointer to returned size - size of data which is still waiting to be received.
+ *      If -1 is returned then whole buffer has been filled with received data
+ *      It is same situation like call of @see ready handler.
+ *      Unfortunately, this handler is not called now from inside of @see USBD_IOTP_Recv_And_Wait
+ *      to protect system from recursive calling of @see USBD_IOTP_Recv_And_Wait.
+ *      This pointer can be USBD_MAKE_INVALID_PTR(USBD_IO_Inout_Data_Size_DT) - in this situation nothing will be returned.
+ * \return USBD_TRUE when "recv" requested successfully, USBD_FALSE otherwise
+ */
+USBD_Bool_DT USBD_IOTP_Recv_And_Wait_To_Ring(
+      USBD_IOTP_Params_XT        *tp,
+      Buff_Ring_XT               *ring,
+      USBD_IO_Inout_Data_Size_DT  size,
+      USBD_IO_Inout_Data_Size_DT *size_left);
+#endif
+
+/**
+ * Keeps receiving data over specified endpoint
+ *
+ * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
+ * \param data pointer to the ring buffer to which data shall be received
+ * \return USBD_TRUE when "recv" requested successfully, USBD_FALSE otherwise
+ */
+USBD_Bool_DT USBD_IOTP_Recv_To_Ring_Infinitely(
+      USBD_IOTP_Params_XT        *tp,
+      Buff_Ring_XT               *ring);
 
 /**
  * Enables receiving next data over specified endpoint.

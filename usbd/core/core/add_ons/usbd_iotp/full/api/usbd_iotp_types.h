@@ -164,6 +164,7 @@ typedef struct USBD_IOTP_Params_eXtended_Tag
 #endif
                   }data;
                   USBD_IO_Inout_Data_Size_DT             offset;
+                  USBD_IO_Inout_Data_Size_DT             next_contineous_part;
                   USBD_IO_Inout_Data_Size_DT             size;
                }data;
                USBD_IO_OUT_Data_Method_Port_HT           mem_cpy;

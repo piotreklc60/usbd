@@ -65,6 +65,8 @@ typedef void (*USBD_IOTP_send_invoked_connect_data_HT)(
 typedef USBD_IO_Inout_Data_Size_DT (*USBD_IOTP_io_data_memcpy_in_HT)(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left);
 
+typedef USBD_IO_Inout_Data_Size_DT (*USBD_IOTP_io_data_memcpy_out_HT)(
+   USBD_IOTP_Params_XT *tp, USBD_IO_Inout_Data_Size_DT size, USBD_Bool_DT is_last_part);
 
 typedef struct usbd_iotp_vendor_memcpy_eXtended_Tag
 {
@@ -774,12 +776,12 @@ static void USBD_IOTP_send_invoked_connect_data_ring(
 
 
 static USBD_Bool_DT USBD_IOTP_send_invoked(
-   USBD_IOTP_Params_XT                          *tp,
-   USBD_IOTP_send_invoked_connect_data_HT connect_data,
-   const void                                   *data,
-   USBD_IO_Inout_Data_Size_DT                    size,
-   USBD_IO_Inout_Data_Size_DT                   *size_left,
-   USBD_Bool_DT                                 *result_ret)
+   USBD_IOTP_Params_XT                    *tp,
+   USBD_IOTP_send_invoked_connect_data_HT  connect_data,
+   const void                             *data,
+   USBD_IO_Inout_Data_Size_DT              size,
+   USBD_IO_Inout_Data_Size_DT             *size_left,
+   USBD_Bool_DT                           *result_ret)
 {
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
    USBD_Bool_DT do_trigger = USBD_TRUE;
@@ -1135,6 +1137,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Tree(
 
 
 
+#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
 USBD_Bool_DT USBD_IOTP_Send_From_Ring(
    USBD_IOTP_Params_XT          *tp,
    Buff_Ring_XT                 *ring,
@@ -1211,6 +1214,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Ring(
 
    return result;
 } /* USBD_IOTP_Send_From_Ring */
+#endif
 
 
 
@@ -1302,7 +1306,7 @@ static Buff_Size_DT USBD_IOTP_ring_vendor_memcpy_in(const Buff_Memcpy_Params_XT 
    USBD_IOTP_Params_XT        *tp;
    Buff_Size_DT                result;
 
-   USBD_ENTER_FUNC(USBD_DBG_IOTPBF_PROCESSING);
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 
    vendor_data = (usbd_iotp_vendor_memcpy_XT*)(params->dest);
    tp          = vendor_data->tp;
@@ -1355,6 +1359,7 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_linear(
    return result;
 } /* USBD_IOTP_io_data_memcpy_in_linear */
 
+#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_vector(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left)
 {
@@ -1367,7 +1372,7 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_vector(
 
    if(size_left > (tp->core.pipe_params.data.mps + tp->core.pipe_params.data.mps))
    {
-      size_left > (USBD_IO_Inout_Data_Size_DT)(tp->core.pipe_params.data.mps + tp->core.pipe_params.data.mps);
+      size_left = (USBD_IO_Inout_Data_Size_DT)(tp->core.pipe_params.data.mps + tp->core.pipe_params.data.mps);
    }
 
    result = Buff_Copy_From_Vector_Vendor(
@@ -1386,7 +1391,9 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_vector(
 
    return (USBD_IO_Inout_Data_Size_DT)result;
 } /* USBD_IOTP_io_data_memcpy_in_vector */
+#endif
 
+#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_tree(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left)
 {
@@ -1399,7 +1406,7 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_tree(
 
    if(size_left > (tp->core.pipe_params.data.mps + tp->core.pipe_params.data.mps))
    {
-      size_left > (USBD_IO_Inout_Data_Size_DT)(tp->core.pipe_params.data.mps + tp->core.pipe_params.data.mps);
+      size_left = (USBD_IO_Inout_Data_Size_DT)(tp->core.pipe_params.data.mps + tp->core.pipe_params.data.mps);
    }
 
    result = Buff_Copy_From_Tree_Vendor(
@@ -1419,12 +1426,16 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_tree(
 
    return (USBD_IO_Inout_Data_Size_DT)result;
 } /* USBD_IOTP_io_data_memcpy_in_tree */
+#endif
 
+#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_ring(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left)
 {
    usbd_iotp_vendor_memcpy_XT vendor_data;
    Buff_Size_DT               result = 0;
+
+   USBD_UNUSED_PARAM(size_left);
 
    BUFF_PROTECTION_LOCK(tp->core.transfer_params.in.proc.data.data.ring);
 
@@ -1446,6 +1457,7 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_ring(
 
    return (USBD_IO_Inout_Data_Size_DT)result;
 } /* USBD_IOTP_io_data_memcpy_in_ring */
+#endif
 
 static void USBD_IOTP_io_data_memcpy_in(
    void *tp_params,
@@ -1455,12 +1467,18 @@ static void USBD_IOTP_io_data_memcpy_in(
    USBD_IOTP_Params_XT *tp   = (USBD_IOTP_Params_XT*)tp_params;
    USBD_IO_Inout_Data_Size_DT size = 0;
    USBD_IO_Inout_Data_Size_DT size_left;
-   static USBD_IOTP_io_data_memcpy_in_HT memcpy_in[4] =
+   static const USBD_IOTP_io_data_memcpy_in_HT memcpy_in[4] =
    {
-      USBD_IOTP_io_data_memcpy_in_linear,
-      USBD_IOTP_io_data_memcpy_in_vector,
-      USBD_IOTP_io_data_memcpy_in_tree,
-      USBD_IOTP_io_data_memcpy_in_ring
+      [USBD_IOTP_DATA_LINEAR] = USBD_IOTP_io_data_memcpy_in_linear,
+#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
+      [USBD_IOTP_DATA_VECTOR] = USBD_IOTP_io_data_memcpy_in_vector,
+#endif
+#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
+      [USBD_IOTP_DATA_TREE]   = USBD_IOTP_io_data_memcpy_in_tree,
+#endif
+#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+      [USBD_IOTP_DATA_RING]   = USBD_IOTP_io_data_memcpy_in_ring
+#endif
    };
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
@@ -1644,8 +1662,151 @@ static void USBD_IOTP_io_evdata_in(
 
 
 
+static void USBD_IOTP_recv_invoked_connect_data_linear(
+   USBD_IOTP_Params_XT *tp,
+   const void *data,
+   USBD_IO_Inout_Data_Size_DT size)
+{
+   tp->core.transfer_params.out.proc.data.data.linear    = (void*)data;
+   tp->core.transfer_params.out.proc.data.offset         = 0;
+   tp->core.transfer_params.out.proc.data.size           = size;
+   tp->core.transfer_params.out.proc.data.next_contineous_part = size;
+   tp->core.data_type                                    = USBD_IOTP_DATA_LINEAR;
+} /* USBD_IOTP_recv_invoked_connect_data_linear */
+
+
+
+static void USBD_IOTP_recv_invoked_connect_data_ring(
+   USBD_IOTP_Params_XT *tp,
+   const void *data,
+   USBD_IO_Inout_Data_Size_DT size)
+{
+   Buff_Ring_XT *ring = (Buff_Ring_XT*)data;
+   tp->core.transfer_params.out.proc.data.data.ring      = ring;
+   tp->core.transfer_params.out.proc.data.offset         = 0;
+   tp->core.transfer_params.out.proc.data.size           = size;
+   tp->core.transfer_params.out.proc.data.next_contineous_part = 0;
+   tp->core.data_type                                    = USBD_IOTP_DATA_RING;
+} /* USBD_IOTP_recv_invoked_connect_data_ring */
+
+static Buff_Size_DT USBD_IOTP_ring_vendor_memcpy_out(const Buff_Memcpy_Params_XT *params)
+{
+   usbd_iotp_vendor_memcpy_XT *vendor_data;
+   Buff_Size_DT result = 0;
+   USBD_Bool_DT is_last_part;
+
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   vendor_data = (usbd_iotp_vendor_memcpy_XT*)(params->src);
+
+   USBD_DEBUG_HI_4(
+      USBD_DBG_IOTPEV_PROCESSING,
+      "vendor_memcpy_out called with params: dest: %p; dest_offset: %d; size: %d; is_last_part: %s",
+      params->dest,
+      params->dest_offset,
+      params->size,
+      params->is_last_part ? "true" : "false");
+
+   if(BUFF_BOOL_IS_TRUE(params->is_last_part))
+   {
+      if(params->size >= (Buff_Size_DT)(vendor_data->out_left_data_size))
+      {
+         is_last_part = USBD_TRUE;
+      }
+      else
+      {
+         is_last_part = USBD_FALSE;
+      }
+   }
+   else
+   {
+      is_last_part = USBD_FALSE;
+   }
+
+   if(vendor_data->out_left_data_size >= 0)
+   {
+      result = (Buff_Size_DT)USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, vendor_data->data_method.out)(
+         USBD_IOTP_GET_USBD_FROM_TP(vendor_data->tp),
+         USBD_IOTP_GET_EP_NUM_FROM_TP(vendor_data->tp),
+         USBD_IOTP_GET_EP_DIR_FROM_TP(vendor_data->tp),
+         &(((uint8_t*)(params->dest))[params->dest_offset]),
+         params->size,
+         is_last_part);
+
+      vendor_data->out_left_data_size -= result;
+
+      if(USBD_BOOL_IS_TRUE(is_last_part))
+      {
+         vendor_data->out_left_data_size = (-1);
+      }
+      else if(vendor_data->out_left_data_size <= 0)
+      {
+         vendor_data->out_left_data_size = 0;
+      }
+   }
+   else
+   {
+      USBD_ERROR(USBD_DBG_IOTPEV_ONOFF, "vendor_memcpy_out called when no data is waiting - ignore it!");
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   return result;
+} /* USBD_IOTP_ring_vendor_memcpy_out */
+
+
+
+static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_out_linear(
+   USBD_IOTP_Params_XT *tp, USBD_IO_Inout_Data_Size_DT size, USBD_Bool_DT is_last_part)
+{
+   USBD_IO_Inout_Data_Size_DT result = USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, tp->core.transfer_params.out.proc.mem_cpy)(
+      USBD_IOTP_GET_USBD_FROM_TP(tp),
+      USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+      USBD_IOTP_GET_EP_DIR_FROM_TP(tp),
+      &tp->core.transfer_params.out.proc.data.data.linear[tp->core.transfer_params.out.proc.data.offset],
+      size,
+      is_last_part);
+
+   tp->core.transfer_params.out.proc.data.next_contineous_part -= result;
+
+   return result;
+} /* USBD_IOTP_io_data_memcpy_in_linear */
+
+
+
+static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_out_ring(
+   USBD_IOTP_Params_XT *tp, USBD_IO_Inout_Data_Size_DT size, USBD_Bool_DT is_last_part)
+{
+   usbd_iotp_vendor_memcpy_XT vendor_data;
+   Buff_Size_DT               result = 0;
+
+   vendor_data.tp                   = tp;
+   vendor_data.data_method.out      = tp->core.transfer_params.out.proc.mem_cpy;
+   vendor_data.out_left_data_size   = size;
+
+   BUFF_PROTECTION_LOCK(tp->core.transfer_params.out.proc.data.data.ring);
+
+   if(size <= (USBD_IO_Inout_Data_Size_DT)BUFF_RING_GET_FREE_SIZE(tp->core.transfer_params.out.proc.data.data.ring))
+   {
+      result = Buff_Ring_Write_Vendor(
+         tp->core.transfer_params.out.proc.data.data.ring,
+         &vendor_data,
+         size,
+         USBD_IOTP_ring_vendor_memcpy_out,
+         BUFF_FALSE,
+         BUFF_FALSE);
+   }
+
+   BUFF_PROTECTION_UNLOCK(tp->core.transfer_params.out.proc.data.data.ring);
+
+   return (USBD_IO_Inout_Data_Size_DT)result;
+} /* USBD_IOTP_io_data_memcpy_out_ring */
+
+
+
 static USBD_Bool_DT USBD_IOTP_recv_invoked(
    USBD_IOTP_Params_XT *tp,
+   USBD_IOTP_send_invoked_connect_data_HT  connect_data,
    void *data,
    USBD_IO_Inout_Data_Size_DT size,
    USBD_IO_Inout_Data_Size_DT *size_left_ret,
@@ -1656,6 +1817,13 @@ static USBD_Bool_DT USBD_IOTP_recv_invoked(
    USBD_IO_Inout_Data_Size_DT             size_left;
    USBD_Bool_DT                           is_last_part = USBD_TRUE;
    USBD_Bool_DT                           result       = USBD_FALSE;
+   static const USBD_IOTP_io_data_memcpy_out_HT memcpy_out[4] =
+   {
+      [USBD_IOTP_DATA_LINEAR] = USBD_IOTP_io_data_memcpy_out_linear,
+#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+      [USBD_IOTP_DATA_RING]   = USBD_IOTP_io_data_memcpy_out_ring
+#endif
+   };
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 
@@ -1666,14 +1834,11 @@ static USBD_Bool_DT USBD_IOTP_recv_invoked(
    if(USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction))
    {
       tp->up_link.data.size_transferred                     = 0;
-      tp->core.transfer_params.out.proc.data.data.linear    = data;
-      tp->core.transfer_params.out.proc.data.offset         = 0;
-      tp->core.transfer_params.out.proc.data.size           = size;
-      tp->core.data_type                                    = USBD_IOTP_DATA_LINEAR;
+      USBD_CALL_HANDLER(USBD_IOTP_send_invoked_connect_data_HT, connect_data)(tp, data, size);
       tp->core.transfer_params.out.proc.dont_wait_for_ready = dont_wait_for_ready;
       result                                                = USBD_TRUE;
 
-      if(size > tp->core.pipe_params.data.mps)
+      if(tp->core.transfer_params.out.proc.data.next_contineous_part > tp->core.pipe_params.data.mps)
       {
          USBD_ATOMIC_BOOL_SET(tp->core.transfer_active, USBD_TRUE);
          USBD_IO_SET_OUT_PROVIDE_HANDLER(
@@ -1718,19 +1883,12 @@ static USBD_Bool_DT USBD_IOTP_recv_invoked(
                is_last_part = USBD_FALSE;
             }
 
-            size = USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, tp->core.transfer_params.out.proc.mem_cpy)(
-               USBD_IOTP_GET_USBD_FROM_TP(tp),
-               USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
-               USBD_IOTP_GET_EP_DIR_FROM_TP(tp),
-               &tp->core.transfer_params.out.proc.data.data.linear[tp->core.transfer_params.out.proc.data.offset],
-               size,
-               is_last_part);
+            size = USBD_CALL_HANDLER(USBD_IOTP_io_data_memcpy_out_HT, memcpy_out[tp->core.data_type])(tp, size, is_last_part);
 
             tp->up_link.data.size_transferred               = size;
-            size_left                                      -= size;
             tp->core.transfer_params.out.proc.data.offset  += size;
 
-            if(0 == size_left)
+            if(tp->core.transfer_params.out.proc.data.size == tp->core.transfer_params.out.proc.data.offset)
             {
                USBD_ATOMIC_BOOL_SET(tp->core.transfer_active, USBD_FALSE);
 
@@ -1742,7 +1900,7 @@ static USBD_Bool_DT USBD_IOTP_recv_invoked(
 
             if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active))
             {
-               if(size_left > tp->core.pipe_params.data.mps)
+               if(tp->core.transfer_params.out.proc.data.next_contineous_part > tp->core.pipe_params.data.mps)
                {
                   USBD_IO_SET_OUT_PROVIDE_HANDLER(
                      transaction, USBD_IOTP_io_provide_out);
@@ -1843,18 +2001,18 @@ static USBD_Bool_DT USBD_IOTP_recv_ready_invoked(USBD_IOTP_Params_XT *tp, USBD_B
 
 
 static USBD_Bool_DT USBD_IOTP_recv(
-      USBD_IOTP_Params_XT *tp,
-      void *data,
-      USBD_IO_Inout_Data_Size_DT size,
-      USBD_IO_Inout_Data_Size_DT *size_left_ret,
-      USBD_Bool_DT dont_wait_for_ready)
+      USBD_IOTP_Params_XT                    *tp,
+      USBD_IOTP_send_invoked_connect_data_HT  connect_data,
+      void                                   *data,
+      USBD_IO_Inout_Data_Size_DT              size,
+      USBD_IO_Inout_Data_Size_DT             *size_left_ret,
+      USBD_Bool_DT                            dont_wait_for_ready)
 {
-   void                                  *tp_owner;
+   void          *tp_owner;
 #ifdef USBD_USE_IOCMD
-   const char                            *recv_option_desc = USBD_BOOL_IS_TRUE(dont_wait_for_ready) ? "ready" : "wait";
+   const char    *recv_option_desc = USBD_BOOL_IS_TRUE(dont_wait_for_ready) ? "ready" : "wait";
 #endif
-   USBD_IO_Inout_Data_Size_DT             size_left;
-   USBD_Bool_DT                           result;
+   USBD_Bool_DT   result;
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 
@@ -1891,7 +2049,8 @@ static USBD_Bool_DT USBD_IOTP_recv(
          {
             /* check if transaction can be processed or if request must be synchronizes to USBD task/irq */
             if(USBD_INVOKE(
-               USBD_IOTP_GET_INVOKE_PARAMS(tp), USBD_IOTP_recv_invoked(tp, data, size, size_left_ret, dont_wait_for_ready, &result)))
+               USBD_IOTP_GET_INVOKE_PARAMS(tp), USBD_IOTP_recv_invoked(
+                  tp, connect_data, data, size, size_left_ret, dont_wait_for_ready, &result)))
             {
                /* OK */
             }
@@ -1932,7 +2091,7 @@ USBD_Bool_DT USBD_IOTP_Recv_And_Ready(
       USBD_IO_Inout_Data_Size_DT  size,
       USBD_IO_Inout_Data_Size_DT *size_left)
 {
-   return USBD_IOTP_recv(tp, data, size, size_left, USBD_TRUE);
+   return USBD_IOTP_recv(tp, USBD_IOTP_recv_invoked_connect_data_linear, data, size, size_left, USBD_TRUE);
 }/* USBD_IOTP_Recv_And_Ready */
 
 
@@ -1943,8 +2102,40 @@ USBD_Bool_DT USBD_IOTP_Recv_And_Wait(
       USBD_IO_Inout_Data_Size_DT size,
       USBD_IO_Inout_Data_Size_DT *size_left)
 {
-   return USBD_IOTP_recv(tp, data, size, size_left, USBD_FALSE);
+   return USBD_IOTP_recv(tp, USBD_IOTP_recv_invoked_connect_data_linear, data, size, size_left, USBD_FALSE);
 }/* USBD_IOTP_Recv_And_Wait */
+
+
+
+#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+USBD_Bool_DT USBD_IOTP_Recv_And_Ready_To_Ring(
+      USBD_IOTP_Params_XT        *tp,
+      Buff_Ring_XT               *ring,
+      USBD_IO_Inout_Data_Size_DT  size,
+      USBD_IO_Inout_Data_Size_DT *size_left)
+{
+   return USBD_IOTP_recv(tp, USBD_IOTP_recv_invoked_connect_data_ring, ring, size, size_left, USBD_TRUE);
+}/* USBD_IOTP_Recv_And_Ready_To_Ring */
+
+
+
+USBD_Bool_DT USBD_IOTP_Recv_And_Wait_To_Ring(
+      USBD_IOTP_Params_XT        *tp,
+      Buff_Ring_XT               *ring,
+      USBD_IO_Inout_Data_Size_DT  size,
+      USBD_IO_Inout_Data_Size_DT *size_left)
+{
+   return USBD_IOTP_recv(tp, USBD_IOTP_recv_invoked_connect_data_ring, ring, size, size_left, USBD_FALSE);
+}/* USBD_IOTP_Recv_And_Wait_To_Ring */
+#endif
+
+
+
+USBD_Bool_DT USBD_IOTP_Recv_To_Ring_Infinitely(
+      USBD_IOTP_Params_XT        *tp,
+      Buff_Ring_XT               *ring)
+{
+}/* USBD_IOTP_Recv_To_Ring_Infinitely */
 
 
 
@@ -2024,7 +2215,6 @@ static void USBD_IOTP_io_provide_out(
 {
    USBD_IOTP_Params_XT       *tp       = (USBD_IOTP_Params_XT*)tp_params;
    USBD_IO_Inout_Data_Size_DT part_size= 0;
-   USBD_IO_Inout_Data_Size_DT size_left;
 
 #ifndef USBD_USE_IOCMD
    USBD_UNUSED_PARAM(packet_size);
@@ -2055,25 +2245,22 @@ static void USBD_IOTP_io_provide_out(
          USBD_BOOL_IS_TRUE(tp->core.transfer_params.out.proc.dont_wait_for_ready) ? "true" : "false",
          tp->core.transfer_params.out.proc.data.data.linear);
 
-      if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active))
+      if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active)
+         && (tp->core.transfer_params.out.proc.data.next_contineous_part > tp->core.pipe_params.data.mps))
       {
-         size_left = tp->core.transfer_params.out.proc.data.size - tp->core.transfer_params.out.proc.data.offset;
-         if(size_left > tp->core.pipe_params.data.mps)
-         {
-            part_size = USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, provide)(
-               USBD_IOTP_GET_USBD_FROM_TP(tp),
-               USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
-               USBD_IOTP_GET_EP_DIR_FROM_TP(tp),
-               &tp->core.transfer_params.out.proc.data.data.linear[tp->core.transfer_params.out.proc.data.offset],
-               size_left - 1,
-               USBD_TRUE);
-         }
+         part_size = USBD_CALL_HANDLER(USBD_IO_OUT_Data_Method_Port_HT, provide)(
+            USBD_IOTP_GET_USBD_FROM_TP(tp),
+            USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+            USBD_IOTP_GET_EP_DIR_FROM_TP(tp),
+            &tp->core.transfer_params.out.proc.data.data.linear[tp->core.transfer_params.out.proc.data.offset],
+            tp->core.transfer_params.out.proc.data.next_contineous_part - 1,
+            USBD_TRUE);
 
-         size_left                                         -= part_size;
-         tp->core.transfer_params.out.proc.data.offset     += part_size;
-         tp->core.transfer_params.out.proc.size_in_progress = part_size;
+         tp->core.transfer_params.out.proc.data.next_contineous_part-= part_size;
+         tp->core.transfer_params.out.proc.data.offset              += part_size;
+         tp->core.transfer_params.out.proc.size_in_progress          = part_size;
 
-         if(size_left < tp->core.pipe_params.data.mps)
+         if(tp->core.transfer_params.out.proc.data.next_contineous_part < tp->core.pipe_params.data.mps)
          {
             USBD_IO_SET_OUT_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_TP_HT));
             USBD_IO_SET_OUT_MEMCPY_HANDLER(transaction, USBD_IOTP_io_memcpy_out);
