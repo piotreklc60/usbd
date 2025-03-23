@@ -103,6 +103,19 @@
 
 
 
+typedef struct USBD_IOTP_Vendor_Memcpy_eXtended_Tag
+{
+   USBD_IOTP_Params_XT                *tp;
+   union
+   {
+      USBD_IO_IN_Data_Method_Port_HT   in;
+      USBD_IO_OUT_Data_Method_Port_HT  out;
+   }data_method;
+   USBD_IO_Inout_Data_Size_DT          out_left_data_size;
+   USBD_Bool_DT                        is_last_part;
+}USBD_IOTP_Vendor_Memcpy_XT;
+
+
 
 /**
  * Instals IN and OUT TP structures and handlers in USB device for 0 endpont (default control pipe)
@@ -117,6 +130,130 @@ USBD_Bool_DT USBD_IOTP_Install_Default_Control_Pipe(
       USBD_Params_XT *usbd,
       USBD_IOTP_Params_XT *tp_in,
       USBD_IOTP_Params_XT *tp_out);
+
+
+
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_COMPLEX_BUFFERS)
+/**
+ * Helper function used by complex buffer types as vendor memcpy function for IN transactions.
+ *
+ * \param params parameters provided to the function containing such information like source ptr, destination, etc.
+ * \return size of copied data
+ */
+Buff_Size_DT USBD_IOTP_Ring_Vendor_Memcpy_In(const Buff_Memcpy_Params_XT *params);
+
+/**
+ * Helper function used by complex buffer types as vendor memcpy function for OUT transactions.
+ *
+ * \param params parameters provided to the function containing such information like source ptr, destination, etc.
+ * \return size of copied data
+ */
+Buff_Size_DT USBD_IOTP_Ring_Vendor_Memcpy_Out(const Buff_Memcpy_Params_XT *params);
+
+#if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
+/**
+ * Function to trigger IN transaction on the pipe.
+ *
+ * \param usbd pointer to USBD_Params_XT structure
+ * \param ep_num number of the endpoint for which we do the trigger
+ * \return always USBD_TRUE as this is callback for INVOKE mechanism where always USBD_TRUE is expected.
+ */
+USBD_Bool_DT USBD_IOTP_Trigger_In_Invoked(USBD_Params_XT *usbd, uint8_t ep_num);
+
+/**
+ * Function to trigger OUT transaction on the pipe.
+ *
+ * \param usbd pointer to USBD_Params_XT structure
+ * \param ep_num number of the endpoint for which we do the trigger
+ * \return always USBD_TRUE as this is callback for INVOKE mechanism where always USBD_TRUE is expected.
+ */
+USBD_Bool_DT USBD_IOTP_Trigger_Out_Invoked(USBD_Params_XT *usbd, uint8_t ep_num);
+
+/**
+ * Function to clear the ring buffer and connect all functions needed for it.
+ *
+ * \param tp pointer transport protocol structure for which hbuffer shall be cleared.
+ * \param transaction pointer to transaction parameters
+ * \param set_valid_handlers if USBD_TRUE then valid communication callbacks shall be connected, for USBD_FALSE invalid will be used.
+ */
+void USBD_IOTP_Ring_Clear_Buff(
+   USBD_IOTP_Params_XT *tp, USBD_IO_UP_DOWN_Transaction_Params_XT *transaction, USBD_Bool_DT set_valid_handlers);
+
+/**
+ * Callback from USBD_IO layer called when OUT data arrives and no PROVIDE neighter MEMCPY handlers are connected to the transaction.
+ *
+ * \param tp pointer transport protocol structure attached to the pipe during initialization using USBD_IO_UP_Set_TP.
+ * \param transaction pointer to the transaction structure which c ontain pointers to fast functions like PROVIDE and MEMCPY
+ * \param size size of received data
+ * \param mem_cpy pointer to port MEMCPY function called to process incomming data
+ */
+void USBD_IOTP_Ring_Io_Evdata_Out(
+   void *tp_params,
+   USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
+   USBD_IO_Inout_Data_Size_DT size,
+   USBD_IO_OUT_Data_Method_Port_HT mem_cpy);
+
+/**
+ * Callback from USBD_IO layer called when IN data has been sent and no PROVIDE neighter MEMCPY handlers are connected to the transaction.
+ *
+ * \param tp pointer transport protocol structure attached to the pipe during initialization using USBD_IO_UP_Set_TP.
+ * \param transaction pointer to the transaction structure which c ontain pointers to fast functions like PROVIDE and MEMCPY
+ * \param size size of data possible to be transmited
+ * \param mem_cpy pointer to port MEMCPY function called to initialize next IN data packet
+ */
+void USBD_IOTP_Ring_Io_Evdata_In(
+   void *tp_params,
+   USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
+   USBD_IO_Inout_Data_Size_DT size,
+   USBD_IO_IN_Data_Method_Port_HT mem_cpy);
+#endif
+#endif
+
+/**
+ * Callback from USBD_IO layer called when OUT data arrives and no PROVIDE neighter MEMCPY handlers are connected to the transaction.
+ *
+ * \param tp pointer transport protocol structure attached to the pipe during initialization using USBD_IO_UP_Set_TP.
+ * \param transaction pointer to the transaction structure which c ontain pointers to fast functions like PROVIDE and MEMCPY
+ * \param size size of received data
+ * \param mem_cpy pointer to port MEMCPY function called to process incomming data
+ */
+void USBD_IOTP_Io_Evdata_Out(
+   void *tp_params,
+   USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
+   USBD_IO_Inout_Data_Size_DT size,
+   USBD_IO_OUT_Data_Method_Port_HT mem_cpy);
+
+/**
+ * Callback from USBD_IO layer called when IN data has been sent and no PROVIDE neighter MEMCPY handlers are connected to the transaction.
+ *
+ * \param tp pointer transport protocol structure attached to the pipe during initialization using USBD_IO_UP_Set_TP.
+ * \param transaction pointer to the transaction structure which c ontain pointers to fast functions like PROVIDE and MEMCPY
+ * \param size size of data possible to be transmited
+ * \param mem_cpy pointer to port MEMCPY function called to initialize next IN data packet
+ */
+void USBD_IOTP_Io_Evdata_In(
+   void *tp_params,
+   USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
+   USBD_IO_Inout_Data_Size_DT size,
+   USBD_IO_IN_Data_Method_Port_HT mem_cpy);
+
+extern USBD_Atomic_Bool_DT USBD_IOTP_refresh_trigger;
+extern const uint8_t USBD_IOTP_not_ring_infinite_owner[1];
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+extern const uint8_t USBD_IOTP_ring_infinite_owner[1];
+#endif
+
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+/**
+ * Helper function to check TP_OWNER field
+ *
+ * \param tp_owner pointer to the data to be checked
+ * \return USBD_TRUE if tp_owner pointer is valid for this IOTP, USBD_FALSE otherwise
+ */
+USBD_Bool_DT USBD_IOTP_check_both_tp_owners(void *tp_owner);
+#else
+#define USBD_IOTP_check_both_tp_owners(_tp_owner)  USBD_COMPARE_PTRS(void, _tp_owner, void, USBD_IOTP_not_ring_infinite_owner)
+#endif
 
 
 #endif

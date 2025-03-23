@@ -61,6 +61,9 @@ USBD_SRC += $(USBD_CORE_USBDC_PATH)/imp/src/usbdc.c
 USBD_SRC += $(USBD_CORE_USBD_DEV_PATH)/imp/src/usbd_dev.c
 USBD_SRC += $(USBD_CORE_USBD_IO_PATH)/imp/src/usbd_io.c
 USBD_SRC += $(USBD_CORE_IOTP_PATH)/imp/src/usbd_iotp.c
+USBD_SRC += $(USBD_CORE_IOTP_PATH)/imp/src/usbd_iotp_finite_in.c
+USBD_SRC += $(USBD_CORE_IOTP_PATH)/imp/src/usbd_iotp_finite_out.c
+USBD_SRC += $(USBD_CORE_IOTP_PATH)/imp/src/usbd_iotp_ring_infinite.c
 USBD_SRC += $(USBD_CORE_ADD_ONS_CDP_PATH)/imp/src/usb_cdp.c
 USBD_SRC += $(USBD_PORT_TEST_PATH)/imp/src/port_test.c
 

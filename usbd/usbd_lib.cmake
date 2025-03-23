@@ -86,89 +86,98 @@ target_sources(usbd_lib INTERFACE
 )
 
 if(DEFINED USBD_DO_NOT_USE_CDP AND USBD_DO_NOT_USE_CDP MATCHES ON)
-target_compile_definitions(usbd_lib INTERFACE
-    USB_CDP_H_
-)
+    target_compile_definitions(usbd_lib INTERFACE
+        USB_CDP_H_
+    )
 else()
-target_sources(usbd_lib INTERFACE
-    ${USBD_CORE_ADD_ONS_CDP_PATH}/imp/src/usb_cdp.c
-)
+    target_sources(usbd_lib INTERFACE
+        ${USBD_CORE_ADD_ONS_CDP_PATH}/imp/src/usb_cdp.c
+    )
 endif()
 
 if(DEFINED USBD_DO_NOT_USE_USBDC AND USBD_DO_NOT_USE_USBDC MATCHES ON)
-target_compile_definitions(usbd_lib INTERFACE
-    USBDC_H_
-)
+    target_compile_definitions(usbd_lib INTERFACE
+        USBDC_H_
+    )
 else()
-target_sources(usbd_lib INTERFACE
-    ${USBD_CORE_USBDC_PATH}/imp/src/usbdc.c
-)
+    target_sources(usbd_lib INTERFACE
+        ${USBD_CORE_USBDC_PATH}/imp/src/usbdc.c
+    )
 endif()
 
 if(DEFINED USBD_DO_NOT_USE_DEV AND USBD_DO_NOT_USE_DEV MATCHES ON)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_DEV_TYPES_H_
-    USBD_DEV_H_
-)
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_DEV_TYPES_H_
+        USBD_DEV_H_
+    )
 else()
-target_sources(usbd_lib INTERFACE
-    ${USBD_CORE_USBD_DEV_PATH}/imp/src/usbd_dev.c
-)
+    target_sources(usbd_lib INTERFACE
+        ${USBD_CORE_USBD_DEV_PATH}/imp/src/usbd_dev.c
+    )
 endif()
 
 if(DEFINED USBD_DO_NOT_USE_EVENT AND USBD_DO_NOT_USE_EVENT MATCHES ON)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_EVENT_TYPES_H_
-    USBD_EVENT_H_
-)
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_EVENT_TYPES_H_
+        USBD_EVENT_H_
+    )
 else()
-target_sources(usbd_lib INTERFACE
-    ${USBD_CORE_USBD_EVENT_PATH}/imp/src/usbd_event.c
-)
+    target_sources(usbd_lib INTERFACE
+        ${USBD_CORE_USBD_EVENT_PATH}/imp/src/usbd_event.c
+    )
 endif()
 
 if(DEFINED USBD_DO_NOT_USE_IO AND USBD_DO_NOT_USE_IO MATCHES ON)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_IO_TYPES_H_
-    USBD_IO_H_
-)
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_IO_TYPES_H_
+        USBD_IO_H_
+    )
 else()
-target_sources(usbd_lib INTERFACE
-    ${USBD_CORE_USBD_IO_PATH}/imp/src/usbd_io.c
-)
+    target_sources(usbd_lib INTERFACE
+        ${USBD_CORE_USBD_IO_PATH}/imp/src/usbd_io.c
+    )
 endif()
 
 if(DEFINED USBD_DO_NOT_USE_IOTP AND USBD_DO_NOT_USE_IOTP MATCHES ON)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_IOTP_TYPES_H_
-    USBD_IOTP_H_
-)
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_IOTP_TYPES_H_
+        USBD_IOTP_H_
+    )
 else()
-target_sources(usbd_lib INTERFACE
-    ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp.c
-)
+    if(DEFINED USBD_IOTP_LIGHT_ONLY AND USBD_IOTP_LIGHT_ONLY MATCHES ON)
+        target_sources(usbd_lib INTERFACE
+            ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp.c
+        )
+    else()
+        target_sources(usbd_lib INTERFACE
+            ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp.c
+            ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp_finite_in.c
+            ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp_finite_out.c
+            ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp_ring_infinite.c
+        )
+    endif()
 endif()
 
 if(DEFINED USBD_DO_NOT_USE_IOTP_BUFF AND USBD_DO_NOT_USE_IOTP_BUFF MATCHES ON)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_IOTP_BUFF_TYPES_H_
-    USBD_IOTP_BUFF_H_
-)
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_IOTP_BUFF_TYPES_H_
+        USBD_IOTP_BUFF_H_
+    )
 else()
-target_sources(usbd_lib INTERFACE
-    ${USBD_CORE_IOTP_BUFF_PATH}/imp/src/usbd_iotp_buff.c
-)
+    target_sources(usbd_lib INTERFACE
+        ${USBD_CORE_IOTP_BUFF_PATH}/imp/src/usbd_iotp_buff.c
+    )
 endif()
 
 if(DEFINED USBD_DO_NOT_USE_REQUEST AND USBD_DO_NOT_USE_REQUEST MATCHES ON)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_REQUEST_TYPES_H_
-    USBD_REQUEST_H_
-)
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_REQUEST_TYPES_H_
+        USBD_REQUEST_H_
+    )
 else()
-target_sources(usbd_lib INTERFACE
-    ${USBD_CORE_USBD_REQUEST_PATH}/imp/src/usbd_request.c
-)
+    target_sources(usbd_lib INTERFACE
+        ${USBD_CORE_USBD_REQUEST_PATH}/imp/src/usbd_request.c
+    )
 endif()
 
 # -----------------------------------------------------------------------------------------------------------------------------
@@ -177,55 +186,55 @@ endif()
 # -----------------------------------------------------------------------------------------------------------------------------
 
 if(DEFINED USBD_USE_MASS_STORAGE AND USBD_USE_MASS_STORAGE MATCHES ON)
-target_sources(usbd_lib INTERFACE
-    ${MASS_STORAGE_PATH}/imp/src/mass_storage.c
-)
-target_include_directories(usbd_lib INTERFACE
-    ${MASS_STORAGE_PATH}/api/
-    ${MASS_STORAGE_PATH}/imp/inc/
-)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_MASS_STORAGE_PRESENT
-)
+    target_sources(usbd_lib INTERFACE
+        ${MASS_STORAGE_PATH}/imp/src/mass_storage.c
+    )
+    target_include_directories(usbd_lib INTERFACE
+        ${MASS_STORAGE_PATH}/api/
+        ${MASS_STORAGE_PATH}/imp/inc/
+    )
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_MASS_STORAGE_PRESENT
+    )
 endif()
 
 if(DEFINED USBD_USE_CDC_VCOM AND USBD_USE_CDC_VCOM MATCHES ON)
-target_sources(usbd_lib INTERFACE
-    ${CDC_VCOM_PATH}/imp/src/cdc_vcom.c
-)
-target_include_directories(usbd_lib INTERFACE
-    ${CDC_VCOM_PATH}/api/
-    ${CDC_VCOM_PATH}/imp/inc/
-)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_CDC_VCOM_PRESENT
-)
+    target_sources(usbd_lib INTERFACE
+        ${CDC_VCOM_PATH}/imp/src/cdc_vcom.c
+    )
+    target_include_directories(usbd_lib INTERFACE
+        ${CDC_VCOM_PATH}/api/
+        ${CDC_VCOM_PATH}/imp/inc/
+    )
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_CDC_VCOM_PRESENT
+    )
 endif()
 
 if(DEFINED USBD_USE_DFU AND USBD_USE_DFU MATCHES ON)
-target_sources(usbd_lib INTERFACE
-    ${DFU_PATH}/imp/src/dfu.c
-)
-target_include_directories(usbd_lib INTERFACE
-    ${DFU_PATH}/api/
-    ${DFU_PATH}/imp/inc/
-)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_DFU_PRESENT
-)
+    target_sources(usbd_lib INTERFACE
+        ${DFU_PATH}/imp/src/dfu.c
+    )
+    target_include_directories(usbd_lib INTERFACE
+        ${DFU_PATH}/api/
+        ${DFU_PATH}/imp/inc/
+    )
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_DFU_PRESENT
+    )
 endif()
 
 if(DEFINED USBD_USE_HID AND USBD_USE_HID MATCHES ON)
-target_sources(usbd_lib INTERFACE
-    ${HID_PATH}/imp/src/hid.c
-)
-target_include_directories(usbd_lib INTERFACE
-    ${HID_PATH}/api/
-    ${HID_PATH}/imp/inc/
-)
-target_compile_definitions(usbd_lib INTERFACE
-    USBD_HID_PRESENT
-)
+    target_sources(usbd_lib INTERFACE
+        ${HID_PATH}/imp/src/hid.c
+    )
+    target_include_directories(usbd_lib INTERFACE
+        ${HID_PATH}/api/
+        ${HID_PATH}/imp/inc/
+    )
+    target_compile_definitions(usbd_lib INTERFACE
+        USBD_HID_PRESENT
+    )
 endif()
 
 # -----------------------------------------------------------------------------------------------------------------------------
@@ -234,21 +243,21 @@ endif()
 # -----------------------------------------------------------------------------------------------------------------------------
 
 if(DEFINED USBD_USE_PORT_TEST AND USBD_USE_PORT_TEST MATCHES ON)
-target_sources(usbd_lib INTERFACE
-    ${USBD_PORT_TEST_PATH}/imp/src/port_test.c
-)
-target_include_directories(usbd_lib INTERFACE
-    ${USBD_PORT_TEST_PATH}/api/
-    ${USBD_PORT_TEST_PATH}/imp/inc/
-)
+    target_sources(usbd_lib INTERFACE
+        ${USBD_PORT_TEST_PATH}/imp/src/port_test.c
+    )
+    target_include_directories(usbd_lib INTERFACE
+        ${USBD_PORT_TEST_PATH}/api/
+        ${USBD_PORT_TEST_PATH}/imp/inc/
+    )
 endif()
 
 if(DEFINED USBD_USE_PORT_STM32_CATEGORY_A AND USBD_USE_PORT_STM32_CATEGORY_A MATCHES ON)
-target_sources(usbd_lib INTERFACE
-    ${USBD_PORT_STM32_CATEGORY_A_PATH}/imp/src/usbd_port_stm32_cat_a.c
-)
-target_include_directories(usbd_lib INTERFACE
-    ${USBD_PORT_STM32_CATEGORY_A_PATH}/api/
-    ${USBD_PORT_STM32_CATEGORY_A_PATH}/imp/inc/
-)
+    target_sources(usbd_lib INTERFACE
+        ${USBD_PORT_STM32_CATEGORY_A_PATH}/imp/src/usbd_port_stm32_cat_a.c
+    )
+    target_include_directories(usbd_lib INTERFACE
+        ${USBD_PORT_STM32_CATEGORY_A_PATH}/api/
+        ${USBD_PORT_STM32_CATEGORY_A_PATH}/imp/inc/
+    )
 endif()
