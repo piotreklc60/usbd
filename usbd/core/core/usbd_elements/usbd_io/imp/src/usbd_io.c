@@ -437,6 +437,10 @@ void USBD_IO_UP_Set_TP(
          USBD_IO_UP_PIPE_SET_TP_PARAMS_PTR(pipe, tp_params);
          USBD_IO_UP_PIPE_SET_TP_OWNER_PTR(pipe,  tp_owner);
 
+         USBD_IO_SET_IN_PROVIDE_HANDLER(USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe), USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
+         USBD_IO_SET_IN_MEMCPY_HANDLER(USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe),  USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
+         USBD_IO_SET_OUT_TRANSFERRED_SIZE(USBD_IO_GET_PIPE_TRANSACATION_PARAMS(pipe), 0);
+
          /**
           * if endpoint was already active and we are only changing TP then TP must be immediately reactivated.
           */
