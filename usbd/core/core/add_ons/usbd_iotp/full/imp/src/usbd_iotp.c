@@ -87,7 +87,14 @@ typedef struct usbd_iotp_vendor_memcpy_eXtended_Tag
 
 
 
-
+static USBD_Bool_DT USBD_IOTP_proc_abort_invoked(USBD_IOTP_Params_XT *tp, USBD_Bool_DT flush_hw_bufs);
+static USBD_Bool_DT USBD_IOTP_trigger_in_invoked(USBD_Params_XT *usbd, uint8_t ep_num);
+static USBD_Bool_DT USBD_IOTP_trigger_out_invoked(USBD_Params_XT *usbd, uint8_t ep_num);
+#ifdef USBD_EVENT_PRESENT
+static void USBD_IOTP_proc_event(USBD_IOTP_Params_XT *tp, uint8_t req);
+static void USBD_IOTP_event(
+   USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_EVENT_Event_Header_XT *event_params, USBD_EVENT_Reason_ET reason);
+#endif
 static void USBD_IOTP_send_invoked_connect_data_linear(
    USBD_IOTP_Params_XT *tp,
    const void *data,
@@ -245,7 +252,6 @@ static const USBD_IOTP_io_data_memcpy_out_HT USBD_IOTP_memcpy_out_tab[4] =
 #endif
 };
 
-static const uint8_t USBD_IOTP_dummy_data[2] = {0, 1};
 static USBD_Atomic_Bool_DT USBD_IOTP_refresh_trigger;
 
 void USBD_IOTP_Init(
@@ -255,6 +261,10 @@ void USBD_IOTP_Init(
       USB_EP_Direction_ET dir,
       USBD_IOTP_Params_XT *tp)
 {
+#ifdef USBD_EVENT_PRESENT
+   USBD_EVENT_Event_Header_XT *event;
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_ONOFF);
 
    if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
@@ -274,6 +284,19 @@ void USBD_IOTP_Init(
       USBD_IOTP_SET_EP_DIR_INSIDE_TP(tp, dir);
 
       USBD_INIT_INVOKE_PARAMS(USBD_IOTP_GET_INVOKE_PARAMS(tp));
+
+#ifdef USBD_EVENT_PRESENT
+      event = USBDC_EVENT_Install(usbdc, USBD_IOTP_event, USBD_EVENT_REASON_SOF_RECEIVED | USBD_EVENT_INSTALL_ONLY_ONCE);
+
+      if(!USBD_CHECK_PTR(USBD_EVENT_Event_Header_XT, event))
+      {
+         USBD_WARN(USBD_DBG_IOTPEV_INVALID_PARAMS, "IOTP event cannot be installed");
+      }
+      else
+      {
+         /* ok */
+      }
+#endif
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_ONOFF);
@@ -316,9 +339,6 @@ USBD_Bool_DT USBD_IOTP_Install(
                USBD_IO_UP_SET_IN_DATA_EVENT_HANDLER(
                   &(tp->core.pipe_params.handlers),USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_IN_Data_Event_HT));
 
-               tp->core.transfer_params.data.data.linear       = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
-               tp->core.transfer_params.data.offset            = 0;
-               tp->core.transfer_params.data.size              = 0;
                tp->core.transfer_params.dir.in.last_packet_size= 0;
                tp->core.transfer_params.dir.in.req_in_progress = USBD_FALSE;
             }
@@ -328,11 +348,12 @@ USBD_Bool_DT USBD_IOTP_Install(
                   &(tp->core.pipe_params.handlers),USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_OUT_Data_Event_HT));
 
                tp->core.transfer_params.dir.out.mem_cpy              = USBD_MAKE_INVALID_HANDLER(USBD_IO_OUT_Data_Method_Port_HT);
-               tp->core.transfer_params.data.data.linear             = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
-               tp->core.transfer_params.data.offset                  = 0;
-               tp->core.transfer_params.data.size                    = 0;
                tp->core.transfer_params.dir.out.dont_wait_for_ready  = USBD_FALSE;
             }
+
+            tp->core.transfer_params.data.data.linear       = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
+            tp->core.transfer_params.data.offset            = 0;
+            tp->core.transfer_params.data.size              = 0;
 
             USBD_IO_UP_Set_TP(
                USBD_IOTP_GET_USBD_FROM_TP(tp),
@@ -340,7 +361,7 @@ USBD_Bool_DT USBD_IOTP_Install(
                USBD_IOTP_GET_EP_DIR_FROM_TP(tp),
                &(tp->core.pipe_params.handlers),
                tp,
-               (void*)(&USBD_IOTP_dummy_data));
+               (void*)(&USBD_IOTP_refresh_trigger));
 
             result = USBD_TRUE;
          }
@@ -386,7 +407,7 @@ USBD_Bool_DT USBD_IOTP_Install_Default_Control_Pipe(
          USB_EP_DIRECTION_IN,
          &(tp_in->core.pipe_params.handlers),
          tp_in,
-         (void*)(&USBD_IOTP_dummy_data));
+         (void*)(&USBD_IOTP_refresh_trigger));
 
       /** initializes OUT pipe */
       USBD_IOTP_Init(usbd, USBD_MAKE_INVALID_PTR(void), 0, USB_EP_DIRECTION_OUT, tp_out);
@@ -408,7 +429,7 @@ USBD_Bool_DT USBD_IOTP_Install_Default_Control_Pipe(
          USB_EP_DIRECTION_OUT,
          &(tp_out->core.pipe_params.handlers),
          tp_out,
-         (void*)(&USBD_IOTP_dummy_data));
+         (void*)(&USBD_IOTP_refresh_trigger));
 
       /** locks IN and OUT pipes */
       USBD_IO_UP_Lock_TP_Params(usbd, 0, USB_EP_DIRECTION_IN);
@@ -630,7 +651,7 @@ USBD_Bool_DT USBD_IOTP_Is_Transfer_Active(
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data))
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger))
       {
          result = USBD_ATOMIC_BOOL_GET(tp->core.transfer_active);
       }
@@ -640,6 +661,49 @@ USBD_Bool_DT USBD_IOTP_Is_Transfer_Active(
 
    return result;
 } /* USBD_IOTP_Is_Transfer_Active */
+
+
+
+static USBD_Bool_DT USBD_IOTP_proc_abort_invoked(USBD_IOTP_Params_XT *tp, USBD_Bool_DT flush_hw_bufs)
+{
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   USBD_DEBUG_HI_3(
+      USBD_DBG_IOTPEV_PROCESSING,
+      "abort before::ep: %d::%s; tr_active = %s",
+      USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+      USBD_IO_UP_Is_EP_Active(
+         USBD_IOTP_GET_USBD_FROM_TP(tp),
+         USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+         USBD_IOTP_GET_EP_DIR_FROM_TP(tp)) ? "active" : "passive",
+      USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false");
+
+   if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
+   {
+      USBD_IO_Abort(
+         USBD_IOTP_GET_USBD_FROM_TP(tp),
+         USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+         USBD_IOTP_GET_EP_DIR_FROM_TP(tp),
+         flush_hw_bufs);
+   }
+
+   USBD_DEBUG_HI_3(
+      USBD_DBG_IOTPEV_PROCESSING,
+      "abort after:: ep: %d::%s; tr_active = %s",
+      USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+      USBD_IO_UP_Is_EP_Active(
+         USBD_IOTP_GET_USBD_FROM_TP(tp),
+         USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+         USBD_IOTP_GET_EP_DIR_FROM_TP(tp)) ? "active" : "passive",
+      USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false");
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   /* this returned value MUST be always true, it is needed for Invoke mechanism */
+   return USBD_TRUE;
+} /* USBD_IOTP_proc_abort_invoked */
+
+
 
 USBD_Bool_DT USBD_IOTP_Abort(
       USBD_IOTP_Params_XT *tp,
@@ -659,7 +723,7 @@ USBD_Bool_DT USBD_IOTP_Abort(
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data))
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger))
       {
          USBD_DEBUG_HI_3(
             USBD_DBG_IOTPEV_PROCESSING,
@@ -671,21 +735,28 @@ USBD_Bool_DT USBD_IOTP_Abort(
                USBD_IOTP_GET_EP_DIR_FROM_TP(tp)) ? "active" : "passive",
             USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) ? "true" : "false");
 
-         /* check if transaction can be processed or if request must be synchronizes to USBD task/irq */
-         if(USBD_BOOL_IS_FALSE(USBD_IS_INVOKE_NEEDED(USBD_IOTP_GET_INVOKE_PARAMS(tp))))
+         if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
          {
-            if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_active) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
+            /* try to synchronize transaction to USBD task/irq */
+            if(!USBD_INVOKE(
+               USBD_IOTP_GET_INVOKE_PARAMS(tp), USBD_IOTP_proc_abort_invoked(tp, flush_hw_bufs)))
             {
-               USBD_IO_Abort(
-                  USBD_IOTP_GET_USBD_FROM_TP(tp),
+               USBD_DEBUG_HI_3(
+                  USBD_DBG_IOTPEV_PROCESSING,
+                  "abort   invoke::ep: %d::%s, dir: %s",
                   USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
-                  USBD_IOTP_GET_EP_DIR_FROM_TP(tp),
-                  flush_hw_bufs);
+                  USBD_IO_UP_Is_EP_Active(
+                     USBD_IOTP_GET_USBD_FROM_TP(tp),
+                     USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
+                     USB_EP_DIRECTION_IN) ? "active" : "passive",
+                  USB_EP_DESC_DIR_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp) ? "out" : "in");
+
+                  USBD_ATOMIC_UINT8_SET(
+                     USBD_IOTP_GET_INVOKE_REQ(tp),
+                     USBD_BOOL_IS_TRUE(flush_hw_bufs) ? USBD_IOTP_INVOKE_REQ_ABORT_FLUSH_HW : USBD_IOTP_INVOKE_REQ_ABORT_NO_FLUSH_HW);
+
+                  USBD_ATOMIC_BOOL_SET(USBD_IOTP_refresh_trigger, USBD_TRUE);
             }
-         }
-         else
-         {
-            USBD_EMERG(USBD_DBG_IOTPEV_PROCESSING, "Invoke not implemented!");
          }
 
          USBD_DEBUG_HI_3(
@@ -786,7 +857,7 @@ USBD_Bool_DT USBD_IOTP_Send_Stall(
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data))
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger))
       {
          /* check if transaction can be processed or if request must be synchronizes to USBD task/irq */
          if(USBD_BOOL_IS_FALSE(USBD_IS_INVOKE_NEEDED(USBD_IOTP_GET_INVOKE_PARAMS(tp))))
@@ -835,6 +906,102 @@ static USBD_Bool_DT USBD_IOTP_trigger_out_invoked(USBD_Params_XT *usbd, uint8_t 
 
    return USBD_TRUE;
 } /* USBD_IOTP_trigger_out_invoked */
+
+
+
+#ifdef USBD_EVENT_PRESENT
+static void USBD_IOTP_proc_event(USBD_IOTP_Params_XT *tp, uint8_t req)
+{
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_EVENT);
+
+   USBD_ATOMIC_UINT8_SET(USBD_IOTP_GET_INVOKE_REQ(tp), USBD_IOTP_INVOKE_REQ_NONE);
+
+   if(USBD_IOTP_INVOKE_REQ_ABORT_NO_FLUSH_HW == req)
+   {
+      (void)USBD_IOTP_proc_abort_invoked(tp, USBD_FALSE);
+   }
+   else if(USBD_IOTP_INVOKE_REQ_ABORT_FLUSH_HW == req)
+   {
+      (void)USBD_IOTP_proc_abort_invoked(tp, USBD_TRUE);
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_EVENT);
+} /* USBD_IOTP_proc_event */
+
+static void USBD_IOTP_event(
+   USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_EVENT_Event_Header_XT *event_params, USBD_EVENT_Reason_ET reason)
+{
+   USBD_IOTP_Params_XT  *tp;
+#if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
+   USBD_IO_Inout_Data_Size_DT waiting_size;
+#endif
+   uint8_t ep_num;
+   uint8_t req;
+
+   USBD_UNUSED_PARAM(usbdc);
+   USBD_UNUSED_PARAM(event_params);
+   USBD_UNUSED_PARAM(reason);
+
+   USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
+
+   if(USBD_ATOMIC_BOOL_IS_TRUE(USBD_IOTP_refresh_trigger))
+   {
+      for(ep_num = 0; ep_num < USBD_MAX_NUM_ENDPOINTS; ep_num++)
+      {
+         /* OUT TP */
+         if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_OUT_TP_Owner(usbd, ep_num), void, (&USBD_IOTP_refresh_trigger)))
+         {
+            tp = USBD_IO_UP_Get_OUT_TP_Params(usbd, ep_num);
+            req = USBD_ATOMIC_UINT8_GET(USBD_IOTP_GET_INVOKE_REQ(tp));
+
+            if(USBD_IOTP_INVOKE_REQ_NONE != req)
+            {
+               USBD_IOTP_proc_event(tp, req);
+            }
+
+#if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
+            if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.data_type)
+            {
+               waiting_size = USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_TRUE);
+
+               if((waiting_size > 0)
+                  && ((USBD_IO_Inout_Data_Size_DT)BUFF_RING_GET_FREE_SIZE(tp->core.transfer_params.data.data.ring) >= waiting_size))
+               {
+                  USBD_IOTP_trigger_out_invoked(usbd, ep_num);
+               }
+            }
+#endif
+         }
+         /* IN TP */
+         if(USBD_COMPARE_PTRS(void, USBD_IO_UP_Get_IN_TP_Owner(usbd, ep_num), void, (&USBD_IOTP_refresh_trigger)))
+         {
+            tp = USBD_IO_UP_Get_IN_TP_Params(usbd, ep_num);
+            req = USBD_ATOMIC_UINT8_GET(USBD_IOTP_GET_INVOKE_REQ(tp));
+
+            if(USBD_IOTP_INVOKE_REQ_NONE != req)
+            {
+               USBD_IOTP_proc_event(tp, req);
+            }
+
+#if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
+            if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.data_type)
+            {
+               if((!BUFF_RING_IS_EMPTY(tp->core.transfer_params.data.data.ring))
+                  && (USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(usbd, ep_num) < 0))
+               {
+                  USBD_IOTP_trigger_in_invoked(usbd, ep_num);
+               }
+            }
+#endif
+         }
+      }
+
+      USBD_ATOMIC_BOOL_SET(USBD_IOTP_refresh_trigger, USBD_FALSE);
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPBF_EVENT);
+} /* USBD_IOTP_event */
+#endif
 
 
 
@@ -1040,7 +1207,7 @@ USBD_Bool_DT USBD_IOTP_Send(
          USBD_IOTP_GET_USBD_FROM_TP(tp),
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data)
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger)
          && (USB_EP_DIRECTION_IN == USBD_IOTP_GET_EP_DIR_FROM_TP(tp)))
       {
          USBD_DEBUG_HI_8(
@@ -1124,7 +1291,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Vector(
          USBD_IOTP_GET_USBD_FROM_TP(tp),
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data)
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger)
          && (USB_EP_DIRECTION_IN == USBD_IOTP_GET_EP_DIR_FROM_TP(tp)))
       {
          USBD_DEBUG_HI_8(
@@ -1211,7 +1378,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Tree(
          USBD_IOTP_GET_USBD_FROM_TP(tp),
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data)
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger)
          && (USB_EP_DIRECTION_IN == USBD_IOTP_GET_EP_DIR_FROM_TP(tp)))
       {
          USBD_DEBUG_HI_8(
@@ -1294,7 +1461,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Ring(
          USBD_IOTP_GET_USBD_FROM_TP(tp),
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data)
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger)
          && (USB_EP_DIRECTION_IN == USBD_IOTP_GET_EP_DIR_FROM_TP(tp)))
       {
          USBD_DEBUG_HI_8(
@@ -2137,7 +2304,7 @@ static USBD_Bool_DT USBD_IOTP_recv(
          USBD_IOTP_GET_USBD_FROM_TP(tp),
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data)
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger)
          && (USB_EP_DIRECTION_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp)))
       {
          USBD_DEBUG_HI_9(
@@ -2259,7 +2426,7 @@ USBD_Bool_DT USBD_IOTP_Recv_Ready(
          USBD_IOTP_GET_USBD_FROM_TP(tp),
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data)
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger)
          && (USB_EP_DIRECTION_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp)))
       {
          USBD_DEBUG_HI_7(
@@ -2681,7 +2848,7 @@ static USBD_Bool_DT USBD_IOTP_Ring_start_stop_transfer_infinitely(
          USBD_IOTP_GET_USBD_FROM_TP(tp),
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data)
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger)
          && (USB_EP_DIRECTION_IN == USBD_IOTP_GET_EP_DIR_FROM_TP(tp)))
       {
          USBD_DEBUG_HI_7(
@@ -3264,7 +3431,7 @@ static void USBD_IOTP_io_reinit(
 
    tp = (USBD_IOTP_Params_XT*)tp_params;
 
-   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_dummy_data))
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_COMPARE_PTRS(void, tp_owner, void, &USBD_IOTP_refresh_trigger))
    {
       USBD_DEBUG_HI_4(
          USBD_DBG_IOTPEV_PROCESSING,
