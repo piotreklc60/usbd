@@ -334,19 +334,6 @@ USBD_Bool_DT USBD_IOTP_Send_From_Ring(
       USBD_IO_Inout_Data_Size_DT   *size_left);
 #endif
 
-/**
- * Keeps sending data over specified endpoint from a ring buffer.
- * When there is no data in the buffer, NAK is responded until more dat awill be added to the buffer.
- *
- * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
- * \param ring pointer to ring buffer from which data shall be sent
- * \return USBD_TRUE when "send" requested successfully, USBD_FALSE otherwise
- *
- */
-USBD_Bool_DT USBD_IOTP_Send_From_Ring_Infinitely(
-      USBD_IOTP_Params_XT          *tp,
-      Buff_Ring_XT                 *ring);
-
 
 /**
  * Receives data over specified endpoint and allows for next reception
@@ -432,17 +419,6 @@ USBD_Bool_DT USBD_IOTP_Recv_And_Wait_To_Ring(
 #endif
 
 /**
- * Keeps receiving data over specified endpoint
- *
- * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
- * \param data pointer to the ring buffer to which data shall be received
- * \return USBD_TRUE when "recv" requested successfully, USBD_FALSE otherwise
- */
-USBD_Bool_DT USBD_IOTP_Recv_To_Ring_Infinitely(
-      USBD_IOTP_Params_XT        *tp,
-      Buff_Ring_XT               *ring);
-
-/**
  * Enables receiving next data over specified endpoint.
  *
  * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
@@ -452,5 +428,34 @@ USBD_Bool_DT USBD_IOTP_Recv_To_Ring_Infinitely(
  */
 USBD_Bool_DT USBD_IOTP_Recv_Ready(
       USBD_IOTP_Params_XT *tp);
+
+#if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
+/**
+ * Keeps sending data over specified endpoint via a ring buffer.
+ * When there is no data in the IN buffer / no space in the OUT buffer, NAK is responded until data is stored in IN buffer / read from OUT buffer.
+ *
+ * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
+ * \param ring pointer to the ring buffer from/to which data shall be sent/received
+ * \return USBD_TRUE when Start requested successfully, USBD_FALSE otherwise
+ *
+ */
+USBD_Bool_DT USBD_IOTP_Ring_Start_Transfer_Infinitely(
+   USBD_IOTP_Params_XT          *tp,
+   Buff_Ring_XT                 *ring);
+
+
+
+/**
+ * Finishes sending data over specified endpoint via a ring buffer.
+ *
+ * \param tp pointer to USBD_IOTP_Params_XT structure - EVENT-type TP params container
+ * \param ring pointer to the ring buffer from/to which data shall be sent/received
+ * \return USBD_TRUE when Stop requested successfully, USBD_FALSE otherwise
+ *
+ */
+USBD_Bool_DT USBD_IOTP_Ring_Stop_Transfer_Infinitely(
+   USBD_IOTP_Params_XT          *tp,
+   Buff_Ring_XT                 *ring);
+#endif
 
 #endif
