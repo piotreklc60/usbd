@@ -992,7 +992,7 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_ring(
          BUFF_FALSE);
    }
 
-   BUFF_PROTECTION_UNLOCK(tp->core.buff);
+   BUFF_PROTECTION_UNLOCK(tp->core.transfer_params.data.data.ring);
 
    return (USBD_IO_Inout_Data_Size_DT)result;
 } /* USBD_IOTP_io_data_memcpy_in_ring */

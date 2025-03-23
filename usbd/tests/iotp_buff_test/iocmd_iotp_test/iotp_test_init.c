@@ -32,6 +32,9 @@
 #ifndef USBD_DEV_INTERNAL_H_
 #include "usbd_io_internal.h"
 #endif
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
+#endif
 
 #include "cfg.h"
 #include "port_test_control.h"
@@ -40,7 +43,7 @@
 typedef struct
 {
    USBDC_Params_XT                   usbdc;
-   USBD_IOTP_BUFF_Params_XT            tp;
+   USBD_IOTP_Params_Ring_Infinite_Only_XT            tp;
    USB_EP_Direction_ET               dir;
 }test_params_T;
 
@@ -51,7 +54,7 @@ typedef struct test_ring_buf_mem_Data_Tag
 
 /*
 static USBDC_Params_XT test_usbdc;
-static USBD_IOTP_BUFF_Params_XT test_tp;
+static USBD_IOTP_Params_Ring_Infinite_Only_XT test_tp;
 static USB_EP_Direction_ET test_dir;
 // static uint8_t test_ep_num;
 */
@@ -87,61 +90,61 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
    Buff_Ring_Init(&iotp_collection_bufs[ep_index], iotp_collection_buf_mem[ep_index].mem, sizeof(iotp_collection_buf_mem[ep_index].mem));
    Buff_Ring_Add_Extension(&iotp_collection_bufs[ep_index], &iotp_collection_buf_extensions[ep_index]);
-   USBD_IOTP_BUFF_Init(usbd, &(test->usbdc), ep_num, test->dir, &(test->tp), &iotp_collection_bufs[ep_index]);
+   USBD_IOTP_Init_Infinitive_Only(usbd, &(test->usbdc), ep_num, test->dir, &(test->tp), &iotp_collection_bufs[ep_index]);
 } /* perform_test */
 
 static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 {
    test_params_T *test = &test_params[ep_index];
 
-   if(!USBD_COMPARE_PTRS(void, USBD_IOTP_BUFF_GET_USBD_FROM_TP(&(test->tp)), void, usbd))
+   if(!USBD_COMPARE_PTRS(void, USBD_IOTP_GET_USBD_FROM_TP(&(test->tp)), void, usbd))
    {
       USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"usbd\" pointer inside of TP");
       REPORT_ERROR();
    }
-   if(!USBD_COMPARE_PTRS(void, USBD_IOTP_BUFF_Get_USBD(&(test->tp)), void, usbd))
+   if(!USBD_COMPARE_PTRS(void, USBD_IOTP_Get_USBD((USBD_IOTP_Params_XT*)&(test->tp)), void, usbd))
    {
-      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"usbd\" pointer inside of TP / read by USBD_IOTP_BUFF_Get_USBD");
+      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"usbd\" pointer inside of TP / read by USBD_IOTP_Get_USBD");
       REPORT_ERROR();
    }
-   if(!USBD_COMPARE_PTRS(void, USBD_IOTP_BUFF_GET_USBDC_FROM_TP(&(test->tp)), void, &(test->usbdc)))
+   if(!USBD_COMPARE_PTRS(void, USBD_IOTP_GET_USBDC_FROM_TP(&(test->tp)), void, &(test->usbdc)))
    {
       USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"(test->usbdc)\" pointer inside of TP");
       REPORT_ERROR();
    }
-   if(!USBD_COMPARE_PTRS(void, USBD_IOTP_BUFF_Get_USBDC(&(test->tp)), void, &(test->usbdc)))
+   if(!USBD_COMPARE_PTRS(void, USBD_IOTP_Get_USBDC((USBD_IOTP_Params_XT*)&(test->tp)), void, &(test->usbdc)))
    {
-      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"(test->usbdc)\" pointer inside of TP / read by USBD_IOTP_BUFF_Get_USBDC");
+      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"(test->usbdc)\" pointer inside of TP / read by USBD_IOTP_Get_USBDC");
       REPORT_ERROR();
    }
-   if(USBD_IOTP_BUFF_GET_EP_NUM_FROM_TP(&(test->tp)) != ep_num)
+   if(USBD_IOTP_GET_EP_NUM_FROM_TP(&(test->tp)) != ep_num)
    {
       USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"ep_num\" inside of TP");
       REPORT_ERROR();
    }
-   if(USBD_IOTP_BUFF_Get_EP_Num(&(test->tp)) != ep_num)
+   if(USBD_IOTP_Get_EP_Num((USBD_IOTP_Params_XT*)&(test->tp)) != ep_num)
    {
-      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"ep_num\" inside of TP / read by USBD_IOTP_BUFF_Get_EP_Num");
+      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"ep_num\" inside of TP / read by USBD_IOTP_Get_EP_Num");
       REPORT_ERROR();
    }
-   if(USBD_IOTP_BUFF_GET_EP_DIR_FROM_TP(&(test->tp)) != test->dir)
+   if(USBD_IOTP_GET_EP_DIR_FROM_TP(&(test->tp)) != test->dir)
    {
       USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"dir\" inside of TP");
       REPORT_ERROR();
    }
-   if(USBD_IOTP_BUFF_Get_Dir(&(test->tp)) != test->dir)
+   if(USBD_IOTP_Get_Dir((USBD_IOTP_Params_XT*)&(test->tp)) != test->dir)
    {
-      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"dir\" inside of TP / read by USBD_IOTP_BUFF_Get_Dir");
+      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"dir\" inside of TP / read by USBD_IOTP_Get_Dir");
       REPORT_ERROR();
    }
-   if(USBD_IOTP_BUFF_GET_BUFF_FROM_TP(&(test->tp)) != &iotp_collection_bufs[ep_index])
+   if(USBD_IOTP_GET_RING_FROM_TP(&(test->tp)) != &iotp_collection_bufs[ep_index])
    {
       USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"buff\" inside of TP");
       REPORT_ERROR();
    }
-   if(USBD_IOTP_BUFF_Get_Buff(&(test->tp)) != &iotp_collection_bufs[ep_index])
+   if(USBD_IOTP_Get_Ring((USBD_IOTP_Params_XT*)&(test->tp)) != &iotp_collection_bufs[ep_index])
    {
-      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"buff\" inside of TP / read by USBD_IOTP_BUFF_Get_Buff");
+      USBD_WARN(MAIN_APP_TEST_ERROR, "Invalid \"buff\" inside of TP / read by USBD_IOTP_Get_Ring");
       REPORT_ERROR();
    }
 } /* check_result */

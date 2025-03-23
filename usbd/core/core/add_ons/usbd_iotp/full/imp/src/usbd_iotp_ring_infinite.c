@@ -46,7 +46,7 @@ typedef USBD_Bool_DT (*USBD_IOTP_ring_start_stop_transfer_infinitely_invoked_HT)
 
 
 #if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
-static USBD_Bool_DT USBD_IOTP_ring_start_transfer_infinitely_invoked(
+USBD_Bool_DT USBD_IOTP_Ring_Start_Transfer_Infinitely_Invoked(
    USBD_IOTP_Params_XT *tp, Buff_Ring_XT *ring, USBD_Bool_DT *result)
 {
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
@@ -125,8 +125,7 @@ static USBD_Bool_DT USBD_IOTP_Ring_start_stop_transfer_infinitely(
          USBD_IOTP_GET_USBD_FROM_TP(tp),
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, tp_owner_expected)
-         && (USB_EP_DIRECTION_IN == USBD_IOTP_GET_EP_DIR_FROM_TP(tp)))
+      if(USBD_COMPARE_PTRS(void, tp_owner, void, tp_owner_expected) || (!USBD_CHECK_PTR(void, tp_owner)))
       {
          USBD_DEBUG_HI_5(
             USBD_DBG_IOTPEV_PROCESSING,
@@ -584,7 +583,7 @@ USBD_Bool_DT USBD_IOTP_Ring_Start_Transfer_Infinitely(
    Buff_Ring_XT                 *ring)
 {
    return USBD_IOTP_Ring_start_stop_transfer_infinitely(
-      tp, (void*)USBD_IOTP_not_ring_infinite_owner, ring, USBD_IOTP_ring_start_transfer_infinitely_invoked, "start");
+      tp, (void*)USBD_IOTP_not_ring_infinite_owner, ring, USBD_IOTP_Ring_Start_Transfer_Infinitely_Invoked, "start");
 } /* USBD_IOTP_Ring_Start_Transfer_Infinitely */
 
 

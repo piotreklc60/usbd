@@ -32,8 +32,8 @@
 #ifndef USBD_IO_INTERNAL_H_
 #include "usbd_io_internal.h"
 #endif
-#ifndef USBD_IOTP_BUFF_INTERNAL_H_
-#include "usbd_iotp_buff_internal.h"
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 
 #include "cfg.h"
@@ -42,7 +42,7 @@
 
 typedef struct
 {
-   USBD_IOTP_BUFF_Params_XT     *tp;
+   USBD_IOTP_Params_Ring_Infinite_Only_XT     *tp;
    USB_EP_Direction_ET           dir;
    USBD_Bool_DT                  is_tp_in;
    uint8_t                       ep_num_bufs;
@@ -100,13 +100,13 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-   USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+   USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
-   USBD_NOTICE_3(MAIN_APP_TEST, "Buff_Ring_Write with size: %d to buf with size: %d, free_size: %d", test->size, Buff_Ring_Get_Size(test->tp->core.buff, true), Buff_Ring_Get_Free_Size(test->tp->core.buff, true));
+   USBD_NOTICE_3(MAIN_APP_TEST, "Buff_Ring_Write with size: %d to buf with size: %d, free_size: %d", test->size, Buff_Ring_Get_Size(test->tp->core.transfer_params.data.data.ring, true), Buff_Ring_Get_Free_Size(test->tp->core.transfer_params.data.data.ring, true));
 
-   result = Buff_Ring_Write(test->tp->core.buff, test->data, test->size, false, true);
+   result = Buff_Ring_Write(test->tp->core.transfer_params.data.data.ring, test->data, test->size, false, true);
 
-   USBD_NOTICE_3(MAIN_APP_TEST, "Buff_Ring_Write result: %d to buf with size: %d, free_size: %d", result, Buff_Ring_Get_Size(test->tp->core.buff, true), Buff_Ring_Get_Free_Size(test->tp->core.buff, true));
+   USBD_NOTICE_3(MAIN_APP_TEST, "Buff_Ring_Write result: %d to buf with size: %d, free_size: %d", result, Buff_Ring_Get_Size(test->tp->core.transfer_params.data.data.ring, true), Buff_Ring_Get_Free_Size(test->tp->core.transfer_params.data.data.ring, true));
 
    if(result > 0)
    {
@@ -126,10 +126,10 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
             break;
          }
 #endif
-      }while(BUFF_BOOL_IS_FALSE(Buff_Ring_Is_Empty(test->tp->core.buff, BUFF_FALSE)) || (0 != port_test_get_num_used_bufs(ep_num, USB_EP_DIRECTION_IN)));
+      }while(BUFF_BOOL_IS_FALSE(Buff_Ring_Is_Empty(test->tp->core.transfer_params.data.data.ring, BUFF_FALSE)) || (0 != port_test_get_num_used_bufs(ep_num, USB_EP_DIRECTION_IN)));
    }
 
-   USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+   USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
    USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* perform_test */
@@ -299,7 +299,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
    USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* check_result */
 
-void iotp_test_send_irq(USBD_Params_XT *usbd, USBD_IOTP_BUFF_Params_XT *tp, uint8_t ep_num, USB_EP_Direction_ET dir, uint8_t num_bufs, uint8_t *data, USBD_IO_Inout_Data_Size_DT size)
+void iotp_test_send_irq(USBD_Params_XT *usbd, USBD_IOTP_Params_Ring_Infinite_Only_XT *tp, uint8_t ep_num, USB_EP_Direction_ET dir, uint8_t num_bufs, uint8_t *data, USBD_IO_Inout_Data_Size_DT size)
 {
    uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
    test_params_T *test = &test_params[ep_index];

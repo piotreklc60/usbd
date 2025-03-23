@@ -32,8 +32,8 @@
 #ifndef USBD_IO_INTERNAL_H_
 #include "usbd_io_internal.h"
 #endif
-#ifndef USBD_IOTP_BUFF_INTERNAL_H_
-#include "usbd_iotp_buff_internal.h"
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 
 #include "cfg.h"
@@ -41,7 +41,7 @@
 #include "main_get_exe.h"
 
 
-void iotp_test_recv_ready_irq_too_less_space(USBD_Params_XT *usbd, USBD_IOTP_BUFF_Params_XT *tp, uint8_t ep_num, USB_EP_Direction_ET dir, uint8_t num_bufs, uint8_t *data, USBD_IO_Inout_Data_Size_DT size)
+void iotp_test_recv_ready_irq_too_less_space(USBD_Params_XT *usbd, USBD_IOTP_Params_Ring_Infinite_Only_XT *tp, uint8_t ep_num, USB_EP_Direction_ET dir, uint8_t num_bufs, uint8_t *data, USBD_IO_Inout_Data_Size_DT size)
 {
    /* this test is deprecated and shall be reworked. It shall cover following realistic situation: data from the HOST is comming too fast, comparing to reading from the ring buffer. In this case 2 options we have: slow down HOST-TO-DEVICE (OUT) transmission or allow for buffer data overwrite */
 

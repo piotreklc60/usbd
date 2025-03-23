@@ -74,7 +74,7 @@
 #define USBD_IOTP_GET_EP_NUM_FROM_TP(tp)     ((tp)->core.pipe_params.data.ep_num)
 #define USBD_IOTP_GET_EP_DIR_FROM_TP(tp)     ((tp)->core.pipe_params.data.dir)
 #define USBD_IOTP_GET_SIZE_TRANSFERRED(tp)   ((tp)->up_link.data.size_transferred)
-
+#define USBD_IOTP_GET_RING_FROM_TP(tp)       ((tp)->core.transfer_params.data.data.ring)
 
 
 #define USBD_IOTP_DATA_LINEAR             0

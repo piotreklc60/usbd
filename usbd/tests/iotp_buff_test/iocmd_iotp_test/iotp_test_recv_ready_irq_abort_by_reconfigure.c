@@ -32,8 +32,8 @@
 #ifndef USBD_IO_INTERNAL_H_
 #include "usbd_io_internal.h"
 #endif
-#ifndef USBD_IOTP_BUFF_INTERNAL_H_
-#include "usbd_iotp_buff_internal.h"
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 
 #include "cfg.h"
@@ -42,7 +42,7 @@
 
 typedef struct
 {
-   USBD_IOTP_BUFF_Params_XT       *tp;
+   USBD_IOTP_Params_Ring_Infinite_Only_XT       *tp;
    USB_EP_Direction_ET             dir;
    USBD_Bool_DT                    is_tp_in;
    uint8_t                         ep_num_bufs;
@@ -103,18 +103,18 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-   USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+   USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
    test->read_in_progress = USBD_TRUE;
 
-   on_remove = test->tp->core.buff->extension->on_remove;
-   test->tp->core.buff->extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
-   Buff_Ring_Clear(test->tp->core.buff, true);
-   test->tp->core.buff->extension->on_remove = on_remove;
+   on_remove = test->tp->core.transfer_params.data.data.ring->extension->on_remove;
+   test->tp->core.transfer_params.data.data.ring->extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
+   Buff_Ring_Clear(test->tp->core.transfer_params.data.data.ring, true);
+   test->tp->core.transfer_params.data.data.ring->extension->on_remove = on_remove;
 
    test->read_in_progress = USBD_FALSE;
 
-   if(BUFF_RING_IS_EMPTY(test->tp->core.buff))
+   if(BUFF_RING_IS_EMPTY(test->tp->core.transfer_params.data.data.ring))
    {
       do
       {
@@ -127,13 +127,13 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
          {
             test->num_used_bufs = 0;
 
-            Buff_Ring_Peak(test->tp->core.buff, test->data_result, test->size, 0, true);
+            Buff_Ring_Peak(test->tp->core.transfer_params.data.data.ring, test->data_result, test->size, 0, true);
 
             USBD_IO_EP_Disable(usbd, ep_num, test->dir, USBD_FALSE, USBD_FALSE);
 
             if(NULL == USBD_IO_UP_Get_OUT_TP_Params(usbd, ep_num))
             {
-               USBD_IOTP_BUFF_Install(test->tp);
+               USBD_IOTP_Install((USBD_IOTP_Params_XT*)(test->tp));
             }
 
             USBD_IO_EP_Enable_And_Configure(usbd, ep_num, test->dir);
@@ -156,7 +156,7 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
       if(USBD_BOOL_IS_FALSE(aborted))
       {
-         Buff_Ring_Peak(test->tp->core.buff, test->data_result, test->size, 0, true);
+         Buff_Ring_Peak(test->tp->core.transfer_params.data.data.ring, test->data_result, test->size, 0, true);
       }
    }
    else if(USB_EP_DIRECTION_OUT == test->dir)
@@ -170,7 +170,7 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
       REPORT_ERROR();
    }
 
-   USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+   USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
    USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* perform_test */
@@ -287,7 +287,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
 void iotp_test_recv_ready_irq_abort_by_reconfigure(
    USBD_Params_XT *usbd,
-   USBD_IOTP_BUFF_Params_XT *tp,
+   USBD_IOTP_Params_Ring_Infinite_Only_XT *tp,
    uint8_t ep_num,
    USB_EP_Direction_ET dir,
    uint8_t num_bufs,

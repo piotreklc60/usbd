@@ -32,8 +32,8 @@
 #ifndef USBD_IO_INTERNAL_H_
 #include "usbd_io_internal.h"
 #endif
-#ifndef USBD_IOTP_BUFF_INTERNAL_H_
-#include "usbd_iotp_buff_internal.h"
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 
 #include "cfg.h"
@@ -42,7 +42,7 @@
 
 typedef struct
 {
-   USBD_IOTP_BUFF_Params_XT  *tp;
+   USBD_IOTP_Params_Ring_Infinite_Only_XT  *tp;
    USB_EP_Direction_ET        dir;
    USBD_Bool_DT               is_tp_in;
    uint8_t                    ep_num_bufs;
@@ -97,18 +97,18 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-   USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+   USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
    test->read_in_progress = USBD_TRUE;
 
-   on_remove = test->tp->core.buff->extension->on_remove;
-   test->tp->core.buff->extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
-   Buff_Ring_Clear(test->tp->core.buff, false);
-   test->tp->core.buff->extension->on_remove = on_remove;
+   on_remove = test->tp->core.transfer_params.data.data.ring->extension->on_remove;
+   test->tp->core.transfer_params.data.data.ring->extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
+   Buff_Ring_Clear(test->tp->core.transfer_params.data.data.ring, false);
+   test->tp->core.transfer_params.data.data.ring->extension->on_remove = on_remove;
 
    test->read_in_progress = USBD_FALSE;
 
-   if(BUFF_RING_IS_EMPTY(test->tp->core.buff))
+   if(BUFF_RING_IS_EMPTY(test->tp->core.transfer_params.data.data.ring))
    {
       do
       {
@@ -129,9 +129,9 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
       }while(USBD_BOOL_IS_TRUE(result/*port_test_is_transfer_active(ep_num, test->dir)*/));
 
       USBD_NOTICE_2(MAIN_APP_TEST, "read received data from ring buf; size to read: %d; size in buf: %d",
-         test->size, Buff_Ring_Get_Busy_Size(test->tp->core.buff, true));
+         test->size, Buff_Ring_Get_Busy_Size(test->tp->core.transfer_params.data.data.ring, true));
 
-      Buff_Ring_Peak(test->tp->core.buff, test->data_result, test->size, 0, true);
+      Buff_Ring_Peak(test->tp->core.transfer_params.data.data.ring, test->data_result, test->size, 0, true);
    }
    else if(USB_EP_DIRECTION_OUT == test->dir)
    {
@@ -144,7 +144,7 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
       REPORT_ERROR();
    }
 
-   USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+   USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
    USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* perform_test */
@@ -171,7 +171,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
          USBD_WARN_2(MAIN_APP_TEST_ERROR, "data transferred size incorrect! test->size_result = %d; test->size = %d", test->size_result, test->size);
          REPORT_ERROR();
       }
-      else if(Buff_Ring_Get_Busy_Size(test->tp->core.buff, true) != test->size)
+      else if(Buff_Ring_Get_Busy_Size(test->tp->core.transfer_params.data.data.ring, true) != test->size)
       {
          USBD_WARN_4(MAIN_APP_TEST_ERROR, "recv_ready irq: size = %d, ep_num: %d, dir: %s, num buffers: %d",
               test->size,
@@ -179,7 +179,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
               (USB_EP_DIRECTION_IN == test->dir) ? "IN" : "OUT",
               test->ep_num_bufs);
          USBD_WARN_2(MAIN_APP_TEST_ERROR, "data transferred size incorrect! transferred_size = %d; test->size = %d",
-            Buff_Ring_Get_Busy_Size(test->tp->core.buff, true), test->size);
+            Buff_Ring_Get_Busy_Size(test->tp->core.transfer_params.data.data.ring, true), test->size);
          REPORT_ERROR();
       }
       else if(0 != memcmp(test->data, test->data_result, test->size))
@@ -302,7 +302,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
    USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* check_result */
 
-void iotp_test_recv_ready_irq(USBD_Params_XT *usbd, USBD_IOTP_BUFF_Params_XT *tp, uint8_t ep_num, USB_EP_Direction_ET dir, uint8_t num_bufs, uint8_t *data, USBD_IO_Inout_Data_Size_DT size)
+void iotp_test_recv_ready_irq(USBD_Params_XT *usbd, USBD_IOTP_Params_Ring_Infinite_Only_XT *tp, uint8_t ep_num, USB_EP_Direction_ET dir, uint8_t num_bufs, uint8_t *data, USBD_IO_Inout_Data_Size_DT size)
 {
    volatile Buff_Ring_Extension_On_Remove on_remove;
    uint8_t ep_index = ep_num * ((USB_EP_DIRECTION_IN == dir) ? 1 : 2);
@@ -346,10 +346,10 @@ void iotp_test_recv_ready_irq(USBD_Params_XT *usbd, USBD_IOTP_BUFF_Params_XT *tp
 
       USBD_EMERG_2(MAIN_APP_TEST_INTRO, "test size = %d; EP OUT size: %d!", size, port_test_get_out_ep_buf_size(ep_num));
 
-      on_remove = test->tp->core.buff->extension->on_remove;
-      test->tp->core.buff->extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
-      Buff_Ring_Clear(test->tp->core.buff, true);
-      test->tp->core.buff->extension->on_remove = on_remove;
+      on_remove = test->tp->core.transfer_params.data.data.ring->extension->on_remove;
+      test->tp->core.transfer_params.data.data.ring->extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
+      Buff_Ring_Clear(test->tp->core.transfer_params.data.data.ring, true);
+      test->tp->core.transfer_params.data.data.ring->extension->on_remove = on_remove;
 
       test->read_in_progress = USBD_FALSE;
 

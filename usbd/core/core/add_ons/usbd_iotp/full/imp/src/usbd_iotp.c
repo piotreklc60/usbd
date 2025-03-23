@@ -123,6 +123,8 @@ static USBD_Bool_DT USBD_IOTP_init_internal(
          /* ok */
          result = USBD_TRUE;
       }
+#else
+      result = USBD_TRUE;
 #endif
    }
 
@@ -162,14 +164,13 @@ void USBD_IOTP_Init_Infinitive_Only(
       USBD_IOTP_Params_Ring_Infinite_Only_XT *tp,
       Buff_Ring_XT *buff)
 {
+   USBD_Bool_DT result;
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_ONOFF);
 
    if(USBD_BOOL_IS_TRUE(USBD_IOTP_init_internal(
       usbd, usbdc, ep_num, dir, (USBD_IOTP_Params_XT*)tp, sizeof(USBD_IOTP_Params_Ring_Infinite_Only_XT))))
    {
-      if(USBD_BOOL_IS_TRUE(USBD_IOTP_Ring_Start_Transfer_Infinitely((USBD_IOTP_Params_XT*)tp, buff)))
-      {
-      }
+      (void)USBD_IOTP_Ring_Start_Transfer_Infinitely_Invoked((USBD_IOTP_Params_XT*)tp, buff, &result);
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_ONOFF);
@@ -400,6 +401,27 @@ USB_EP_Direction_ET USBD_IOTP_Get_Dir(
 
    return result;
 } /* USBD_IOTP_Get_Dir */
+
+#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+Buff_Ring_XT *USBD_IOTP_Get_Ring(
+      USBD_IOTP_Params_XT *tp)
+{
+   Buff_Ring_XT *result;
+
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_STATE);
+
+   result = USBD_MAKE_INVALID_PTR(Buff_Ring_XT);
+
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
+   {
+      result = USBD_IOTP_GET_RING_FROM_TP(tp);
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_STATE);
+
+   return result;
+} /* USBD_IOTP_Get_Ring */
+#endif
 
 USBD_IO_Inout_Data_Size_DT USBD_IOTP_Get_Transferred_Size(
       USBD_IOTP_Params_XT *tp)

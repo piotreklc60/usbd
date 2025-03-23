@@ -152,6 +152,17 @@ Buff_Size_DT USBD_IOTP_Ring_Vendor_Memcpy_Out(const Buff_Memcpy_Params_XT *param
 
 #if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
 /**
+ * Function to initialize RING_INFINITE transfer type
+ *
+ * \param tp pointer to transport protocol structure to be initialized
+ * \param ring pointer to ring buffer to be connected
+ * \param result USBD_TRUE if succeeded, USBD_FALSE otherwise.
+ * \return always USBD_TRUE as this is callback for INVOKE mechanism where always USBD_TRUE is expected.
+ */
+USBD_Bool_DT USBD_IOTP_Ring_Start_Transfer_Infinitely_Invoked(
+   USBD_IOTP_Params_XT *tp, Buff_Ring_XT *ring, USBD_Bool_DT *result);
+
+/**
  * Function to trigger IN transaction on the pipe.
  *
  * \param usbd pointer to USBD_Params_XT structure

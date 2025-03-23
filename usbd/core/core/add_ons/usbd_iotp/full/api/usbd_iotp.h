@@ -42,6 +42,26 @@ void USBD_IOTP_Init(
       USB_EP_Direction_ET dir,
       USBD_IOTP_Params_XT *tp);
 
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+/**
+ * Initializes TP structure and its basic parameters to work ONLY in RING_INFINITE mode.
+ *
+ * \param usbd pointer to USBD_Params_XT structure which is a pointer to USB device
+ * \param usbdc pointer to USBDC_Params_XT structure which is a pointer to USB device configuration
+ * \param ep_num number of endpoint for which TP is installed
+ * \param dir direction. For possible values please refer to @see USB_EP_Direction_ET
+ * \param tp pointer to USBD_IOTP_Params_XT structure which will be initialized
+ * \param buff pointer ring buffer to be used by the TP
+ */
+void USBD_IOTP_Init_Infinitive_Only(
+      USBD_Params_XT  *usbd,
+      USBDC_Params_XT *usbdc,
+      uint8_t ep_num,
+      USB_EP_Direction_ET dir,
+      USBD_IOTP_Params_Ring_Infinite_Only_XT *tp,
+      Buff_Ring_XT *buff);
+#endif
+
 /**
  * Instals TP structure and handlers in device.
  * This function shall be called on CONFIGURED event by TP user (upper layer, for example class library)
@@ -92,6 +112,17 @@ uint8_t USBD_IOTP_Get_EP_Num(
  */
 USB_EP_Direction_ET USBD_IOTP_Get_Dir(
       USBD_IOTP_Params_XT *tp);
+
+#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+/**
+ * Gets pointer to ring buffer which is used by TP
+ *
+ * \param tp pointer to USBD_IOTP_Params_XT structure
+ * \return pointer to buffer used by tp
+ */
+Buff_Ring_XT *USBD_IOTP_Get_Ring(
+      USBD_IOTP_Params_XT *tp);
+#endif
 
 /**
  * Gets size of data which has been successfully transferred

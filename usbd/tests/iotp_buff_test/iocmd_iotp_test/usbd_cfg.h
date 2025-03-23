@@ -41,8 +41,6 @@
 
 
 //#define USBD_IO_H_
-#define USBD_IOTP_TYPES_H_
-#define USBD_IOTP_H_
 //#define USBD_DEV_H_
 //#define USBD_INIT_H_
 #define USBD_REQUEST_TYPES_H_
@@ -51,8 +49,5 @@
 #define USBD_EVENT_H_
 //#define USBDC_H_
 
-#define USBD_IOTP_BUFF_USE
-#define USBD_IOTP_BUFF_USE_UP_LINK                 USBD_FEATURE_PRESENT
-#define USBD_IOTP_BUFF_SUPPORT_CONTROL_TRANSFER    USBD_FEATURE_PRESENT
 
 #endif

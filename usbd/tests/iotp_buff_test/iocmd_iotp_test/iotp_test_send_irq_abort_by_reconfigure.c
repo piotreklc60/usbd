@@ -32,8 +32,8 @@
 #ifndef USBD_IO_INTERNAL_H_
 #include "usbd_io_internal.h"
 #endif
-#ifndef USBD_IOTP_BUFF_INTERNAL_H_
-#include "usbd_iotp_buff_internal.h"
+#ifndef USBD_IOTP_INTERNAL_H_
+#include "usbd_iotp_internal.h"
 #endif
 
 #include "cfg.h"
@@ -42,7 +42,7 @@
 
 typedef struct
 {
-   USBD_IOTP_BUFF_Params_XT       *tp;
+   USBD_IOTP_Params_Ring_Infinite_Only_XT       *tp;
    USB_EP_Direction_ET             dir;
    USBD_Bool_DT                    is_tp_in;
    uint8_t                         ep_num_bufs;
@@ -99,9 +99,9 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
    USBD_ENTER_FUNC(MAIN_APP_TEST);
 
-   USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+   USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
-   result = Buff_Ring_Write(test->tp->core.buff, test->data, test->size, false, true);
+   result = Buff_Ring_Write(test->tp->core.transfer_params.data.data.ring, test->data, test->size, false, true);
 
    num_packets = port_test_get_num_transactions_passed(ep_num, test->dir);
 
@@ -122,7 +122,7 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
             if(NULL == USBD_IO_UP_Get_IN_TP_Params(usbd, ep_num))
             {
-               USBD_IOTP_BUFF_Install(test->tp);
+               USBD_IOTP_Install((USBD_IOTP_Params_XT*)(test->tp));
             }
 
             USBD_IO_EP_Enable_And_Configure(usbd, ep_num, test->dir);
@@ -140,7 +140,7 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 #endif
 
          num_packets++;
-      }while(BUFF_BOOL_IS_FALSE(Buff_Ring_Is_Empty(test->tp->core.buff, BUFF_FALSE)));
+      }while(BUFF_BOOL_IS_FALSE(Buff_Ring_Is_Empty(test->tp->core.transfer_params.data.data.ring, BUFF_FALSE)));
 
       if(num_packets <= test->abort_after_packets)
       {
@@ -148,7 +148,7 @@ static void perform_test(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
       }
    }
 
-   USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+   USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
    USBD_EXIT_FUNC(MAIN_APP_TEST);
 } /* perform_test */
@@ -253,7 +253,7 @@ static void check_result(USBD_Params_XT *usbd, uint8_t ep_index, uint8_t ep_num)
 
 void iotp_test_send_irq_abort_by_reconfigure(
    USBD_Params_XT *usbd,
-   USBD_IOTP_BUFF_Params_XT *tp,
+   USBD_IOTP_Params_Ring_Infinite_Only_XT *tp,
    uint8_t ep_num,
    USB_EP_Direction_ET dir,
    uint8_t num_bufs,
@@ -306,11 +306,11 @@ void iotp_test_send_irq_abort_by_reconfigure(
 
    if((port_test_get_num_used_bufs(ep_num, dir) > 0) && USBD_BOOL_IS_TRUE(test->is_tp_in))
    {
-      USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+      USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
 
-      USBD_IOTP_BUFF_Abort(test->tp, USBD_TRUE);
+      USBD_IOTP_Abort((USBD_IOTP_Params_XT*)(test->tp), USBD_TRUE);
 
-      USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_BUFF_GET_INVOKE_PARAMS(test->tp));
+      USBD_UNMARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(test->tp));
    }
 
    USBD_EXIT_FUNC(MAIN_APP_TEST);
