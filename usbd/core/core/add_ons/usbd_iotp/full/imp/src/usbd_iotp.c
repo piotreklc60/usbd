@@ -553,9 +553,31 @@ USBD_Bool_DT USBD_IOTP_Is_Transfer_Active(
          USBD_IOTP_GET_EP_NUM_FROM_TP(tp),
          USBD_IOTP_GET_EP_DIR_FROM_TP(tp));
 
-      if(USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_not_ring_infinite_owner))
+      if(USBD_BOOL_IS_TRUE(USBD_IOTP_check_both_tp_owners(tp_owner)))
       {
-         result = USBD_ATOMIC_BOOL_GET(tp->core.transfer_params.transfer_active);
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+         if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.transfer_params.data_type)
+         {
+            if(USB_EP_DIRECTION_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp))
+            {
+               if(!BUFF_RING_IS_FULL(tp->core.transfer_params.data.data.ring))
+               {
+                  result = USBD_TRUE;
+               }
+            }
+            else
+            {
+               if(BUFF_RING_GET_BUSY_SIZE(tp->core.transfer_params.data.data.ring) > 0)
+               {
+                  result = USBD_TRUE;
+               }
+            }
+         }
+         else
+#endif
+         {
+            result = USBD_ATOMIC_BOOL_GET(tp->core.transfer_params.transfer_active);
+         }
       }
    }
 
@@ -581,7 +603,7 @@ static USBD_Bool_DT USBD_IOTP_proc_abort_invoked(USBD_IOTP_Params_XT *tp, USBD_B
       USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_params.transfer_active) ? "true" : "false",
       tp->core.transfer_params.data_type);
 
-   if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_params.transfer_active) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
+   if(USBD_ATOMIC_BOOL_IS_TRUE(USBD_IOTP_Is_Transfer_Active(tp)) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
    {
       USBD_IO_Abort(
          USBD_IOTP_GET_USBD_FROM_TP(tp),
@@ -640,7 +662,7 @@ USBD_Bool_DT USBD_IOTP_Abort(
             USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_params.transfer_active) ? "true" : "false",
             tp->core.transfer_params.data_type);
 
-         if(USBD_ATOMIC_BOOL_IS_TRUE(tp->core.transfer_params.transfer_active) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
+         if(USBD_BOOL_IS_TRUE(USBD_IOTP_Is_Transfer_Active(tp)) || USBD_BOOL_IS_TRUE(flush_hw_bufs))
          {
             /* try to synchronize transaction to USBD task/irq */
             if(!USBD_INVOKE(
