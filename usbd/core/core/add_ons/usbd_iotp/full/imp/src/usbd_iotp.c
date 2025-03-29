@@ -73,11 +73,11 @@ static const USBD_IO_UP_Error_HT USBD_IOTP_error_table[4] =
 
 USBD_Atomic_Bool_DT USBD_IOTP_refresh_trigger;
 const uint8_t USBD_IOTP_not_ring_infinite_owner[1] = {0};
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
 const uint8_t USBD_IOTP_ring_infinite_owner[1] = {0};
 #endif
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
 USBD_Bool_DT USBD_IOTP_check_both_tp_owners(void *tp_owner)
 {
    return (USBD_COMPARE_PTRS(void, tp_owner, void, USBD_IOTP_not_ring_infinite_owner)
@@ -155,7 +155,7 @@ void USBD_IOTP_Init(
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_ONOFF);
 } /* USBD_IOTP_Init */
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
 void USBD_IOTP_Init_Infinitive_Only(
       USBD_Params_XT  *usbd,
       USBDC_Params_XT *usbdc,
@@ -212,8 +212,8 @@ USBD_Bool_DT USBD_IOTP_Install(
 
             USBD_ATOMIC_BOOL_SET(tp->core.transfer_params.transfer_active, USBD_FALSE);
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
-            if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.transfer_params.data_type)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
+            if(USBD_IOTP_DATA_RING_INFINITE == tp->core.transfer_params.data_type)
             {
                tp_owner = (void*)USBD_IOTP_ring_infinite_owner;
             }
@@ -402,7 +402,7 @@ USB_EP_Direction_ET USBD_IOTP_Get_Dir(
    return result;
 } /* USBD_IOTP_Get_Dir */
 
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if((USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS) || (USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS))
 Buff_Ring_XT *USBD_IOTP_Get_Ring(
       USBD_IOTP_Params_XT *tp)
 {
@@ -555,8 +555,8 @@ USBD_Bool_DT USBD_IOTP_Is_Transfer_Active(
 
       if(USBD_BOOL_IS_TRUE(USBD_IOTP_check_both_tp_owners(tp_owner)))
       {
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
-         if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.transfer_params.data_type)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
+         if(USBD_IOTP_DATA_RING_INFINITE == tp->core.transfer_params.data_type)
          {
             if(USB_EP_DIRECTION_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp))
             {
@@ -730,7 +730,7 @@ static void USBD_IOTP_event(
    USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_EVENT_Event_Header_XT *event_params, USBD_EVENT_Reason_ET reason)
 {
    USBD_IOTP_Params_XT  *tp;
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
    USBD_IO_Inout_Data_Size_DT waiting_size;
 #endif
    uint8_t ep_num;
@@ -757,8 +757,8 @@ static void USBD_IOTP_event(
                USBD_IOTP_proc_event(tp, req);
             }
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
-            if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.transfer_params.data_type)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
+            if(USBD_IOTP_DATA_RING_INFINITE == tp->core.transfer_params.data_type)
             {
                waiting_size = USBD_IO_UP_EP_OUT_Get_Waiting_Data_Size(usbd, ep_num, USBD_TRUE);
 
@@ -781,8 +781,8 @@ static void USBD_IOTP_event(
                USBD_IOTP_proc_event(tp, req);
             }
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
-            if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.transfer_params.data_type)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
+            if(USBD_IOTP_DATA_RING_INFINITE == tp->core.transfer_params.data_type)
             {
                if((!BUFF_RING_IS_EMPTY(tp->core.transfer_params.data.data.ring))
                   && (USBD_IO_UP_EP_IN_Get_Buffered_Data_Size(usbd, ep_num) < 0))
@@ -828,8 +828,8 @@ static void USBD_IOTP_io_abort(void *tp_params, USBD_IO_UP_DOWN_Transaction_Para
 
       USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(tp));
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
-      if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.transfer_params.data_type)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
+      if(USBD_IOTP_DATA_RING_INFINITE == tp->core.transfer_params.data_type)
       {
          USBD_IOTP_Ring_Clear_Buff(tp, transaction, USBD_FALSE);
       }
@@ -902,8 +902,8 @@ static void USBD_IOTP_io_error(
 
       USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(tp));
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
-      if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.transfer_params.data_type)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
+      if(USBD_IOTP_DATA_RING_INFINITE == tp->core.transfer_params.data_type)
       {
          USBD_IOTP_Ring_Clear_Buff(tp, transaction, USBD_FALSE);
       }
@@ -969,8 +969,8 @@ static void USBD_IOTP_io_reinit(
 
       USBD_ATOMIC_BOOL_SET(tp->core.transfer_params.transfer_active, USBD_FALSE);
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
-      if(USBD_IOTP_DATA_RING_INFINITIVE != tp->core.transfer_params.data_type)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
+      if(USBD_IOTP_DATA_RING_INFINITE != tp->core.transfer_params.data_type)
 #endif
       {
          tp->core.transfer_params.data.data.linear = USBD_MAKE_INVALID_PTR(USBD_IOTP_Data_DT);
@@ -1013,8 +1013,8 @@ static void USBD_IOTP_io_reinit(
          tp->core.pipe_params.data.mps       = mps;
          tp->core.pipe_params.data.ep_type   = ep_type;
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
-         if(USBD_IOTP_DATA_RING_INFINITIVE == tp->core.transfer_params.data_type)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
+         if(USBD_IOTP_DATA_RING_INFINITE == tp->core.transfer_params.data_type)
          {
             if(USB_EP_DESC_DIR_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp))
             {

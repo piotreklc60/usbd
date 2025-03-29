@@ -150,7 +150,7 @@ Buff_Size_DT USBD_IOTP_Ring_Vendor_Memcpy_In(const Buff_Memcpy_Params_XT *params
  */
 Buff_Size_DT USBD_IOTP_Ring_Vendor_Memcpy_Out(const Buff_Memcpy_Params_XT *params);
 
-#if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS == USBD_FEATURE_PRESENT)
 /**
  * Function to initialize RING_INFINITE transfer type
  *
@@ -250,11 +250,11 @@ void USBD_IOTP_Io_Evdata_In(
 
 extern USBD_Atomic_Bool_DT USBD_IOTP_refresh_trigger;
 extern const uint8_t USBD_IOTP_not_ring_infinite_owner[1];
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
 extern const uint8_t USBD_IOTP_ring_infinite_owner[1];
 #endif
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
 /**
  * Helper function to check TP_OWNER field
  *

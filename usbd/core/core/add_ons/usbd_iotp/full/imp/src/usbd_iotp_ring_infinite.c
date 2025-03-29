@@ -45,14 +45,14 @@ typedef USBD_Bool_DT (*USBD_IOTP_ring_start_stop_transfer_infinitely_invoked_HT)
 
 
 
-#if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
 USBD_Bool_DT USBD_IOTP_Ring_Start_Transfer_Infinitely_Invoked(
    USBD_IOTP_Params_XT *tp, Buff_Ring_XT *ring, USBD_Bool_DT *result)
 {
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 
    tp->core.transfer_params.data.data.ring = ring;
-   tp->core.transfer_params.data_type = USBD_IOTP_DATA_RING_INFINITIVE;
+   tp->core.transfer_params.data_type = USBD_IOTP_DATA_RING_INFINITE;
 
    if(USBD_COMPARE_PTRS(void, tp, void, USBD_IO_UP_Get_TP_Params(
       USBD_IOTP_GET_USBD_FROM_TP(tp), USBD_IOTP_GET_EP_NUM_FROM_TP(tp), USBD_IOTP_GET_EP_DIR_FROM_TP(tp))))

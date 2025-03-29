@@ -71,19 +71,19 @@ static void USBD_IOTP_send_invoked_connect_data_linear(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size);
-#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_VECTOR_BUFFERS)
 static void USBD_IOTP_send_invoked_connect_data_vector(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size);
 #endif
-#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_TREE_BUFFERS)
 static void USBD_IOTP_send_invoked_connect_data_tree(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size);
 #endif
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
 static void USBD_IOTP_send_invoked_connect_data_ring(
    USBD_IOTP_Params_XT *tp,
    const void *data,
@@ -102,15 +102,15 @@ static void USBD_IOTP_io_data_provide_in(
    USBD_IO_IN_Data_Method_Port_HT data_method);
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_linear(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left);
-#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_VECTOR_BUFFERS)
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_vector(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left);
 #endif
-#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_TREE_BUFFERS)
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_tree(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left);
 #endif
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_ring(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left);
 #endif
@@ -124,17 +124,17 @@ static void USBD_IOTP_io_data_memcpy_in(
 static const USBD_IOTP_io_data_memcpy_in_HT USBD_IOTP_memcpy_in_tab[4] =
 {
    [USBD_IOTP_DATA_LINEAR] = USBD_IOTP_io_data_memcpy_in_linear,
-#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_VECTOR_BUFFERS)
    [USBD_IOTP_DATA_VECTOR] = USBD_IOTP_io_data_memcpy_in_vector,
 #else
-   [USBD_IOTP_DATA_RING]   = USBD_MAKE_INVALID_HANDLER(USBD_IOTP_io_data_memcpy_in_HT)
+   [USBD_IOTP_DATA_VECTOR] = USBD_MAKE_INVALID_HANDLER(USBD_IOTP_io_data_memcpy_in_HT),
 #endif
-#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_TREE_BUFFERS)
    [USBD_IOTP_DATA_TREE]   = USBD_IOTP_io_data_memcpy_in_tree,
 #else
-   [USBD_IOTP_DATA_RING]   = USBD_MAKE_INVALID_HANDLER(USBD_IOTP_io_data_memcpy_in_HT)
+   [USBD_IOTP_DATA_TREE]   = USBD_MAKE_INVALID_HANDLER(USBD_IOTP_io_data_memcpy_in_HT),
 #endif
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
    [USBD_IOTP_DATA_RING]   = USBD_IOTP_io_data_memcpy_in_ring
 #else
    [USBD_IOTP_DATA_RING]   = USBD_MAKE_INVALID_HANDLER(USBD_IOTP_io_data_memcpy_in_HT)
@@ -263,7 +263,7 @@ static void USBD_IOTP_send_invoked_connect_data_linear(
 
 
 
-#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_VECTOR_BUFFERS)
 static void USBD_IOTP_send_invoked_connect_data_vector(
    USBD_IOTP_Params_XT *tp,
    const void *data,
@@ -283,7 +283,7 @@ static void USBD_IOTP_send_invoked_connect_data_vector(
 
 
 
-#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_TREE_BUFFERS)
 static void USBD_IOTP_send_invoked_connect_data_tree(
    USBD_IOTP_Params_XT *tp,
    const void *data,
@@ -303,7 +303,7 @@ static void USBD_IOTP_send_invoked_connect_data_tree(
 
 
 
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
 static void USBD_IOTP_send_invoked_connect_data_ring(
    USBD_IOTP_Params_XT *tp,
    const void *data,
@@ -510,7 +510,7 @@ USBD_Bool_DT USBD_IOTP_Send(
 
 
 
-#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_VECTOR_BUFFERS)
 USBD_Bool_DT USBD_IOTP_Send_From_Vector(
    USBD_IOTP_Params_XT          *tp,
    const Buff_Readable_Vector_XT*data,
@@ -597,7 +597,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Vector(
 
 
 
-#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_TREE_BUFFERS)
 USBD_Bool_DT USBD_IOTP_Send_From_Tree(
    USBD_IOTP_Params_XT          *tp,
    const Buff_Readable_Tree_XT  *data,
@@ -684,7 +684,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Tree(
 
 
 
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
 USBD_Bool_DT USBD_IOTP_Send_From_Ring(
    USBD_IOTP_Params_XT          *tp,
    Buff_Ring_XT                 *ring,
@@ -898,7 +898,7 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_linear(
    return result;
 } /* USBD_IOTP_io_data_memcpy_in_linear */
 
-#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_VECTOR_BUFFERS)
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_vector(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left)
 {
@@ -932,7 +932,7 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_vector(
 } /* USBD_IOTP_io_data_memcpy_in_vector */
 #endif
 
-#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_TREE_BUFFERS)
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_tree(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left)
 {
@@ -967,7 +967,7 @@ static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_tree(
 } /* USBD_IOTP_io_data_memcpy_in_tree */
 #endif
 
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
 static USBD_IO_Inout_Data_Size_DT USBD_IOTP_io_data_memcpy_in_ring(
    USBD_IOTP_Params_XT *tp, USBD_IO_IN_Data_Method_Port_HT data_method, USBD_IO_Inout_Data_Size_DT size_left)
 {

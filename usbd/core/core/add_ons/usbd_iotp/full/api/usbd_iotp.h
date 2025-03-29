@@ -42,7 +42,7 @@ void USBD_IOTP_Init(
       USB_EP_Direction_ET dir,
       USBD_IOTP_Params_XT *tp);
 
-#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
 /**
  * Initializes TP structure and its basic parameters to work ONLY in RING_INFINITE mode.
  *
@@ -113,7 +113,7 @@ uint8_t USBD_IOTP_Get_EP_Num(
 USB_EP_Direction_ET USBD_IOTP_Get_Dir(
       USBD_IOTP_Params_XT *tp);
 
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if((USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS) || (USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS))
 /**
  * Gets pointer to ring buffer which is used by TP
  *
@@ -292,7 +292,7 @@ USBD_Bool_DT USBD_IOTP_Send(
       USBD_IO_Inout_Data_Size_DT  size,
       USBD_IO_Inout_Data_Size_DT *size_left);
 
-#if(USBD_IOTP_SUPPORT_VECTOR_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_VECTOR_BUFFERS)
 /**
  * Sends data over specified endpoint from a vector (list of linear data pieces).
  *
@@ -317,7 +317,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Vector(
       USBD_IO_Inout_Data_Size_DT   *size_left);
 #endif
 
-#if(USBD_IOTP_SUPPORT_TREE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_TREE_BUFFERS)
 /**
  * Sends data over specified endpoint from a tree (list of vectors).
  *
@@ -342,7 +342,7 @@ USBD_Bool_DT USBD_IOTP_Send_From_Tree(
       USBD_IO_Inout_Data_Size_DT   *size_left);
 #endif
 
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
 /**
  * Sends data over specified endpoint from a ring buffer.
  *
@@ -407,7 +407,7 @@ USBD_Bool_DT USBD_IOTP_Recv_And_Wait(
       USBD_IO_Inout_Data_Size_DT *size_left);
 
 
-#if(USBD_IOTP_SUPPORT_RING_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
 /**
  * Receives data over specified endpoint and allows for next reception
  *
@@ -460,7 +460,7 @@ USBD_Bool_DT USBD_IOTP_Recv_And_Wait_To_Ring(
 USBD_Bool_DT USBD_IOTP_Recv_Ready(
       USBD_IOTP_Params_XT *tp);
 
-#if(USBD_IOTP_SUPPORT_RING_INFINITIVE_BUFFERS == USBD_FEATURE_PRESENT)
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
 /**
  * Keeps sending data over specified endpoint via a ring buffer.
  * When there is no data in the IN buffer / no space in the OUT buffer, NAK is responded until data is stored in IN buffer / read from OUT buffer.
