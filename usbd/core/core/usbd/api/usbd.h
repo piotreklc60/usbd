@@ -133,12 +133,6 @@ struct USBDC_params_eXtended_Tag;
 #include "usbd_iotp_types.h"
 #endif
 
-#ifndef USBD_IOTP_BUFF_TYPES_H_
-#ifdef  USBD_IOTP_BUFF_USE
-#include "usbd_iotp_buff_types.h"
-#endif
-#endif
-
 #ifndef USBD_REQUEST_TYPES_H_
 #include "usbd_request_types.h"
 #endif

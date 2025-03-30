@@ -39,7 +39,7 @@
 #define APP_END                  (APP_START        + (1024 * APP_SIZE_KB)        - 1)     /* 0x0801FFFF */
 #define APP_SIZE_KB              (INTERNAL_FLASH_SIZE_KB - BOOTLOADER_SIZE_KB)            /* 118 kB */
 
-#define IOCMD_LOG_MAIN_BUF_SIZE  3000
+#define IOCMD_LOG_MAIN_BUF_SIZE  2900
 
 #define HEAP_SIZE                (6 * 1024)
 

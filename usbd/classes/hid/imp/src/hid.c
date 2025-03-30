@@ -230,6 +230,10 @@ static USBD_Bool_DT HID_send_report(
    uint8_t *data;
    USBD_Bool_DT result = USBD_FALSE;
 
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(report_type);
+#endif
+
    USBD_ENTER_FUNC(HID_IO);
 
    if(USBD_CHECK_PTR(uint8_t, buffer))

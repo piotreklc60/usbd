@@ -115,6 +115,10 @@ static USBD_Bool_DT USBD_IOTP_Ring_start_stop_transfer_infinitely(
    void          *tp_owner;
    USBD_Bool_DT   result;
 
+#ifndef USBD_USE_IOCMD
+   USBD_UNUSED_PARAM(desc);
+#endif
+
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
 
    result = USBD_FALSE;

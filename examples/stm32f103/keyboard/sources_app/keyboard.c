@@ -160,12 +160,25 @@ void Keyboard_Out_Report_Done(HID_Report_XT *report, USBD_Bool_DT is_feature)
    USBD_UNUSED_PARAM(report);
    USBD_UNUSED_PARAM(is_feature);
 
+#ifndef USBD_USE_IOCMD
+
+   IOCMD_Printf_Line("");
+   IOCMD_Printf_Line("%12s: %d", "num_lock",    keyboard_report_out.num_lock);
+   IOCMD_Printf_Line("%12s: %d", "caps_lock",   keyboard_report_out.caps_lock);
+   IOCMD_Printf_Line("%12s: %d", "scrool_lock", keyboard_report_out.scrool_lock);
+   IOCMD_Printf_Line("%12s: %d", "compose",     keyboard_report_out.compose);
+   IOCMD_Printf_Line("%12s: %d", "kana",        keyboard_report_out.kana);
+   IOCMD_Printf_Line("");
+
+#else
+
    USBD_NOTICE_2(MAIN_APP, "%12s: %d", "num_lock",    keyboard_report_out.num_lock);
    USBD_NOTICE_2(MAIN_APP, "%12s: %d", "caps_lock",   keyboard_report_out.caps_lock);
    USBD_NOTICE_2(MAIN_APP, "%12s: %d", "scrool_lock", keyboard_report_out.scrool_lock);
    USBD_NOTICE_2(MAIN_APP, "%12s: %d", "compose",     keyboard_report_out.compose);
    USBD_NOTICE_2(MAIN_APP, "%12s: %d", "kana",        keyboard_report_out.kana);
 
+#endif
 } /* Keyboard_Out_Report_Done */
 
 void Keybord_Send_Ascii_Char(char key)

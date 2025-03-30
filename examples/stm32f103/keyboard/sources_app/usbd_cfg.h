@@ -39,7 +39,6 @@
 #define USBD_MAX_NUM_STRINGS                       8
 #define USBD_MAX_NUM_EVENTS                        4
 #define USBDC_MAX_NUM_EVENTS                       5
-#define USBD_IOTP_BUFF_USE
 
 #define USBD_IOTP_SUPPORT_VECTOR_BUFFERS           USBD_FEATURE_PRESENT
 #define USBD_IOTP_SUPPORT_TREE_BUFFERS             USBD_FEATURE_NOT_PRESENT
