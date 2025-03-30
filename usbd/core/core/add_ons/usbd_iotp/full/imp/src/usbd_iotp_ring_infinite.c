@@ -592,8 +592,19 @@ USBD_Bool_DT USBD_IOTP_Ring_Stop_Transfer_Infinitely(
    USBD_IOTP_Params_XT          *tp,
    Buff_Ring_XT                 *ring)
 {
-   return USBD_IOTP_Ring_start_stop_transfer_infinitely(
-      tp, (void*)USBD_IOTP_ring_infinite_owner, ring, USBD_IOTP_ring_stop_transfer_infinitely_invoked, "stop");
+   USBD_Bool_DT result = USBD_FALSE;
+
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_BOOL_IS_FALSE(tp->core.transfer_params.infinite_only))
+   {
+      result = USBD_IOTP_Ring_start_stop_transfer_infinitely(
+         tp, (void*)USBD_IOTP_ring_infinite_owner, ring, USBD_IOTP_ring_stop_transfer_infinitely_invoked, "stop");
+   }
+
+   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_PROCESSING);
+
+   return result;
 } /* USBD_IOTP_Ring_Stop_Transfer_Infinitely */
 #endif
 

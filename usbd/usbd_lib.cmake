@@ -158,17 +158,6 @@ else()
     endif()
 endif()
 
-if(DEFINED USBD_DO_NOT_USE_IOTP_BUFF AND USBD_DO_NOT_USE_IOTP_BUFF MATCHES ON)
-    target_compile_definitions(usbd_lib INTERFACE
-        USBD_IOTP_BUFF_TYPES_H_
-        USBD_IOTP_BUFF_H_
-    )
-else()
-    target_sources(usbd_lib INTERFACE
-        ${USBD_CORE_IOTP_BUFF_PATH}/imp/src/usbd_iotp_buff.c
-    )
-endif()
-
 if(DEFINED USBD_DO_NOT_USE_REQUEST AND USBD_DO_NOT_USE_REQUEST MATCHES ON)
     target_compile_definitions(usbd_lib INTERFACE
         USBD_REQUEST_TYPES_H_

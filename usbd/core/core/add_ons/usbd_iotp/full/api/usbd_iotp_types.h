@@ -128,6 +128,7 @@ typedef struct USBD_IOTP_Transfer_Params_Ring_Infinite_Only_eXtended_Tag
    uint8_t             data_type;
    /* when 0 then transfer is not present, when 1 then transfer is in progress */
    USBD_Atomic_Bool_DT transfer_active;
+   USBD_Bool_DT        infinite_only;
    struct
    {
       union
@@ -142,6 +143,7 @@ typedef struct USBD_IOTP_Transfer_Params_eXtended_Tag
    uint8_t             data_type;
    /* when 0 then transfer is not present, when 1 then transfer is in progress */
    USBD_Atomic_Bool_DT transfer_active;
+   USBD_Bool_DT        infinite_only;
    struct
    {
       union

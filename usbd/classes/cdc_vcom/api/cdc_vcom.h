@@ -34,8 +34,8 @@
 #include "usbd.h"
 #endif
 
-#ifndef USBD_IOTP_BUFF_USE
-#error "USBD_IOTP_BUFF_USE not defined! Please define USBD_IOTP_BUFF_USE in usbd_cfg.h"
+#if( (!defined( USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)) || (!USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS))
+#error "USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS not enabled! Please define USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS in usbd_cfg.h"
 #endif
 
 /**
@@ -241,8 +241,8 @@ typedef struct CDC_VCOM_Params_eXtendedTag
       CDC_VCOM_Physical_Params_DT comm_physical_params;
       struct
       {
-         USBD_IOTP_BUFF_Params_XT in;
-         USBD_IOTP_BUFF_Params_XT out;
+         USBD_IOTP_Params_Ring_Infinite_Only_XT in;
+         USBD_IOTP_Params_Ring_Infinite_Only_XT out;
          USBD_IOTP_Params_XT notif;
       }iotp;
       struct

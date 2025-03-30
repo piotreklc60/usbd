@@ -94,8 +94,6 @@ void USART1_IRQHandler(void)
       {
          Buff_Ring_Write(CDC_Vcom_Get_In_Buf(VCOM_UART), &data, sizeof(data), BUFF_FALSE, BUFF_TRUE);
       }
-
- //     Cmd_Parse_Byte(usart_get_exe(), data);
    }
    else if(0 != (status_register & UART_FLAG_TXE))
    {

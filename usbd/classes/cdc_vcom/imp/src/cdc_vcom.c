@@ -448,14 +448,14 @@ static void CDC_VCOM_on_event(
 
       if(USBD_CHECK_PTR(CDC_VCOM_Params_XT, cdc_vcom))
       {
-         buff = USBD_IOTP_BUFF_Get_Buff(&(cdc_vcom->data.iotp.in));
+         buff = USBD_IOTP_Get_Ring((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.in));
          USBD_DEBUG_HI_3(CDC_VCOM_EVENT, "init %s %s TP on EP: %d", cdc_vcom->data.name, "BUFF IN", cdc_vcom->data.hw.ep_in);
-         USBD_IOTP_BUFF_Init(usbd, usbdc, cdc_vcom->data.hw.ep_in, USB_EP_DIRECTION_IN, &(cdc_vcom->data.iotp.in), buff);
-         USBD_IOTP_BUFF_Install(&(cdc_vcom->data.iotp.in));
-         buff = USBD_IOTP_BUFF_Get_Buff(&(cdc_vcom->data.iotp.out));
+         USBD_IOTP_Init_Infinitive_Only(usbd, usbdc, cdc_vcom->data.hw.ep_in, USB_EP_DIRECTION_IN, &(cdc_vcom->data.iotp.in), buff);
+         USBD_IOTP_Install((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.in));
+         buff = USBD_IOTP_Get_Ring((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.out));
          USBD_DEBUG_HI_3(CDC_VCOM_EVENT, "init %s %s TP on EP: %d", cdc_vcom->data.name, "BUFF OUT", cdc_vcom->data.hw.ep_out);
-         USBD_IOTP_BUFF_Init(usbd, usbdc, cdc_vcom->data.hw.ep_out, USB_EP_DIRECTION_OUT, &(cdc_vcom->data.iotp.out), buff);
-         USBD_IOTP_BUFF_Install(&(cdc_vcom->data.iotp.out));
+         USBD_IOTP_Init_Infinitive_Only(usbd, usbdc, cdc_vcom->data.hw.ep_out, USB_EP_DIRECTION_OUT, &(cdc_vcom->data.iotp.out), buff);
+         USBD_IOTP_Install((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.out));
          USBD_DEBUG_HI_3(CDC_VCOM_EVENT, "init %s %s TP on EP: %d", cdc_vcom->data.name, "EVENT IN", cdc_vcom->data.hw.ep_notif);
          USBD_IOTP_Init(usbd, usbdc, cdc_vcom->data.hw.ep_notif, USB_EP_DIRECTION_IN, &(cdc_vcom->data.iotp.notif));
          (void)USBD_IOTP_Install(&(cdc_vcom->data.iotp.notif));
@@ -521,9 +521,26 @@ void CDC_VCOM_Init(CDC_VCOM_Params_XT *cdc_vcom, Buff_Ring_XT *buff_in, Buff_Rin
 
    memset(cdc_vcom, 0, sizeof(CDC_VCOM_Params_XT));
 
-   USBD_IOTP_BUFF_Init(USBD_MAKE_INVALID_PTR(void), USBD_MAKE_INVALID_PTR(void), 0, 0, &(cdc_vcom->data.iotp.in), buff_in);
-   USBD_IOTP_BUFF_Init(USBD_MAKE_INVALID_PTR(void), USBD_MAKE_INVALID_PTR(void), 0, 0, &(cdc_vcom->data.iotp.out), buff_out);
-   USBD_IOTP_Init(USBD_MAKE_INVALID_PTR(void), USBD_MAKE_INVALID_PTR(void), 0, 0, &(cdc_vcom->data.iotp.notif));
+   USBD_IOTP_Init_Infinitive_Only(
+      USBD_MAKE_INVALID_PTR(USBD_Params_XT),
+      USBD_MAKE_INVALID_PTR(USBDC_Params_XT),
+      0,
+      USB_EP_DIRECTION_IN,
+      &(cdc_vcom->data.iotp.in),
+      buff_in);
+   USBD_IOTP_Init_Infinitive_Only(
+      USBD_MAKE_INVALID_PTR(USBD_Params_XT),
+      USBD_MAKE_INVALID_PTR(USBDC_Params_XT),
+      0,
+      USB_EP_DIRECTION_OUT,
+      &(cdc_vcom->data.iotp.out),
+      buff_out);
+   USBD_IOTP_Init(
+      USBD_MAKE_INVALID_PTR(USBD_Params_XT),
+      USBD_MAKE_INVALID_PTR(USBDC_Params_XT),
+      0,
+      USB_EP_DIRECTION_IN,
+      &(cdc_vcom->data.iotp.notif));
 
    if(!USBD_CHECK_PTR(const char, name))
    {
@@ -638,8 +655,8 @@ void CDC_VCOM_Install_In_Config(USBDC_Params_XT *usbdc, CDC_VCOM_Params_XT *cdc_
                                  data_if_num,
                                  cdc_vcom->data.hw.ep_in,
                                  cdc_vcom->data.hw.ep_out,
-                                 USBD_IOTP_BUFF_Get_Buff(&(cdc_vcom->data.iotp.in)),
-                                 USBD_IOTP_BUFF_Get_Buff(&(cdc_vcom->data.iotp.out)),
+                                 USBD_IOTP_Get_Ring((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.in)),
+                                 USBD_IOTP_Get_Ring((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.out)),
                                  "");
                            }
                            else
@@ -651,8 +668,8 @@ void CDC_VCOM_Install_In_Config(USBDC_Params_XT *usbdc, CDC_VCOM_Params_XT *cdc_
                                  data_if_num,
                                  cdc_vcom->data.hw.ep_in,
                                  cdc_vcom->data.hw.ep_out,
-                                 USBD_IOTP_BUFF_Get_Buff(&(cdc_vcom->data.iotp.in)),
-                                 USBD_IOTP_BUFF_Get_Buff(&(cdc_vcom->data.iotp.out)),
+                                 USBD_IOTP_Get_Ring((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.in)),
+                                 USBD_IOTP_Get_Ring((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.out)),
                                  "FAILED");
                            }
                         }
@@ -802,7 +819,7 @@ Buff_Ring_XT *CDC_Vcom_Get_In_Buf(CDC_VCOM_Params_XT *cdc_vcom)
 
    if(USBD_CHECK_PTR(CDC_VCOM_Params_XT, cdc_vcom))
    {
-      result = USBD_IOTP_BUFF_Get_Buff(&(cdc_vcom->data.iotp.in));
+      result = USBD_IOTP_Get_Ring((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.in));
    }
 
    USBD_EXIT_FUNC(CDC_VCOM_ONOFF);
@@ -818,7 +835,7 @@ Buff_Ring_XT *CDC_Vcom_Get_Out_Buf(CDC_VCOM_Params_XT *cdc_vcom)
 
    if(USBD_CHECK_PTR(CDC_VCOM_Params_XT, cdc_vcom))
    {
-      result = USBD_IOTP_BUFF_Get_Buff(&(cdc_vcom->data.iotp.out));
+      result = USBD_IOTP_Get_Ring((USBD_IOTP_Params_XT*)&(cdc_vcom->data.iotp.out));
    }
 
    USBD_EXIT_FUNC(CDC_VCOM_ONOFF);

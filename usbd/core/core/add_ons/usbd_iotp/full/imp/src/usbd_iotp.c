@@ -93,9 +93,6 @@ static USBD_Bool_DT USBD_IOTP_init_internal(
       USBD_IOTP_Params_XT *tp,
       size_t tp_size)
 {
-#ifdef USBD_EVENT_PRESENT
-   USBD_EVENT_Event_Header_XT *event;
-#endif
    USBD_Bool_DT result = USBD_FALSE;
 
    USBD_ENTER_FUNC(USBD_DBG_IOTPEV_ONOFF);
@@ -110,22 +107,7 @@ static USBD_Bool_DT USBD_IOTP_init_internal(
       USBD_IOTP_SET_EP_DIR_INSIDE_TP(tp, dir);
 
       USBD_INIT_INVOKE_PARAMS(USBD_IOTP_GET_INVOKE_PARAMS(tp));
-
-#ifdef USBD_EVENT_PRESENT
-      event = USBDC_EVENT_Install(usbdc, USBD_IOTP_event, USBD_EVENT_REASON_SOF_RECEIVED | USBD_EVENT_INSTALL_ONLY_ONCE);
-
-      if(!USBD_CHECK_PTR(USBD_EVENT_Event_Header_XT, event))
-      {
-         USBD_WARN(USBD_DBG_IOTPEV_INVALID_PARAMS, "IOTP event cannot be installed");
-      }
-      else
-      {
-         /* ok */
-         result = USBD_TRUE;
-      }
-#else
       result = USBD_TRUE;
-#endif
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_ONOFF);
@@ -171,6 +153,7 @@ void USBD_IOTP_Init_Infinitive_Only(
       usbd, usbdc, ep_num, dir, (USBD_IOTP_Params_XT*)tp, sizeof(USBD_IOTP_Params_Ring_Infinite_Only_XT))))
    {
       (void)USBD_IOTP_Ring_Start_Transfer_Infinitely_Invoked((USBD_IOTP_Params_XT*)tp, buff, &result);
+      tp->core.transfer_params.infinite_only = USBD_TRUE;
    }
 
    USBD_EXIT_FUNC(USBD_DBG_IOTPEV_ONOFF);
@@ -180,6 +163,9 @@ void USBD_IOTP_Init_Infinitive_Only(
 USBD_Bool_DT USBD_IOTP_Install(
       USBD_IOTP_Params_XT *tp)
 {
+#ifdef USBD_EVENT_PRESENT
+   USBD_EVENT_Event_Header_XT *event;
+#endif
    void *tp_owner = (void*)(USBD_IOTP_not_ring_infinite_owner);
    USBD_Bool_DT result;
 
@@ -244,7 +230,22 @@ USBD_Bool_DT USBD_IOTP_Install(
                tp,
                tp_owner);
 
+#ifdef USBD_EVENT_PRESENT
+            event = USBD_EVENT_Install(
+               USBD_IOTP_GET_USBD_FROM_TP(tp), USBD_IOTP_event, USBD_EVENT_REASON_SOF_RECEIVED | USBD_EVENT_INSTALL_ONLY_ONCE);
+
+            if(!USBD_CHECK_PTR(USBD_EVENT_Event_Header_XT, event))
+            {
+               USBD_WARN(USBD_DBG_IOTPEV_INVALID_PARAMS, "IOTP event cannot be installed");
+            }
+            else
+            {
+               /* ok */
+               result = USBD_TRUE;
+            }
+#else
             result = USBD_TRUE;
+#endif
          }
       }
    }
@@ -1019,10 +1020,12 @@ static void USBD_IOTP_io_reinit(
             if(USB_EP_DESC_DIR_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp))
             {
                USBD_IO_UP_SET_OUT_DATA_EVENT_HANDLER(&(tp->core.pipe_params.handlers), USBD_IOTP_Ring_Io_Evdata_Out);
+               USBD_DEBUG_HI_2(USBD_DBG_IOTPEV_PROCESSING, "handlers.%s: %5s", "OUT", "USBD_IOTP_Ring_Io_Evdata_Out");
             }
             else
             {
                USBD_IO_UP_SET_IN_DATA_EVENT_HANDLER(&(tp->core.pipe_params.handlers), USBD_IOTP_Ring_Io_Evdata_In);
+               USBD_DEBUG_HI_2(USBD_DBG_IOTPEV_PROCESSING, "handlers.%s: %5s", "IN", "USBD_IOTP_Ring_Io_Evdata_In");
             }
 
             USBD_IOTP_Ring_Clear_Buff(tp, transaction, USBD_TRUE);
@@ -1033,15 +1036,21 @@ static void USBD_IOTP_io_reinit(
             if(USB_EP_DESC_DIR_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp))
             {
                USBD_IO_UP_SET_OUT_DATA_EVENT_HANDLER(&(tp->core.pipe_params.handlers), USBD_IOTP_Io_Evdata_Out);
+               USBD_DEBUG_HI_2(USBD_DBG_IOTPEV_PROCESSING, "handlers.%s: %5s", "OUT", "USBD_IOTP_Io_Evdata_Out");
             }
             else
             {
                USBD_IO_UP_SET_IN_DATA_EVENT_HANDLER(&(tp->core.pipe_params.handlers), USBD_IOTP_Io_Evdata_In);
+               USBD_DEBUG_HI_2(USBD_DBG_IOTPEV_PROCESSING, "handlers.%s: %5s", "IN", "USBD_IOTP_Io_Evdata_In");
             }
          }
          USBD_IO_UP_SET_ERROR_HANDLER(&(tp->core.pipe_params.handlers),USBD_IOTP_error_table[ep_type]);
+         USBD_DEBUG_HI_2(USBD_DBG_IOTPEV_PROCESSING, "handlers.%s: %5s", "ERROR",
+            USBD_CHECK_HANDLER(USBD_IO_UP_Error_HT, USBD_IOTP_error_table[ep_type]) ? "USBD_IOTP_io_error" : "NULL");
          USBD_IO_UP_SET_SFIN_HANDLER (&(tp->core.pipe_params.handlers),USBD_MAKE_INVALID_HANDLER(USBD_IO_UP_Stall_Fin_HT));
+         USBD_DEBUG_HI_2(USBD_DBG_IOTPEV_PROCESSING, "handlers.%s: %5s", "SFIN", "NULL");
          USBD_IO_UP_SET_ABORT_HANDLER(&(tp->core.pipe_params.handlers),USBD_IOTP_io_abort);
+         USBD_DEBUG_HI_2(USBD_DBG_IOTPEV_PROCESSING, "handlers.%s: %5s", "ABORT", "USBD_IOTP_io_abort");
 
          USBD_MARK_INVOKE_DESTINATION(USBD_IOTP_GET_INVOKE_PARAMS(tp));
       }
