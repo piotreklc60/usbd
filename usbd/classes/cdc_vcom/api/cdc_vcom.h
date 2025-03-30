@@ -210,6 +210,9 @@ typedef struct CDC_VCOM_Physical_Params_DataTag
 #endif
 }CDC_VCOM_Physical_Params_DT;
 
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           VCOM Feature MAIN Structure
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
 typedef struct CDC_VCOM_Params_eXtendedTag
 {
    struct
@@ -264,28 +267,121 @@ typedef void (*CDC_VCOM_On_RTS_Change_HT)(CDC_VCOM_Params_XT *vcom);
 
 
 
+/** *******************************************************************************************************************************
+ **********************************************************************************************************************************
+ *
+ *                                           VCOM Initialization API
+ *
+ **********************************************************************************************************************************
+ ******************************************************************************************************************************* */
+
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           VCOM Feature MAIN Init Function
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
+/**
+ * @brief VCOM feature MAIN Init function.
+ * This function initializes the main CDC VCOM feature structure.
+ *
+ * @param cdc_vcom pointer to the MAIN VCOM feature structure to be initialized.
+ * @param buff_in pointer to the ring buffer for exchanging IN data (TO HOST).
+ * @param buff_out pointer to the ring buffer for exchanging OUT data (FROM HOST).
+ * @param name pointer to the ASCII string describing this VCOM feature.
+ */
 void CDC_VCOM_Init(CDC_VCOM_Params_XT *cdc_vcom, Buff_Ring_XT *buff_in, Buff_Ring_XT *buff_out, const char *name);
 
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           VCOM Feature Installer
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
+/**
+ * @brief VCOM feature MAIN Installation function.
+ * This function installs VCOM feature in the USBD configuration structure under requested interface ID.
+ *
+ * @param usbdc pointer to the USBD configuration into which HID feature shall be installed.
+ * @param cdc_vcom pointer to the VCOM MAIN structure which we are going to install in the configuration.
+ * @param notif_if_num number of the main (vcom is using 2 interfaces: notification and data; the main is notification interface)
+ * interface under which HID feature shall be installed.
+ */
 void CDC_VCOM_Install_In_Config(USBDC_Params_XT *usbdc, CDC_VCOM_Params_XT *cdc_vcom, uint8_t notif_if_num);
 
+/** *******************************************************************************************************************************
+ **********************************************************************************************************************************
+ *
+ *                                           VCOM execution time API
+ *
+ **********************************************************************************************************************************
+ ******************************************************************************************************************************* */
+
+/**
+ * @brief Gets pointer to the structure with physical parameters of the VCOM, such like baudrate, data_bits, etc.
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ */
 const CDC_VCOM_Physical_Params_DT *CDC_VCOM_Get_Com_Physical_Params(CDC_VCOM_Params_XT *cdc_vcom);
 
+/**
+ * @brief Sets handler to the function called after physical parameters have been changed for the VCOM.
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @param on_params_change handler to the function which shall be connected as the event handler.
+ */
 void CDC_VCOM_Set_Change_Params_Event(CDC_VCOM_Params_XT *cdc_vcom, CDC_VCOM_On_Params_Change_HT on_params_change);
 
 #if(CDC_VCOM_MODE_DATA_AND_SIGNALS == CDC_VCOM_MODE)
 
+/**
+ * @brief Sets handler to the function called after DTR lise state has been changed for the VCOM.
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @param on_dtr_change handler to the function which shall be connected as the event handler.
+ */
 void CDC_VCOM_Set_Change_Dtr_Event(CDC_VCOM_Params_XT *cdc_vcom, CDC_VCOM_On_DTR_Change_HT on_dtr_change);
 
+/**
+ * @brief Sets handler to the function called after RTS lise state has been changed for the VCOM.
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @param on_dtr_change handler to the function which shall be connected as the event handler.
+ */
 void CDC_VCOM_Set_Change_Rts_Event(CDC_VCOM_Params_XT *cdc_vcom, CDC_VCOM_On_RTS_Change_HT on_rts_change);
 
+/**
+ * @brief Gets current state of the DTR line
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @return USBD_TRUE if state of DTR line is 1, USBD_FALSE otherwise.
+ */
 USBD_Bool_DT CDC_VCOM_Get_Dtr(CDC_VCOM_Params_XT *cdc_vcom);
 
+/**
+ * @brief Gets current state of the RTS line
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @return USBD_TRUE if state of RTS line is 1, USBD_FALSE otherwise.
+ */
 USBD_Bool_DT CDC_VCOM_Get_Rts(CDC_VCOM_Params_XT *cdc_vcom);
 
+/**
+ * @brief Sets new state of the RING signal
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @param state USBD_TRUE is state 1 shall be set, USBD_FALSE otherwise.
+ */
 void CDC_VCOM_Set_Ring(CDC_VCOM_Params_XT *cdc_vcom, USBD_Bool_DT state);
 
+/**
+ * @brief Sets new state of the DSR line
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @param state USBD_TRUE is state 1 shall be set, USBD_FALSE otherwise.
+ */
 void CDC_VCOM_Set_Dsr(CDC_VCOM_Params_XT *cdc_vcom, USBD_Bool_DT state);
 
+/**
+ * @brief Sets new state of the DCD line
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @param state USBD_TRUE is state 1 shall be set, USBD_FALSE otherwise.
+ */
 void CDC_VCOM_Set_Dcd(CDC_VCOM_Params_XT *cdc_vcom, USBD_Bool_DT state);
 
 #else
@@ -306,8 +402,20 @@ void CDC_VCOM_Set_Dcd(CDC_VCOM_Params_XT *cdc_vcom, USBD_Bool_DT state);
 
 #endif
 
+/**
+ * @brief Gets pointer to the ring buffer used for exchanging IN data (TO HOST).
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @return always valid PTR if cdc_vcom parameter is valid, USBD_MAKE_INVALID_PTR(Buff_Ring_XT) otherwise.
+ */
 Buff_Ring_XT *CDC_Vcom_Get_In_Buf(CDC_VCOM_Params_XT *cdc_vcom);
 
+/**
+ * @brief Gets pointer to the ring buffer used for exchanging OUT data (FROM HOST).
+ *
+ * @param cdc_vcom pointer to the VCOM structure for which we are going to process the action.
+ * @return always valid PTR if cdc_vcom parameter is valid, USBD_MAKE_INVALID_PTR(Buff_Ring_XT) otherwise.
+ */
 Buff_Ring_XT *CDC_Vcom_Get_Out_Buf(CDC_VCOM_Params_XT *cdc_vcom);
 
 

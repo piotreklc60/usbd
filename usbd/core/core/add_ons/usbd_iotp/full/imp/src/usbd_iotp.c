@@ -741,7 +741,7 @@ static void USBD_IOTP_event(
    USBD_UNUSED_PARAM(event_params);
    USBD_UNUSED_PARAM(reason);
 
-   USBD_ENTER_FUNC(USBD_DBG_IOTPBF_EVENT);
+   USBD_ENTER_FUNC(USBD_DBG_IOTPEV_EVENT);
 
    if(USBD_ATOMIC_BOOL_IS_TRUE(USBD_IOTP_refresh_trigger))
    {
@@ -798,7 +798,7 @@ static void USBD_IOTP_event(
       USBD_ATOMIC_BOOL_SET(USBD_IOTP_refresh_trigger, USBD_FALSE);
    }
 
-   USBD_EXIT_FUNC(USBD_DBG_IOTPBF_EVENT);
+   USBD_EXIT_FUNC(USBD_DBG_IOTPEV_EVENT);
 } /* USBD_IOTP_event */
 #endif
 

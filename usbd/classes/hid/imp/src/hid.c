@@ -226,6 +226,7 @@ static USBD_Bool_DT HID_send_report(
    USBD_IO_Inout_Data_Size_DT  size,
    USBD_Bool_DT                update_markers)
 {
+   Buff_Readable_Vector_XT vector[2];
    uint8_t *data;
    USBD_Bool_DT result = USBD_FALSE;
 
@@ -250,7 +251,20 @@ static USBD_Bool_DT HID_send_report(
 
       USBD_LOG_DATA_DEBUG_HI_3(HID_IO, data, size, "Report: %d (%s) send %s", report->report_id, report->name, report_type);
 
-      result = USBD_IOTP_Send(tp_in, data, size, size_left);
+      if(0 != report->report_id)
+      {
+         vector[0].data = &(report->report_id);
+         vector[0].size = sizeof(report->report_id);
+      }
+      else
+      {
+         vector[0].data = USBD_MAKE_INVALID_PTR(uint8_t);
+         vector[0].size = 0;
+      }
+      vector[1].data = data;
+      vector[1].size = size;
+
+      result = USBD_IOTP_Send_From_Vector(tp_in, vector, Num_Elems(vector), size + vector[0].size, size_left);
 
       if(USBD_BOOL_IS_TRUE(update_markers))
       {
@@ -766,28 +780,27 @@ void HID_Report_Set_Feature(HID_Report_XT *reports_tab, uint8_t report_id, void 
    }
 } /* HID_Report_Set_Feature */
 
-void HID_Report_Set_In_Event(HID_Report_XT *reports_tab, uint8_t report_id, HID_On_Report_HT event)
+void HID_Report_Set_In_Event(HID_Params_XT *hid, uint8_t report_id, HID_On_Report_HT event)
 {
-   if(USBD_CHECK_PTR(HID_Report_XT, reports_tab))
+   if(USBD_CHECK_PTR(HID_Params_XT, hid) && USBD_CHECK_PTR(HID_Report_XT, hid->report_params.reports_table)
+      && (report_id < hid->report_params.num_reports))
    {
-      reports_tab[report_id].report_events.in            = event;
+      hid->report_params.reports_table[report_id].report_events.in   = event;
    }
 } /* HID_Report_Set_In_Event */
 
-void HID_Report_Set_Out_Event(HID_Report_XT *reports_tab, uint8_t report_id, HID_On_Report_HT event)
+void HID_Report_Set_Out_Event(HID_Params_XT *hid, uint8_t report_id, HID_On_Report_HT event)
 {
-   if(USBD_CHECK_PTR(HID_Report_XT, reports_tab))
+   if(USBD_CHECK_PTR(HID_Params_XT, hid) && USBD_CHECK_PTR(HID_Report_XT, hid->report_params.reports_table)
+      && (report_id < hid->report_params.num_reports))
    {
-      reports_tab[report_id].report_events.out           = event;
+      hid->report_params.reports_table[report_id].report_events.out  = event;
    }
 } /* HID_Report_Set_Out_Event */
 
-void HID_Report_Clear_In_After_Each_Update(HID_Report_XT *reports_tab, uint8_t report_id)
+void HID_Report_Clear_In_After_Each_Update(HID_Params_XT *hid, uint8_t report_id)
 {
-   if(USBD_CHECK_PTR(HID_Report_XT, reports_tab))
-   {
-      reports_tab[report_id].report_events.in            = HID_on_in_report_done;
-   }
+   HID_Report_Set_In_Event(hid, report_id, HID_on_in_report_done);
 } /* HID_Report_Clear_In_After_Each_Update */
 
 

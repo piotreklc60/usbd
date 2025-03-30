@@ -30,15 +30,16 @@
 #include "cfg.h"
 
 #define BUFF_DEFAULT_FEATURES_STATE                      BUFF_FEATURE_DISABLED
-/* for iotp_buff */
+/* for iotp */
 #define BUFF_USE_VENDOR_BUFFERS                          BUFF_FEATURE_ENABLED
 /* for iocmd */
 #define BUFF_USE_VECTOR_BUFFERS                          BUFF_FEATURE_ENABLED
-/* for iocmd and iotp_buff */
+/* for iocmd and iotp */
 #define BUFF_USE_RING_BUFFERS                            BUFF_FEATURE_ENABLED
-/* for iotp_buff */
+/* for iotp */
 #define BUFF_RING_USE_EXTENSIONS                         BUFF_FEATURE_ENABLED
-/* for iocmd and iotp_buff */
+#define BUFF_READABLE_VECTOR_GET_CONTINEOUS_PART_ENABLED BUFF_FEATURE_ENABLED
+/* for iocmd and iotp */
 #define BUFF_COPY_FROM_VECTOR_ENABLED                    BUFF_FEATURE_ENABLED
 #define BUFF_COPY_FROM_VECTOR_VENDOR_ENABLED             BUFF_FEATURE_ENABLED
 #define BUFF_COPY_TO_VECTOR_ENABLED                      BUFF_FEATURE_ENABLED

@@ -245,9 +245,9 @@ void main_usbd_init(void)
    memset(&keyboard_report_out, 0, sizeof(keyboard_report_out));
    HID_Report_Set_In( reports, 0, &keyboard_report_in,  &keyboard_report_in_second_buf,  sizeof(keyboard_report_in));
    HID_Report_Set_Out(reports, 0, &keyboard_report_out, &keyboard_report_out_second_buf, sizeof(keyboard_report_out));
-   HID_Report_Set_In_Event( reports, 0, Keyboard_In_Report_Done);
-   HID_Report_Set_Out_Event(reports, 0, Keyboard_Out_Report_Done);
    HID_Init(&hid, hid_report_descriptor_keyboard, sizeof(hid_report_descriptor_keyboard), reports, Num_Elems(reports));
+   HID_Report_Set_In_Event( &hid, 0, Keyboard_In_Report_Done);
+   HID_Report_Set_Out_Event(&hid, 0, Keyboard_Out_Report_Done);
    HID_Install_In_Config(&usbdc, &hid, HID_IF_NUM);
 
    /* DFU */

@@ -318,6 +318,10 @@ typedef DFU_bStatus_ET (*DFU_Download_HT)(struct DFU_Params_eXtendedTag *dfu, ui
 typedef DFU_bStatus_ET (*DFU_Upload_HT)(struct DFU_Params_eXtendedTag *dfu, uint8_t **buffer, uint16_t *length, uint16_t packet_number);
 
 
+
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           DFU Feature MAIN Structure
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
 typedef struct DFU_Params_eXtendedTag
 {
    struct
@@ -385,89 +389,74 @@ typedef struct DFU_Params_eXtendedTag
 
 
 
+/** *******************************************************************************************************************************
+ **********************************************************************************************************************************
+ *
+ *                                           DFU Initialization API
+ *
+ **********************************************************************************************************************************
+ ******************************************************************************************************************************* */
 
-
-
-#if 0
-typedef struct
-{
-   struct
-   {
-#if(USBD_FEATURE_PRESENT == DFU_DFU_MODE_SUPPORT)
-#if(USBD_FEATURE_PRESENT == DFU_DNLOAD_SUPPORT)
-      /**
-       * pointer to a function called when DNLOAD data packet
-       * has beed succesfully received
-       */
-      DFU_UpDownload_HT DFU_DNLOAD_handler;
-#endif
-
-      // pointer to function called when UPLOAD request
-      // has been received from Host
-#if(USBD_FEATURE_PRESENT == DFU_UPLOAD_SUPPORT)
-      DFU_UpDownload_HT DFU_UPLOAD_handler;
-#endif
-
-      DFU_Event_HT user_event;
-
-      DFU_Is_App_Correct_HT is_app_correct;
-
-      DFU_Set_Memory_Id_HT set_memory_id;
-#endif
-
-#if((DFU_APP_MODE_SUPPORT == USBD_FEATURE_ON) && (DFU_WILL_DETACH_SUPPORT == USBD_FEATURE_ON))
-      uint32_t DFU_detach_timeout;
-#endif
-
-      uint8_t DFU_bmAttributes;
-   }user_data;
-
-
-
-   struct
-   {
-      DFU_Params_XT *usbdc;
-
-      int32_t DFU_event_ID;
-
-      DFU_status_type DFU_state;
-
-#if(DFU_DFU_MODE_SUPPORT == USBD_FEATURE_ON)
-      // number of packet received from Host
-      uint16_t DFU_transfer_packet_number;
-
-      // pointer to buffer for data received from Host in DNLOAD
-      // mode or for data to be send in UPLOAD mode.
-      uint8_t *DFU_transfer_buffer;
-
-      // indicates that device is in manifestation phase or not
-#if((DFU_DNLOAD_SUPPORT == USBD_FEATURE_ON) && (DFU_MANIFESTATION_TOLERANT_SUPPORT == USBD_FEATURE_ON))
-      uint8_t DFU_manifestation_phase = 0;
-#endif
-#endif
-
-      // number of the DFU interface
-      uint8_t DFU_interface;
-   }extended_data;
-}DFU_Params_XT;
-#endif
-
-
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           DFU Feature MAIN Init Function
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
+/**
+ * @brief DFU feature MAIN Init function.
+ * This function initializes the main DFU feature structure.
+ *
+ * @param dfu pointer to the MAIN DFU feature structure to be initialized.
+ */
 void DFU_Init(DFU_Params_XT *dfu);
 
 
 #if(USBD_FEATURE_PRESENT == DFU_APP_MODE_SUPPORT)
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           DFU Feature Installer - Application mode
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
+/**
+ * @brief DFU feature MAIN Installation function.
+ * This function installs DFU feature in the USBD configuration structure under requested interface ID.
+ *
+ * @param usbdc pointer to the USBD configuration into which DFU feature shall be installed.
+ * @param dfu pointer to the DFU MAIN structure which we are going to install in the configuration.
+ * @param interface_num number of the interface under which DFU feature shall be installed.
+ */
 void DFU_APP_Install_In_Config(USBDC_Params_XT *usbdc, DFU_Params_XT *dfu, uint8_t interface_num);
 #endif
 
 
 #if(USBD_FEATURE_PRESENT == DFU_DFU_MODE_SUPPORT)
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           DFU Feature Installer - DFU mode
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
+/**
+ * @brief DFU feature MAIN Installation function.
+ * This function installs DFU feature in the USBD configuration structure under requested interface ID.
+ *
+ * @param usbdc pointer to the USBD configuration into which DFU feature shall be installed.
+ * @param dfu pointer to the DFU MAIN structure which we are going to install in the configuration.
+ * @param interface_num number of the interface under which DFU feature shall be installed.
+ */
 void DFU_DFU_Install_In_Config(USBDC_Params_XT *usbdc, DFU_Params_XT *dfu, uint8_t *buffer);
 #endif
 
 
 
+/** *******************************************************************************************************************************
+ **********************************************************************************************************************************
+ *
+ *                                           DFU execution time API
+ *
+ **********************************************************************************************************************************
+ ******************************************************************************************************************************* */
+
 #if(USBD_FEATURE_PRESENT == USBD_SOF_TICKS_SUPPORTED)
+/**
+ * @brief Sets bwPollTimeout used for calculating delays in certain moments of the UPLOAD / DOWNLOAD procedure
+ *
+ * @param dfu pointer to the DFU MAIN structure for which we are processing the action.
+ * @param timeout time in miliseconds which we want to set
+ */
 void DFU_set_bwPollTimeout(DFU_Params_XT *dfu, uint32_t timeout);
 #endif
 

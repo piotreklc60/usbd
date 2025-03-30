@@ -231,8 +231,8 @@ void main_usbd_init(void)
    HID_Report_Set_Name(reports, 0, "mouse");
    memset(&mouse_report, 0, sizeof(mouse_report));
    HID_Report_Set_In(reports, 0, &mouse_report, &mouse_report_second_buf, sizeof(mouse_report));
-   HID_Report_Set_In_Event(reports, 0, Mouse_In_Report_Done);
    HID_Init(&hid, hid_report_descriptor_mouse, sizeof(hid_report_descriptor_mouse), reports, Num_Elems(reports));
+   HID_Report_Set_In_Event(&hid, 0, Mouse_In_Report_Done);
    HID_Install_In_Config(&usbdc, &hid, HID_IF_NUM);
 
    /* DFU */

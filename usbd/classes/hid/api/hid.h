@@ -34,6 +34,10 @@
 #include "usbd.h"
 #endif
 
+#if( (!defined( USBD_IOTP_SUPPORT_VECTOR_BUFFERS)) || (!USBD_IOTP_SUPPORT_VECTOR_BUFFERS))
+#error "USBD_IOTP_SUPPORT_VECTOR_BUFFERS not enabled! Please define USBD_IOTP_SUPPORT_VECTOR_BUFFERS in usbd_cfg.h"
+#endif
+
 /**
  * Following debug groups are used by DFU library and must be configured correctly:
  * HID_INIT
@@ -239,7 +243,7 @@ typedef struct HID_Report_eXtendedTag
    } report_second_buffer;
 #endif
    /**
-    * Reports size. If reports contain report ID then first byte of the buffer must contain this field and below size variables must include it.
+    * Reports size. If reports contain report ID then size still shall not include it. Also "report" and "report_second_buffer" buffers shall not include it.
     */
    struct
    {
@@ -264,37 +268,33 @@ typedef struct HID_Report_eXtendedTag
 typedef void (*HID_On_Report_HT) (HID_Report_XT *report, USBD_Bool_DT is_feature);
 
 
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           HID Feature MAIN Structure
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
 typedef struct HID_Params_eXtendedTag
 {
-   // struktura z polami najczesciej uzywanymi przez uzytkownika
-   // wymaga ustawienia wszystkich pol, chyba ze zaznaczone jest inaczej
+   /**
+    * Reports collection parameters
+    */
    struct
    {
-      // wskaznik do deskryptora reportow
+      /* Pointer to Report descriptor */
       const uint8_t *report_descriptor;
 
-      // rozmiar deskryptora reportow
+      /* size of report descriptor */
       uint16_t report_descriptor_size;
 
-      // zmienna mowiaca o tym, czy pracujemy aktualnie
-      // w trybie BOOT czy REPORT (dla urzadzen bootowalnych)
-      // pole zerowane przy inicjowaniu struktury, nie wymaga
-      // ustawiania wartosci poczatkowej
+      /**
+       * Variable which says if we are currently working in BOOT or REPORT mode.
+       */
       uint8_t boot_protocol_value;
 
-      // liczba reportow zaimplementowanych w interfejsie -
-      // jezeli uzywany jest tylko jeden report
-      // i nie uzywane sa numery reportow (Report_ID)
-      // wowczas zmienna ta wynosi jeden
-      // jezeli uzywane sa numery reportow, wowczas
-      // ta zmienna musi uwzgledniac tez nieuzywany report 0
-      // dlatego zmienna ta musi byc o jeden wieksza
-      // od faktycznej liczby reportow, np dla 2 reportow
-      // zmienna ta wynosi 3
+      /**
+       * Number of reports contained by @see reports_table table
+       */
       uint8_t num_reports;
 
-      // wskaznik do tablicy zawierajacej wskazniki
-      // do struktor opisujacych reporty
+      /* pointer to the table with reports parameters */
       HID_Report_XT *reports_table;
 
       uint32_t sof_tick;
@@ -319,15 +319,87 @@ typedef struct HID_Params_eXtendedTag
 
 
 
-void HID_Reports_Tab_Init(HID_Report_XT *reports_tab, uint8_t reports_tab_num_elems);
-void HID_Report_Set_Name(HID_Report_XT *reports_tab, uint8_t report_id, char *name);
-void HID_Report_Set_In(HID_Report_XT *reports_tab, uint8_t report_id, void *report, void *report_second_buf, uint8_t size);
-void HID_Report_Set_Out(HID_Report_XT *reports_tab, uint8_t report_id, void *report, void *report_second_buf, uint8_t size);
-void HID_Report_Set_Feature(HID_Report_XT *reports_tab, uint8_t report_id, void *report, void *report_second_buf, uint8_t size);
-void HID_Report_Set_In_Event(HID_Report_XT *reports_tab, uint8_t report_id, HID_On_Report_HT event);
-void HID_Report_Set_Out_Event(HID_Report_XT *reports_tab, uint8_t report_id, HID_On_Report_HT event);
-void HID_Report_Clear_In_After_Each_Update(HID_Report_XT *reports_tab, uint8_t report_id);
+/** *******************************************************************************************************************************
+ **********************************************************************************************************************************
+ *
+ *                                           HID Initialization API
+ *
+ **********************************************************************************************************************************
+ ******************************************************************************************************************************* */
 
+/**
+ * @brief This function initializes table with reports.
+ * HID functionality is composed of set of reports - IN reports, OUT reports, FEATURE reports exchanged with the HOST.
+ * The report is a set of information, for example position buttons and movement from the mouse (IN), keys pressed on the keyboard (IN),
+ * lamps to se set ON/OFF on the keyboard (OUT). This function initializes table of structures describing reports
+ * implemented in the APP's HID interface.
+ * To implement HID feature, there is needed to create table of reports, report descriptor
+ * and connect it to the MAIN HID feature structure (@see HID_Params_XT) using HID feature MAIN Init function (@see HID_Init).
+ *
+ * @param reports_tab pointer to the table of reports
+ * @param reports_tab_num_elems numbewr of cells in @see reports_tab table
+ */
+void HID_Reports_Tab_Init(HID_Report_XT *reports_tab, uint8_t reports_tab_num_elems);
+
+/**
+ * @brief Sets name of the specific report reports table.
+ *
+ * @param reports_tab pointer to the table of reports
+ * @param report_id number of the report for which action is executed. If only one report is used by the system, 0 shall be used.
+ * @param name pointer to the string with the name to be set
+ */
+void HID_Report_Set_Name(HID_Report_XT *reports_tab, uint8_t report_id, char *name);
+
+/**
+ * @brief Sets parameters of INPUT report.
+ *
+ * @param reports_tab pointer to the table of reports
+ * @param report_id number of the report for which action is executed. If only one report is used by the system, 0 shall be used.
+ * @param report pointer to the report buffer. It never consist report_id, even when reports IDs are used. Only data shall be exchanged thrugh this buffer.
+ * @param report_second_buf pointer to the second buffer if user want to use it.
+ * In that case report is copied to this buffer for the moment of data transfer to the HOST so the user can still work on the main buffer.
+ * @param size size of the report buffer. It is also size of report_second_buf (both buffer must be identical size).
+ */
+void HID_Report_Set_In(HID_Report_XT *reports_tab, uint8_t report_id, void *report, void *report_second_buf, uint8_t size);
+
+/**
+ * @brief Sets parameters of OUTPUT report.
+ *
+ * @param reports_tab pointer to the table of reports
+ * @param report_id number of the report for which action is executed. If only one report is used by the system, 0 shall be used.
+ * @param report pointer to the report buffer. It never consist report_id, even when reports IDs are used. Only data shall be exchanged thrugh this buffer.
+ * @param report_second_buf pointer to the second buffer if user want to use it.
+ * In that case OUT report is first received to this buffer and when reception is finished, it is copied to the main buffer so user can work on consistent data at a time.
+ * @param size size of the report buffer. It is also size of report_second_buf (both buffer must be identical size).
+ */
+void HID_Report_Set_Out(HID_Report_XT *reports_tab, uint8_t report_id, void *report, void *report_second_buf, uint8_t size);
+
+/**
+ * @brief Sets parameters of FEATURE report.
+ *
+ * @param reports_tab pointer to the table of reports
+ * @param report_id number of the report for which action is executed. If only one report is used by the system, 0 shall be used.
+ * @param report pointer to the report buffer. It never consist report_id, even when reports IDs are used. Only data shall be exchanged thrugh this buffer.
+ * @param report_second_buf pointer to the second buffer if user want to use it.
+ * In that case report is copied to this buffer for the moment of data transfer to the HOST so the user can still work on the main buffer.
+ * In case when report is being received, it is first received to this buffer and when reception is finished, it is copied to the main buffer so user can work on consistent data at a time.
+ * @param size size of the report buffer. It is also size of report_second_buf (both buffer must be identical size).
+ */
+void HID_Report_Set_Feature(HID_Report_XT *reports_tab, uint8_t report_id, void *report, void *report_second_buf, uint8_t size);
+
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           HID Feature MAIN Init Function
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
+/**
+ * @brief HID feature MAIN Init function.
+ * This function initializes the main HID feature structure.
+ *
+ * @param hid pointer to the MAIN HID feature structure to be initialized.
+ * @param report_descriptor pointer to the report descriptor which describes set of reports implemented by the application.
+ * @param report_descriptor_size size of the report descriptor.
+ * @param reports_tab table with reports parameters.
+ * @param num_reports number of reports implemented by the application (number of cells in @see reports_tab table).
+ */
 void HID_Init(
    HID_Params_XT *hid,
    const uint8_t *report_descriptor,
@@ -335,9 +407,72 @@ void HID_Init(
    HID_Report_XT *reports_tab,
    uint8_t        num_reports);
 
+/** -------------------------------------------------------------------------------------------------------------------------------
+ *                                           HID Feature Installer
+ *  ---------------------------------------------------------------------------------------------------------------------------- */
+/**
+ * @brief HID feature MAIN Installation function.
+ * This function installs HID feature in the USBD configuration structure under requested interface ID.
+ *
+ * @param usbdc pointer to the USBD configuration into which HID feature shall be installed.
+ * @param hid pointer to the HID MAIN structure which we are going to install in the configuration.
+ * @param hid_if_num number of the interface under which HID feature shall be installed.
+ */
 void HID_Install_In_Config(USBDC_Params_XT *usbdc, HID_Params_XT *hid, uint8_t hid_if_num);
 
+
+
+/** *******************************************************************************************************************************
+ **********************************************************************************************************************************
+ *
+ *                                           HID execution time API
+ *
+ **********************************************************************************************************************************
+ ******************************************************************************************************************************* */
+
+/**
+ * @brief Sets handler to the function called after IN report has been successfully sent to the HOST.
+ *
+ * @param hid pointer to the HID MAIN structure for which we are processing the action.
+ * @param report_id number of the report for which action is executed. If only one report is used by the system, 0 shall be used.
+ * @param event handler to the function which shall be connected as the event handler.
+ */
+void HID_Report_Set_In_Event(HID_Params_XT *hid, uint8_t report_id, HID_On_Report_HT event);
+
+/**
+ * @brief Sets handler to the function called after OUT report has been successfully received from the HOST.
+ *
+ * @param hid pointer to the HID MAIN structure for which we are processing the action.
+ * @param report_id number of the report for which action is executed. If only one report is used by the system, 0 shall be used.
+ * @param event handler to the function which shall be connected as the event handler.
+ */
+void HID_Report_Set_Out_Event(HID_Params_XT *hid, uint8_t report_id, HID_On_Report_HT event);
+
+/**
+ * @brief Requests that the data buffer of the IN report will be cleared after each successfull send to the HOST.
+ *
+ * @param hid pointer to the HID MAIN structure for which we are processing the action.
+ * @param report_id number of the report for which action is executed. If only one report is used by the system, 0 shall be used.
+ */
+void HID_Report_Clear_In_After_Each_Update(HID_Params_XT *hid, uint8_t report_id);
+
+/**
+ * @brief Marks IN report as changed to trigger sending it to the HOST.
+ *
+ * @param hid pointer to the HID MAIN structure for which we are processing the action.
+ * @param report_id number of the report for which action is executed. If only one report is used by the system, 0 shall be used.
+ */
 void HID_Mark_Report_In_Changed(HID_Params_XT *hid, uint8_t report_id);
+
+/**
+ * @brief Clears OUT "changed" report marker. This action triggers nothing. REPORT_CHANGED for OUT report is set
+ * when OUT report is received. If user doesn't connect event for OUT report (@see HID_Report_Set_Out_Event) but checks the report
+ * by pooling it from a thread then this flag can be useful for hom. In such a case, USBD stack sets this flag when OUT report arrives,
+ * user detects it by pooling that flag, processes report, clears it using this function and waits for it by polling again.
+ *
+ * @param hid pointer to the HID MAIN structure for which we are processing the action.
+ * @param report_id number of the report for which action is executed. If only one report is used by the system, 0 shall be used.
+ */
 void HID_Clear_Report_Out_Changed(HID_Params_XT *hid, uint8_t report_id);
 
 #endif
