@@ -55,7 +55,7 @@ static void HID_get_report_in_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direction_E
 
    tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -81,7 +81,7 @@ static void HID_get_report_feature_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direct
 
    tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -105,7 +105,7 @@ static void HID_set_report_in_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direction_E
 
    tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -140,7 +140,7 @@ static void HID_set_report_out_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direction_
 
    tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -179,7 +179,7 @@ static void HID_set_report_feature_ready (USBD_IOTP_Params_XT *tp, USB_EP_Direct
 
    tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
 
-   if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp) && USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
+   if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
    {
       report = tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid;
 
@@ -405,11 +405,10 @@ static USBD_Bool_DT HID_on_request (
             case HID_GET_REPORT_INTERFACE:
             // ---------------------------
                tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_in);
-               if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
-               {
-                  tp_vendor_data[HID_TP_VENDOR_CONTAINER_HID].pvoid = hid;
-                  tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid = report;
-               }
+
+               tp_vendor_data[HID_TP_VENDOR_CONTAINER_HID].pvoid = hid;
+               tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid = report;
+
                switch (req->wValue & 0xFF00)
                {
                   case USBD_REPORT_REQ_INPUT:
@@ -470,11 +469,10 @@ static USBD_Bool_DT HID_on_request (
             case HID_SET_REPORT_INTERFACE:
             // ---------------------------
                tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_out);
-               if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data))
-               {
-                  tp_vendor_data[HID_TP_VENDOR_CONTAINER_HID].pvoid = hid;
-                  tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid = report;
-               }
+
+               tp_vendor_data[HID_TP_VENDOR_CONTAINER_HID].pvoid = hid;
+               tp_vendor_data[HID_TP_VENDOR_CONTAINER_REPORT].pvoid = report;
+
                switch (req->wValue & 0xFF00)
                {
                   case USBD_REPORT_REQ_INPUT:
@@ -694,9 +692,9 @@ static void HID_in_abort (USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD
 static void HID_on_event(
    USBD_Params_XT *usbd, USBDC_Params_XT *usbdc, USBD_EVENT_Event_Header_XT *event_params, USBD_EVENT_Reason_ET reason)
 {
-   HID_Params_XT             *hid   = event_params->vendor.pvoid;
+   HID_Params_XT       *hid   = event_params->vendor.pvoid;
    USBD_IOTP_Params_XT *tp_in = &(hid->hw.in_iotp);
-   uint8_t                    reports_counter;
+   uint8_t              reports_counter;
 
    USBD_ENTER_FUNC(HID_EVENT);
 

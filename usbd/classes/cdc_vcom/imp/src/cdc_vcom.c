@@ -70,11 +70,9 @@ typedef void (*CDC_VCOM_check_params_execute) (CDC_VCOM_Params_XT *cdc_vcom, USB
 static void CDC_VCOM_check_params_and_execute(
    USBD_IOTP_Params_XT *tp, USB_EP_Direction_ET dir, USBD_IO_Inout_Data_Size_DT size, CDC_VCOM_check_params_execute execute)
 {
-   USBD_Vendor_Data_XT *tp_vendor_data;
-   USBDC_Interface_Header_XT *if_params;
-   CDC_VCOM_Params_XT *cdc_vcom;
-   USBD_Params_XT *usbd;
-   USBD_IOTP_Params_XT *tp_in;
+   CDC_VCOM_Params_XT  *cdc_vcom;
+   USBD_Params_XT      *usbd;
+   USBD_IOTP_Params_XT *ep0_tp_in;
 
    USBD_UNUSED_PARAM(dir);
    USBD_UNUSED_PARAM(size);
@@ -83,35 +81,25 @@ static void CDC_VCOM_check_params_and_execute(
 
    if(USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp))
    {
-      tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp);
       usbd = USBD_IOTP_Get_USBD(tp);
 
-      if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data) && USBD_CHECK_PTR(void, usbd))
+      if(USBD_CHECK_PTR(void, usbd))
       {
-         if_params   = (USBDC_Interface_Header_XT*)(tp_vendor_data->pvoid);
-         tp_in       = (USBD_IOTP_Params_XT*)USBD_IO_UP_Get_IN_TP_Params(usbd, 0);
+         cdc_vcom  = (CDC_VCOM_Params_XT*)(USBD_IOTP_Get_Vendor_Data_Container(tp)->pvoid);
+         ep0_tp_in = (USBD_IOTP_Params_XT*)USBD_IO_UP_Get_IN_TP_Params(usbd, 0);
 
-         if(USBD_CHECK_PTR(USBDC_Interface_Header_XT, if_params) && USBD_CHECK_PTR(USBD_IOTP_Params_XT, tp_in))
+         if(USBD_CHECK_PTR(CDC_VCOM_Params_XT, cdc_vcom) && USBD_CHECK_PTR(USBD_IOTP_Params_XT, ep0_tp_in))
          {
-            cdc_vcom = (CDC_VCOM_Params_XT*)(if_params->vendor.pvoid);
-
-            if(USBD_CHECK_PTR(CDC_VCOM_Params_XT, cdc_vcom))
-            {
-               execute(cdc_vcom, tp_in);
-            }
-            else
-            {
-               USBD_WARN_2(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p)", "cdc_vcom", cdc_vcom);
-            }
+            execute(cdc_vcom, ep0_tp_in);
          }
          else
          {
-            USBD_WARN_4(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p) or %s (%p)", "if_params", if_params, "tp_in", tp_in);
+            USBD_WARN_4(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p) or %s (%p)", "cdc_vcom", cdc_vcom, "ep0_tp_in", ep0_tp_in);
          }
       }
       else
       {
-         USBD_WARN_4(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p) or %s (%p)", "tp_vendor_data", tp_vendor_data, "usbd", usbd);
+         USBD_WARN_2(CDC_VCOM_INVALID_PARAMS, "wrong %s (%p)", "usbd", usbd);
       }
    }
    else
@@ -204,7 +192,6 @@ static USBD_Bool_DT CDC_VCOM_on_request(
    USBD_IOTP_Params_XT *tp_in,
    USBD_IOTP_Params_XT *tp_out)
 {
-   USBD_Vendor_Data_XT *tp_vendor_data;
    USBDC_Interface_Header_XT *if_params;
    CDC_VCOM_Params_XT *cdc_vcom;
    uint16_t *ptr16;
@@ -338,13 +325,10 @@ static USBD_Bool_DT CDC_VCOM_on_request(
 
          case CDC_SET_LINE_CODING_INTERFACE:
             USBD_DEBUG_HI_2(CDC_VCOM_REQ, "set %s %s", cdc_vcom->data.name, "LINE_CODING");
-            tp_vendor_data = USBD_IOTP_Get_Vendor_Data_Container(tp_out);
 
-            if(USBD_CHECK_PTR(USBD_Vendor_Data_XT, tp_vendor_data) && (req->wLength >= CDC_VCOM_LINE_CODING_CONTAINER_SIZE))
+            if(req->wLength >= CDC_VCOM_LINE_CODING_CONTAINER_SIZE)
             {
-               tp_vendor_data->pvoid = if_params;
-               if_params->vendor_data.pvoid = cdc_vcom;
-
+               USBD_IOTP_Get_Vendor_Data_Container(tp_out)->pvoid = cdc_vcom;
                USBD_IOTP_Set_Ready_Handler(tp_out, CDC_VCOM_on_ready_params_change);
 
                if(USBD_BOOL_IS_TRUE(USBD_IOTP_Recv_And_Ready(tp_out, &(cdc_vcom->data.comm_physical_params), req->wLength, &size)))
@@ -497,7 +481,9 @@ static void CDC_VCOM_on_event(
             cdc_vcom->data.serial_state_notification.data |= CDC_VCOM_SERIAL_STATE_NOTIFICATION_DCD;
          }
 
+         USBD_IOTP_Get_Vendor_Data_Container(&(cdc_vcom->data.iotp.notif))->pvoid = cdc_vcom;
          USBD_IOTP_Set_Ready_Handler(&(cdc_vcom->data.iotp.notif), CDC_VCOM_send_notif_done);
+
          if(USBD_BOOL_IS_TRUE(USBD_IOTP_Send(
             &(cdc_vcom->data.iotp.notif),
             &(cdc_vcom->data.serial_state_notification.req),
