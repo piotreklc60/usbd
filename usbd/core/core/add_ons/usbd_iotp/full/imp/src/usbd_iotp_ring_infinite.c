@@ -532,6 +532,13 @@ void USBD_IOTP_Ring_Clear_Buff(
 
    BUFF_PROTECTION_LOCK(tp->core.transfer_params.data.data.ring);
 
+   if(USB_EP_DESC_DIR_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp))
+   {
+      extension->on_remove = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Remove);
+   }
+
+   Buff_Ring_Clear(tp->core.transfer_params.data.data.ring, BUFF_FALSE);
+
    if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
    {
       if(USB_EP_DESC_DIR_OUT == USBD_IOTP_GET_EP_DIR_FROM_TP(tp))
@@ -572,8 +579,6 @@ void USBD_IOTP_Ring_Clear_Buff(
          }
       }
    }
-
-   Buff_Ring_Clear(tp->core.transfer_params.data.data.ring, BUFF_FALSE);
 
    BUFF_PROTECTION_UNLOCK(tp->core.transfer_params.data.data.ring);
 
