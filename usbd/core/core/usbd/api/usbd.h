@@ -176,12 +176,6 @@ typedef struct USBD_params_eXtended_Tag
 #include "usbd_iotp.h"
 #endif
 
-#ifndef USBD_IOTP_BUFF_H_
-#ifdef  USBD_IOTP_BUFF_USE
-#include "usbd_iotp_buff.h"
-#endif
-#endif
-
 #ifndef USBD_REQUEST_H_
 #include "usbd_request.h"
 #endif
