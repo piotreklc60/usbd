@@ -245,16 +245,16 @@ typedef union
 #define USBDEP_SB_SET_TX_COUNT(_ep_number, _count)  USBD_STM32_EPMEM[_ep_number].sb.tx_count = _count
 #define USBDEP_SB_CLR_TX_COUNT(_ep_number)          USBD_STM32_EPMEM[_ep_number].sb.tx_count = 0
 #define USBDEP_DB_CLR_TX_COUNT(_ep_number)          USBD_STM32_EPMEM[_ep_number].sb.tx_count = 0;    USBD_STM32_EPMEM[_ep_number].sb.rx_count = 0
-#define USBDEP_DB_SET_TX_COUNT(_ep_number, _count)  USBD_STM32_EPMEM[_ep_number].db[(USBD_STM32_REG->EP_REG[_ep_number] & USBDEP_STM32_CAT_A__DTOG_RX) >> 14].count = _count
-#define USBDEP_ISO_SET_TX_COUNT(_ep_number, _count) USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_TX) & USBDEP_STM32_CAT_A__DTOG_TX) >> 6].count = _count
+#define USBDEP_DB_SET_TX_COUNT(_ep_number, _count)  USBD_STM32_EPMEM[_ep_number].db[(USBD_STM32_REG->EP_REG[_ep_number] & USBDEP_STM32_CAT_A__DTOG_RX) >> USBDEP_STM32_CAT_A_BIT__DTOG_RX].count = _count
+#define USBDEP_ISO_SET_TX_COUNT(_ep_number, _count) USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_TX) & USBDEP_STM32_CAT_A__DTOG_TX) >> USBDEP_STM32_CAT_A_BIT__DTOG_TX].count = _count
 
-#define USBDEP_DB_GET_TX_COUNT_HB(_ep_number)      ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_RX) & USBDEP_STM32_CAT_A__DTOG_RX) >> 14].count) & 0x3ff)
-#define USBDEP_ISO_GET_TX_COUNT_HB(_ep_number)     ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number]) & USBDEP_STM32_CAT_A__DTOG_TX) >> 6].count) & 0x3ff)
+#define USBDEP_DB_GET_TX_COUNT_HB(_ep_number)      ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_RX) & USBDEP_STM32_CAT_A__DTOG_RX) >> USBDEP_STM32_CAT_A_BIT__DTOG_RX].count) & 0x3ff)
+#define USBDEP_ISO_GET_TX_COUNT_HB(_ep_number)     ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number]) & USBDEP_STM32_CAT_A__DTOG_TX) >> USBDEP_STM32_CAT_A_BIT__DTOG_TX].count) & 0x3ff)
 
 #define USBDEP_SB_GET_RX_COUNT(_ep_number)         ((uint16_t)(USBD_STM32_EPMEM[_ep_number].sb.rx_count) & 0x3ff)
-#define USBDEP_DB_GET_RX_COUNT(_ep_number)         ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[(USBD_STM32_REG->EP_REG[_ep_number] & USBDEP_STM32_CAT_A__DTOG_TX) >> 6].count) & 0x3ff)
-#define USBDEP_DB_GET_RX_COUNT_HB(_ep_number)      ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_TX) & USBDEP_STM32_CAT_A__DTOG_TX) >> 6].count) & 0x3ff)
-#define USBDEP_ISO_GET_RX_COUNT(_ep_number)        ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_RX) & USBDEP_STM32_CAT_A__DTOG_RX) >> 14].count) & 0x3ff)
+#define USBDEP_DB_GET_RX_COUNT(_ep_number)         ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[(USBD_STM32_REG->EP_REG[_ep_number] & USBDEP_STM32_CAT_A__DTOG_TX) >> USBDEP_STM32_CAT_A_BIT__DTOG_TX].count) & 0x3ff)
+#define USBDEP_DB_GET_RX_COUNT_HB(_ep_number)      ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_TX) & USBDEP_STM32_CAT_A__DTOG_TX) >> USBDEP_STM32_CAT_A_BIT__DTOG_TX].count) & 0x3ff)
+#define USBDEP_ISO_GET_RX_COUNT(_ep_number)        ((uint16_t)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_RX) & USBDEP_STM32_CAT_A__DTOG_RX) >> USBDEP_STM32_CAT_A_BIT__DTOG_RX].count) & 0x3ff)
 
 
 
@@ -298,13 +298,13 @@ typedef union
 
 
 
-#define USBDEP_DB_GET_TX_BUFFER_ADDR(_ep_number)      (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[(USBD_STM32_REG->EP_REG[_ep_number] & USBDEP_STM32_CAT_A__DTOG_RX) >> 14].addr * 2))
-#define USBDEP_ISO_GET_TX_BUFFER_ADDR(_ep_number)     (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_TX) & USBDEP_STM32_CAT_A__DTOG_TX) >> 6].addr * 2))
+#define USBDEP_DB_GET_TX_BUFFER_ADDR(_ep_number)      (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[(USBD_STM32_REG->EP_REG[_ep_number] & USBDEP_STM32_CAT_A__DTOG_RX) >> USBDEP_STM32_CAT_A_BIT__DTOG_RX].addr * 2))
+#define USBDEP_ISO_GET_TX_BUFFER_ADDR(_ep_number)     (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_TX) & USBDEP_STM32_CAT_A__DTOG_TX) >> USBDEP_STM32_CAT_A_BIT__DTOG_TX].addr * 2))
 #define USBDEP_SB_GET_TX_BUFFER_ADDR(_ep_number)      (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].sb.tx_addr * 2))
 
-#define USBDEP_DB_GET_RX_BUFFER_ADDR(_ep_number)      (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[(USBD_STM32_REG->EP_REG[_ep_number] & USBDEP_STM32_CAT_A__DTOG_TX) >> 6].addr * 2))
-#define USBDEP_DB_GET_RX_BUFFER_ADDR_HB(_ep_number)   (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_TX) & USBDEP_STM32_CAT_A__DTOG_TX) >> 6].addr * 2))
-#define USBDEP_ISO_GET_RX_BUFFER_ADDR(_ep_number)     (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_RX) & USBDEP_STM32_CAT_A__DTOG_RX) >> 14].addr * 2))
+#define USBDEP_DB_GET_RX_BUFFER_ADDR(_ep_number)      (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[(USBD_STM32_REG->EP_REG[_ep_number] & USBDEP_STM32_CAT_A__DTOG_TX) >> USBDEP_STM32_CAT_A_BIT__DTOG_TX].addr * 2))
+#define USBDEP_DB_GET_RX_BUFFER_ADDR_HB(_ep_number)   (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_TX) & USBDEP_STM32_CAT_A__DTOG_TX) >> USBDEP_STM32_CAT_A_BIT__DTOG_TX].addr * 2))
+#define USBDEP_ISO_GET_RX_BUFFER_ADDR(_ep_number)     (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].db[((USBD_STM32_REG->EP_REG[_ep_number] ^ USBDEP_STM32_CAT_A__DTOG_RX) & USBDEP_STM32_CAT_A__DTOG_RX) >> USBDEP_STM32_CAT_A_BIT__DTOG_RX].addr * 2))
 #define USBDEP_SB_GET_RX_BUFFER_ADDR(_ep_number)      (USBD_BUFFER_BASE + (uint8_t *)(USBD_STM32_EPMEM[_ep_number].sb.rx_addr * 2))
 
 
