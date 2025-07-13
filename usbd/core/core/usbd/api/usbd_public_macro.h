@@ -181,6 +181,16 @@
 #endif
 
 
+#ifndef USBD_MUL_BY_POWER_OF_2
+#define USBD_MUL_BY_POWER_OF_2(_a, _2_power_x)                    ((_a) << (_2_power_x))
+#endif
+
+
+#ifndef USBD_DIV_BY_POWER_OF_2
+#define USBD_DIV_BY_POWER_OF_2(_a, _2_power_x)                    ((_a) >> (_2_power_x))
+#endif
+
+
 #ifndef USBD_ENTER_FUNC
 #define USBD_ENTER_FUNC()
 #endif

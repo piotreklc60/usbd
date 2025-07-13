@@ -55,7 +55,7 @@ typedef struct
 
 
 
-typedef void (*USBD_IOTP_send_invoked_connect_data_HT)(
+typedef USBD_Bool_DT (*USBD_IOTP_send_invoked_connect_data_HT)(
    USBD_IOTP_Params_XT       *tp,
    const void                *data,
    USBD_IO_Inout_Data_Size_DT size);
@@ -67,24 +67,24 @@ typedef USBD_IO_Inout_Data_Size_DT (*USBD_IOTP_io_data_memcpy_in_HT)(
 
 
 
-static void USBD_IOTP_send_invoked_connect_data_linear(
+static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_linear(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size);
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_VECTOR_BUFFERS)
-static void USBD_IOTP_send_invoked_connect_data_vector(
+static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_vector(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size);
 #endif
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_TREE_BUFFERS)
-static void USBD_IOTP_send_invoked_connect_data_tree(
+static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_tree(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size);
 #endif
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
-static void USBD_IOTP_send_invoked_connect_data_ring(
+static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_ring(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size);
@@ -248,7 +248,7 @@ USBD_Bool_DT USBD_IOTP_Send_Stall(
 
 
 
-static void USBD_IOTP_send_invoked_connect_data_linear(
+static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_linear(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size)
@@ -259,12 +259,14 @@ static void USBD_IOTP_send_invoked_connect_data_linear(
    tp->core.transfer_params.dir.in.next_contineous_part.data = data;
    tp->core.transfer_params.dir.in.next_contineous_part.size = size;
    tp->core.transfer_params.data_type                        = USBD_IOTP_DATA_LINEAR;
+
+   return USBD_TRUE;
 } /* USBD_IOTP_send_invoked_connect_data_linear */
 
 
 
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_VECTOR_BUFFERS)
-static void USBD_IOTP_send_invoked_connect_data_vector(
+static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_vector(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size)
@@ -278,13 +280,15 @@ static void USBD_IOTP_send_invoked_connect_data_vector(
       vector->data.vector, vector->data_num_elems, 0);
    tp->core.transfer_params.data.size                  = size;
    tp->core.transfer_params.data_type                  = USBD_IOTP_DATA_VECTOR;
+
+   return USBD_TRUE;
 } /* USBD_IOTP_send_invoked_connect_data_vector */
 #endif
 
 
 
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_TREE_BUFFERS)
-static void USBD_IOTP_send_invoked_connect_data_tree(
+static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_tree(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size)
@@ -298,18 +302,21 @@ static void USBD_IOTP_send_invoked_connect_data_tree(
       vector->data.tree, vector->data_num_elems, 0);
    tp->core.transfer_params.data.size                  = size;
    tp->core.transfer_params.data_type                  = USBD_IOTP_DATA_TREE;
+
+   return USBD_TRUE;
 } /* USBD_IOTP_send_invoked_connect_data_tree */
 #endif
 
 
 
 #if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
-static void USBD_IOTP_send_invoked_connect_data_ring(
+static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_ring(
    USBD_IOTP_Params_XT *tp,
    const void *data,
    USBD_IO_Inout_Data_Size_DT size)
 {
    Buff_Ring_XT *ring = (Buff_Ring_XT*)data;
+   USBD_Bool_DT result = USBD_TRUE;
 
    tp->core.transfer_params.data.data.ring                  = ring;
    tp->core.transfer_params.data.offset                     = 0;
@@ -317,6 +324,14 @@ static void USBD_IOTP_send_invoked_connect_data_ring(
    tp->core.transfer_params.dir.in.next_contineous_part.size= 0;
    tp->core.transfer_params.data.size                       = size;
    tp->core.transfer_params.data_type                       = USBD_IOTP_DATA_RING;
+
+   if(Buff_Ring_Is_Empty(ring, BUFF_TRUE))
+   {
+      // TODO: connect buffer extensions
+      result = USBD_FALSE;
+   }
+
+   return result;
 } /* USBD_IOTP_send_invoked_connect_data_ring */
 #endif
 
@@ -331,7 +346,7 @@ static USBD_Bool_DT USBD_IOTP_send_invoked(
    USBD_Bool_DT                           *result_ret)
 {
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction;
-   USBD_Bool_DT do_trigger = USBD_TRUE;
+   USBD_Bool_DT do_trigger;
    USBD_Bool_DT result = USBD_FALSE;
    USBD_Bool_DT transfer_active;
 
@@ -346,8 +361,8 @@ static USBD_Bool_DT USBD_IOTP_send_invoked(
    if(USBD_CHECK_PTR(USBD_IO_UP_DOWN_Transaction_Params_XT, transaction))
    {
       result = USBD_TRUE;
-      tp->up_link.data.size_transferred                  = 0;
-      USBD_CALL_HANDLER(USBD_IOTP_send_invoked_connect_data_HT, connect_data)(tp, data, size);
+      tp->up_link.data.size_transferred                 = 0;
+      do_trigger = USBD_CALL_HANDLER(USBD_IOTP_send_invoked_connect_data_HT, connect_data)(tp, data, size);
       tp->core.transfer_params.dir.in.last_packet_size  = size % tp->core.pipe_params.data.mps;
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
       if(USB_EP_DESC_TRANSFER_TYPE_CONTROL != tp->core.pipe_params.data.ep_type)
