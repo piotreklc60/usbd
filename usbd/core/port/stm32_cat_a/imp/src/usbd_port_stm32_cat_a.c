@@ -892,7 +892,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
 #if(USBD_MAX_NUM_ENDPOINTS > 1)
    if(2 == ep->in.max_num_bufs)
    {
-      USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "2 bufs; used bufs: %d", ep->in.num_used_bufs);
+      USBD_DEBUG_HI_2(USBD_DBG_PORT_IO, "EP reg %d; 2 bufs; used bufs: %d", ep->in.hw.ep_reg_num, ep->in.num_used_bufs);
 
       if(0 == ep->in.num_used_bufs)
       {
@@ -972,7 +972,7 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_data_in_process_bufs(
    else if(0 == ep->in.num_used_bufs)
 #endif
    {
-      USBD_DEBUG_HI_1(USBD_DBG_PORT_IO, "1 buf; used bufs: %d", ep->in.num_used_bufs);
+      USBD_DEBUG_HI_2(USBD_DBG_PORT_IO, "EP reg %d; 1 buf; used bufs: %d", ep->in.hw.ep_reg_num, ep->in.num_used_bufs);
 
       /* calculate amount of data to be loaded to buffer */
       part = (size > (USBD_IO_Inout_Data_Size_DT)(ep->in.mps - ep->in.buf0.size)) ?
