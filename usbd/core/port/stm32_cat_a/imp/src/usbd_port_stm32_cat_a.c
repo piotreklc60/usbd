@@ -1882,15 +1882,19 @@ static USBD_IO_Inout_Data_Size_DT port_stm32_cat_a_io_get_ep_in_buffered_size(US
 
 static void port_stm32_cat_a_io_stall(USBD_Params_XT *usbd, uint8_t ep_num, USB_EP_Direction_ET dir)
 {
-   USBD_UNUSED_PARAM(usbd);
-#ifndef USBD_USE_IOCMD
-   USBD_UNUSED_PARAM(ep_num);
-   USBD_UNUSED_PARAM(dir);
+   uint32_t temp;
+#ifdef USBD_USE_IOCMD
+   uint32_t temp_before;
+   uint32_t temp_after;
 #endif
+
+   USBD_UNUSED_PARAM(usbd);
 
    USBD_ENTER_FUNC(USBD_DBG_PORT_IO);
 
    USBD_EMERG_3(USBD_DBG_PORT_IO, "EP: %d; dir: %3s - %s", ep_num, (USB_EP_DIRECTION_OUT == dir) ? "OUT" : "IN", "STALL");
+
+   port_stm32_cat_a_io_halt(usbd, ep_num, dir, USBD_MAKE_INVALID_PTR(const USB_Endpoint_Desc_DT), USBD_TRUE);
 
    USBD_EXIT_FUNC(USBD_DBG_PORT_IO);
 } /* port_stm32_cat_a_io_stall */
