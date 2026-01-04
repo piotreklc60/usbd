@@ -1,5 +1,6 @@
 /examples/depedencies/buff
 /examples/depedencies/iocmd
+/examples/depedencies/osal
 /examples/stm32f103/tripple_vcom/build
 /examples/stm32f103/tripple_vcom/stm32cubemx_generated_stm32f103c8t6_bluepill/
 !/examples/stm32f103/tripple_vcom/stm32cubemx_generated_stm32f103c8t6_bluepill/tripple_vcom_stm32f103c8t6_bluepill.ioc

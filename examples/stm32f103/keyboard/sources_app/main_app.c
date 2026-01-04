@@ -26,7 +26,7 @@
 #include "std_libs.h"
 #include "main.h"
 
-#include "os.h"
+#include "osal.h"
 #include "gpio.h"
 #include "iocmd.h"
 
@@ -64,10 +64,10 @@ void Task_Led(void * argument)
    {
       USBD_NOTICE(MAIN_TASK_LED, "led ON!");
       LED_ON();
-      OS_Sleep_Ms(500);
+      OSAL_Sleep_Ms(500);
       USBD_NOTICE(MAIN_TASK_LED, "led FF!");
       LED_OFF();
-      OS_Sleep_Ms(500);
+      OSAL_Sleep_Ms(500);
    }
 } /* Task_Led */
 
@@ -83,7 +83,7 @@ void Task_Logger_Commander(void *pvParameters)
 
    USBD_UNUSED_PARAM(pvParameters);
 
-   OS_Sleep_Ms(1);
+   OSAL_Sleep_Ms(1);
 
    out_buf = CDC_Vcom_Get_Out_Buf(VCOM_CMD);
 
@@ -101,7 +101,7 @@ void Task_Logger_Commander(void *pvParameters)
 //         Mouse_Parse_Cmd_Bytes(data, (size_t)size);
          Cmd_Parse_Bytes(exe, data, (size_t)size);
       }
-      OS_Sleep_Ms(1);
+      OSAL_Sleep_Ms(1);
    }
 } /* Task_Logger_Commander */
 
@@ -132,34 +132,24 @@ int main(void)
    IOCMD_Install_Standard_Output(exe);
    logs_exe = exe;
 
-   OS_Init();
+   OSAL_Init();
 
    // create FreeRTOS tasks
-   if(OS_MAX_NUM_CONTEXTS == OS_Create_Thread(
-      Task_Led,
-      NULL,
-      "led1",
-      configMINIMAL_STACK_SIZE * 2,
-      tskIDLE_PRIORITY + 2))
+   if(0 == OSAL_Thread_Create(Task_Led, NULL, "led1", configMINIMAL_STACK_SIZE * 2, tskIDLE_PRIORITY + 2, 0).id)
    {
       // application should never get here, unless there is a memory allocation problem
       IOCMD_Printf("Task %s creation failed!\n\r", "led1");
    }
 
    // create FreeRTOS tasks
-   if(OS_MAX_NUM_CONTEXTS == OS_Create_Thread(
-      Task_Logger_Commander,
-      NULL,
-      "cmd",
-      configMINIMAL_STACK_SIZE * 4,
-      tskIDLE_PRIORITY + 2))
+   if(0 == OSAL_Thread_Create(Task_Logger_Commander, NULL, "cmd", configMINIMAL_STACK_SIZE * 4, tskIDLE_PRIORITY + 2, 0).id)
    {
       // application should never get here, unless there is a memory allocation problem
       IOCMD_Printf("Task %s creation failed!\n\r", "vcom_1");
    }
 
    // start the sheduler
-   OS_Start();
+   OSAL_Start();
 
    /* We should never get here as control is now taken by the scheduler */
 

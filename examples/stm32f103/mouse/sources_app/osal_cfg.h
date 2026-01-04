@@ -23,8 +23,8 @@
  * -----------------------------------------------------------------------------------------------------------------------------
  */
 
-#ifndef OS_CFG_H_
-#define OS_CFG_H_
+#ifndef OSAL_CFG_H_
+#define OSAL_CFG_H_
 
 
 #include "std_libs.h"
@@ -32,8 +32,14 @@
 #include "task.h"
 #include "semphr.h"
 
-#define OS_MAX_NUM_THREADS       10
-#define OS_MAX_NUM_INTERRUPTS    240
+//#define OSAL_USE_IOCMD
+#define OSAL_IDENTIFY_CONTEXT_BY_PATH_SUPPORTED    OSAL_FEATURE_NOT_PRESENT
+#define OSAL_BASIC_PARAMS_CHECK(expresion)         (1)
+
+#define OSAL_NUM_THREADS       10
+#define OSAL_NUM_INTERRUPTS    240
+#define OSAL_NUM_PRE_ALOCATED_BRANCHES             17
+#define OSAL_NUM_PRE_ALOCATED_BRANCHES_DESC_BUF    89
 
 
 #endif

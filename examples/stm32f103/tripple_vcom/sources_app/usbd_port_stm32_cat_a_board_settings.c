@@ -292,25 +292,25 @@ void USBD_Port_STM32_CAT_A_Clear_Exti_Line_18_Irq_Status(void)
    USBD_EXIT_FUNC(USBD_DBG_PORT_IRQ);
 }
 
-bool_t USBD_Port_STM32_CAT_A_OS_Is_Usbd_Context(OS_Invoke_XT *invoke_params, OS_Context_Id current_context_unique_id)
+OSAL_Bool_DT USBD_Port_STM32_CAT_A_OS_Is_Usbd_Context(OSAL_Invoke_XT *invoke_params, OSAL_Context_Id_XT *current_context_id)
 {
-   bool_t result = true;
+   OSAL_Bool_DT result = OSAL_TRUE;
 
    USBD_UNUSED_PARAM(invoke_params);
 
-   if((STM32_CAT_A_USB_HP_CAN1_TX_IRQ_ID == current_context_unique_id)
-      || (STM32_CAT_A_USB_LP_CAN1_RX0_IRQ_ID == current_context_unique_id)
-      || (STM32_CAT_A_USBWAKEUP_IRQ_ID == current_context_unique_id))
+   if((STM32_CAT_A_USB_HP_CAN1_TX_IRQ_ID == current_context_id->id)
+      || (STM32_CAT_A_USB_LP_CAN1_RX0_IRQ_ID == current_context_id->id)
+      || (STM32_CAT_A_USBWAKEUP_IRQ_ID == current_context_id->id))
    {
-      result = false;
+      result = OSAL_FALSE;
    }
 
    return result;
 }
 
-bool_t USBD_Port_STM32_CAT_A_OS_Irq_Lock (struct OS_Invoke_eXtendedTag *invoke_params)
+OSAL_Bool_DT USBD_Port_STM32_CAT_A_OS_Irq_Lock (OSAL_Invoke_XT *invoke_params)
 {
-   bool_t result = false;
+   OSAL_Bool_DT result = OSAL_FALSE;
 
    USBD_UNUSED_PARAM(invoke_params);
 
@@ -327,13 +327,13 @@ bool_t USBD_Port_STM32_CAT_A_OS_Irq_Lock (struct OS_Invoke_eXtendedTag *invoke_p
          /* deconfigure USB WakeUp IRQ */
          HAL_NVIC_DisableIRQ(USBWakeUp_IRQn);
       }
-      result = true;
+      result = OSAL_TRUE;
    }
 
    return result;
 }
 
-void USBD_Port_STM32_CAT_A_OS_Irq_Unlock (struct OS_Invoke_eXtendedTag *invoke_params)
+void USBD_Port_STM32_CAT_A_OS_Irq_Unlock (OSAL_Invoke_XT *invoke_params)
 {
    USBD_UNUSED_PARAM(invoke_params);
 

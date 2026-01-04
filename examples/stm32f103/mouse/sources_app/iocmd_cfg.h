@@ -65,27 +65,27 @@
 
 #define IOCMD_LOGS_TREE_OS_CRITICAL_ID          IOCMD_OS_SWITCH
 
-#define IOCMD_PROTECTION_LOCK(params)           OS_Enter_Critical_Section()
-#define IOCMD_PROTECTION_UNLOCK(params)         OS_Exit_Critical_Section()
-#define IOCMD_ENTER_CRITICAL()                  OS_Enter_Critical_Section()
-#define IOCMD_EXIT_CRITICAL()                   OS_Exit_Critical_Section()
+#define IOCMD_PROTECTION_LOCK(params)           OSAL_Enter_Critical_Section()
+#define IOCMD_PROTECTION_UNLOCK(params)         OSAL_Exit_Critical_Section()
+#define IOCMD_ENTER_CRITICAL()                  OSAL_Enter_Critical_Section()
+#define IOCMD_EXIT_CRITICAL()                   OSAL_Exit_Critical_Section()
 
-#define IOCMD_OS_GET_CURRENT_TIME()             OS_Get_Time()
-#define IOCMD_OS_GET_CURRENT_CONTEXT_ID()       OS_Get_Current_Context_Id()
-#define IOCMD_OS_GET_CURRENT_CONTEXT_TYPE()     OS_Get_Current_Context_Type()
-#define IOCMD_OS_GET_CONTEXT_TYPE_NAME(type)    OS_Get_Context_Type_Name(type)
-#define IOCMD_OS_GET_CONTEXT_NAME(type, id)     OS_Get_Context_Name(type, id)
-#define IOCMD_OS_CONTEXT_TYPE_THREAD            OS_CONTEXT_TYPE_TASK
+#define IOCMD_OS_GET_CURRENT_TIME()             OSAL_Get_Time()
+#define IOCMD_OS_GET_CURRENT_CONTEXT_ID()       OSAL_Get_Current_Context_Unique_Id()
+#define IOCMD_OS_GET_CURRENT_CONTEXT_TYPE()     OSAL_Get_Current_Context_Type()
+#define IOCMD_OS_GET_CONTEXT_TYPE_NAME(type)    OSAL_Get_Context_Type_Name(type)
+#define IOCMD_OS_GET_CONTEXT_NAME(type, id)     OSAL_Get_Context_Name(OSAL_CONTEXT_ID_BY_NUMBER(id))
+#define IOCMD_OS_CONTEXT_TYPE_THREAD            OSAL_CONTEXT_TYPE_THREAD
 
 #define IOCMD_FILE_NAME_EXPECTED_MAX_SIZE       30
 
 
 #define IOCMD_CONTEXT_ID_DT_EXTERNAL
-typedef OS_Context_Id IOCMD_Context_ID_DT;
+typedef OSAL_Context_Unique_Id_DT IOCMD_Context_ID_DT;
 
 
 #define IOCMD_CONTEXT_TYPE_DT_EXTERNAL
-//typedef OS_Context_Type_DT IOCMD_Context_Type_DT;
+//typedef OSAL_Context_Type_DT IOCMD_Context_Type_DT;
 typedef uint8_t IOCMD_Context_Type_DT;
 
 
@@ -98,10 +98,34 @@ typedef uint8_t IOCMD_Context_Type_DT;
 #define IOCMD_MACRO_COMPILATION_SWITCH_ENABLE      true
 
 
+#ifdef OSAL_USE_IOCMD
+#define IOCMD_LOGS_TREE_OSAL_PART \
+IOCMD_LOG_ADD_MODULE(OSAL_DBG,                         IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED   , "OSAL - debug module") \
+IOCMD_LOG_ADD_GROUP( OSAL_DBG_LISTS,                   IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "OSAL - contexts management") \
+IOCMD_LOG_ADD_GROUP( OSAL_DBG_TREES,                   IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "OSAL - contexts management") \
+IOCMD_LOG_ADD_GROUP( OSAL_DBG_ALLOC,                   IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "OSAL - contexts management") \
+IOCMD_LOG_ADD_GROUP( OSAL_DBG_CONTEXT,                 IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "OSAL - contexts management") \
+IOCMD_LOG_ADD_ITEM(  OSAL_DBG_CONTEXT_STATUS,          IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_DISABLED  , "OSAL - contexts management status information") \
+IOCMD_LOG_ADD_ITEM(  OSAL_DBG_CONTEXT_INVALID_PARAMS,  IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_INFO_HI   , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_DISABLED  , "OSAL - contexts management invalid parameters logging") \
+IOCMD_LOG_ADD_GROUP( OSAL_DBG_THREAD,                  IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "OSAL - threads management") \
+IOCMD_LOG_ADD_GROUP( OSAL_DBG_TIME,                    IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_DISABLED  , "OSAL - time") \
+IOCMD_LOG_ADD_GROUP( OSAL_DBG_SEMAPHORE,               IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_DISABLED  , "OSAL - semaphore") \
+IOCMD_LOG_ADD_GROUP( OSAL_DBG_MUTEX,                   IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_DISABLED  , "OSAL - mutex") \
+IOCMD_LOG_ADD_GROUP( OSAL_DBG_INVOKE,                  IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED  , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_DISABLED  , "OSAL - invoke") \
+
+#else
+#define IOCMD_LOGS_TREE_OSAL_PART
+
+#endif
+
+
 #define IOCMD_LOGS_TREE \
 /*                   name                              compilation switch level   compilation switch entr    default level log           default silent level log   default entrances state    description */ \
 IOCMD_LOG_ADD_MODULE(IOCMD_OS,                         IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED   , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "logs printed from FreeRTOS callbacks") \
 IOCMD_LOG_ADD_GROUP( IOCMD_OS_SWITCH,                  IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED   , IOCMD_LOG_LEVEL_DEBUG_LO  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "logs printed from FreeRTOS threads context switch routine") \
+\
+IOCMD_LOGS_TREE_OSAL_PART \
+\
 IOCMD_LOG_ADD_MODULE(MAIN_APP,                         IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED   , IOCMD_LOG_LEVEL_NOTICE    , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "logs printed from \"main\" function") \
 IOCMD_LOG_ADD_ITEM(  MAIN_TASK_LED,                    IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED   , IOCMD_LOG_LEVEL_WARN      , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "logs printed from LED task") \
 IOCMD_LOG_ADD_ITEM(  MAIN_TASK_USART,                  IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_ENABLED   , IOCMD_LOG_LEVEL_INFO_MID  , IOCMD_LOG_LEVEL_DEBUG_LO , IOCMD_ENTRANCE_QUIET     , "logs printed from USART task") \

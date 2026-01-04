@@ -27,7 +27,6 @@
 #define RING_BUF_CFG_H_
 
 #include "std_libs.h"
-#include "cfg.h"
 
 #define BUFF_DEFAULT_FEATURES_STATE                      BUFF_FEATURE_DISABLED
 /* for iotp */
@@ -70,8 +69,10 @@
 #define BUFF_UNLIKELY(expresion)                         __builtin_expect ((expresion), 0)
 
 
-#define BUFF_PROTECTION_LOCK(buf)                        OS_Enter_Critical_Section()
-#define BUFF_PROTECTION_UNLOCK(buf)                      OS_Exit_Critical_Section()
+#define BUFF_PROTECTION_LOCK(buf)                        OSAL_Enter_Critical_Section()
+#define BUFF_PROTECTION_UNLOCK(buf)                      OSAL_Exit_Critical_Section()
+
+#define BUFF_INCLUDE_IMP_CFG
 
 
 #endif

@@ -26,7 +26,7 @@
 #include "std_libs.h"
 #include "main.h"
 
-#include "os.h"
+#include "osal.h"
 #include "gpio.h"
 #include "stm32_usart_init.h"
 #include "iocmd.h"
@@ -101,16 +101,16 @@ void USART1_IRQHandler(void)
 
       if(BUFF_CHECK_PTR(Buff_Ring_XT, buf))
       {
-         OS_Enter_Critical_Section();
+         OSAL_Enter_Critical_Section();
          if(0 == Buff_Ring_Read(buf, &data, sizeof(data), BUFF_FALSE))
          {
             buf->extension->on_write = Vcom_0_On_Write;
 
-            OS_Exit_Critical_Section();
+            OSAL_Exit_Critical_Section();
          }
          else
          {
-            OS_Exit_Critical_Section();
+            OSAL_Exit_Critical_Section();
 
             USART1->DR = (uint32_t)data;
 
@@ -154,10 +154,10 @@ void Task_Led(void * argument)
    {
       USBD_NOTICE(MAIN_TASK_LED, "led ON!");
       LED_ON();
-      OS_Sleep_Ms(500);
+      OSAL_Sleep_Ms(500);
       USBD_NOTICE(MAIN_TASK_LED, "led FF!");
       LED_OFF();
-      OS_Sleep_Ms(500);
+      OSAL_Sleep_Ms(500);
    }
 } /* Task_Led */
 
@@ -173,7 +173,7 @@ void Task_Logger_Commander(void *pvParameters)
 
    USBD_UNUSED_PARAM(pvParameters);
 
-   OS_Sleep_Ms(1);
+   OSAL_Sleep_Ms(1);
 
    out_buf = CDC_Vcom_Get_Out_Buf(VCOM_CMD);
 
@@ -190,7 +190,7 @@ void Task_Logger_Commander(void *pvParameters)
          size = Buff_Ring_Read(out_buf, data, sizeof(data), BUFF_TRUE);
          Cmd_Parse_Bytes(exe, data, (size_t)size);
       }
-      OS_Sleep_Ms(1);
+      OSAL_Sleep_Ms(1);
    }
 } /* Task_Logger_Commander */
 
@@ -232,34 +232,24 @@ int main(void)
    IOCMD_Install_Standard_Output(exe);
    logs_exe = exe;
 
-   OS_Init();
+   OSAL_Init();
 
    // create FreeRTOS tasks
-   if(OS_MAX_NUM_CONTEXTS == OS_Create_Thread(
-      Task_Led,
-      NULL,
-      "led1",
-      configMINIMAL_STACK_SIZE * 2,
-      tskIDLE_PRIORITY + 2))
+   if(0 == OSAL_Thread_Create(Task_Led, NULL, "led1", configMINIMAL_STACK_SIZE * 2, tskIDLE_PRIORITY + 2, 0).id)
    {
       // application should never get here, unless there is a memory allocation problem
       IOCMD_Printf("Task %s creation failed!\n\r", "led1");
    }
 
    // create FreeRTOS tasks
-   if(OS_MAX_NUM_CONTEXTS == OS_Create_Thread(
-      Task_Logger_Commander,
-      NULL,
-      "cmd",
-      configMINIMAL_STACK_SIZE * 4,
-      tskIDLE_PRIORITY + 2))
+   if(0 == OSAL_Thread_Create(Task_Logger_Commander, NULL, "cmd", configMINIMAL_STACK_SIZE * 4, tskIDLE_PRIORITY + 2, 0).id)
    {
       // application should never get here, unless there is a memory allocation problem
-      IOCMD_Printf("Task %s creation failed!\n\r", "vcom_1");
+      IOCMD_Printf("Task %s creation failed!\n\r", "cmd");
    }
 
    // start the sheduler
-   OS_Start();
+   OSAL_Start();
 
    /* We should never get here as control is now taken by the scheduler */
 

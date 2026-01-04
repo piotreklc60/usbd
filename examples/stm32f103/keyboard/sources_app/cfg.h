@@ -28,7 +28,7 @@
 
 #include "std_libs.h"
 #include "main.h"
-#include "os.h"
+#include "osal.h"
 
 #define PIN_HIGH(pin, port)   (port)->BSRR = (pin)
 #define PIN_LOW(pin, port)    (port)->BRR = (pin)
@@ -46,24 +46,24 @@
 
 
 
-#define USBD_DECLARE_INVOKE_PARAMS(_invoke_params)       OS_Invoke_XT _invoke_params;
+#define USBD_DECLARE_INVOKE_PARAMS(_invoke_params)       OSAL_Invoke_XT _invoke_params;
 
-extern bool_t USBD_Port_STM32_CAT_A_OS_Is_Usbd_Context(OS_Invoke_XT *invoke_params, OS_Context_Id current_context_unique_id);
-extern bool_t USBD_Port_STM32_CAT_A_OS_Irq_Lock (struct OS_Invoke_eXtendedTag *invoke_params);
-extern void USBD_Port_STM32_CAT_A_OS_Irq_Unlock (struct OS_Invoke_eXtendedTag *invoke_params);
+extern OSAL_Bool_DT USBD_Port_STM32_CAT_A_OS_Is_Usbd_Context(OSAL_Invoke_XT *invoke_params, OSAL_Context_Id_XT *current_context_id);
+extern OSAL_Bool_DT USBD_Port_STM32_CAT_A_OS_Irq_Lock (OSAL_Invoke_XT *invoke_params);
+extern void USBD_Port_STM32_CAT_A_OS_Irq_Unlock (OSAL_Invoke_XT *invoke_params);
 
-#define USBD_INIT_INVOKE_PARAMS(_invoke_params)          OS_Invoke_Init(&(_invoke_params)); \
-                                                         OS_Set_Destination_Id_Vendor_Checker(&(_invoke_params), USBD_Port_STM32_CAT_A_OS_Is_Usbd_Context); \
-                                                         OS_Set_Destination_Irq_Lock_Unlock(&(_invoke_params), USBD_Port_STM32_CAT_A_OS_Irq_Lock, USBD_Port_STM32_CAT_A_OS_Irq_Unlock)
-
-
-#define USBD_MARK_INVOKE_DESTINATION(_invoke_params)     OS_Mark_Invoke_Params(&(_invoke_params))
+#define USBD_INIT_INVOKE_PARAMS(_invoke_params)          OSAL_Invoke_Init(&(_invoke_params)); \
+                                                         OSAL_Set_Destination_Id_Vendor_Checker(&(_invoke_params), USBD_Port_STM32_CAT_A_OS_Is_Usbd_Context); \
+                                                         OSAL_Set_Destination_Irq_Lock_Unlock(&(_invoke_params), USBD_Port_STM32_CAT_A_OS_Irq_Lock, USBD_Port_STM32_CAT_A_OS_Irq_Unlock)
 
 
-#define USBD_IS_INVOKE_NEEDED(_invoke_params)            OS_Is_Invoke_Needed(&(_invoke_params))
+#define USBD_MARK_INVOKE_DESTINATION(_invoke_params)     OSAL_Mark_Invoke_Params(&(_invoke_params))
 
 
-#define USBD_INVOKE(_invoke_params, _action)             OS_INVOKE(&(_invoke_params), _action)
+#define USBD_IS_INVOKE_NEEDED(_invoke_params)            OSAL_Is_Invoke_Needed(&(_invoke_params))
+
+
+#define USBD_INVOKE(_invoke_params, _action)             OSAL_INVOKE(&(_invoke_params), _action)
 
 
 

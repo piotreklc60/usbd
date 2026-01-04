@@ -71,10 +71,11 @@ set(USBD_USE_PORT_STM32_CATEGORY_A ON)
 include(${USBD_PATH}/usbd_lib.cmake)
 target_link_libraries(${CMAKE_PROJECT_NAME} usbd_lib)
 
-# external depedencies - buff and iocmd
+# external depedencies - buff, iocmd and osal
 set(DEPEDENCIES_PATH ../../depedencies)
 set(DEPEDENCY_USE_BUFF ON)
 set(DEPEDENCY_USE_IOCMD ON)
+set(DEPEDENCY_USE_OSAL ON)
 set(IOCMD_USE_OUT ON)
 set(IOCMD_USE_IN  ON)
 if(${VARIANT} MATCHES "c8t6_bluepill")
@@ -84,8 +85,10 @@ else()
 set(IOCMD_USE_LOG ON)
 set(IOCMD_USE_CMD ON)
 endif()
+set(OSAL_OS_VARIANT "freertos")
+set(OSAL_HW_VARIANT "cortex-m3")
 include(${DEPEDENCIES_PATH}/depedencies.cmake)
-target_link_libraries(${CMAKE_PROJECT_NAME} buff_lib iocmd_lib)
+target_link_libraries(${CMAKE_PROJECT_NAME} buff_lib iocmd_lib osal_lib)
 
 # definitions from presets for vendor ID and product ID
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE

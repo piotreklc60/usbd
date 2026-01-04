@@ -47,11 +47,11 @@ static const IOCMD_Print_Exe_Params_XT exe_vcom =
 
 static void wait_until_ready(Buff_Ring_XT* buff, Buff_Size_DT size)
 {
-   if(OS_CONTEXT_TYPE_TASK == OS_Get_Current_Context_Type())
+   if(OSAL_CONTEXT_TYPE_THREAD == OSAL_Get_Current_Context_Type())
    {
       while(BUFF_RING_GET_FREE_SIZE(buff) < size)
       {
-         OS_Sleep_Ms(1);
+         OSAL_Sleep_Ms(1);
       }
    }
 }

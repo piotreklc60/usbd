@@ -41,11 +41,21 @@ if(DEFINED DEPEDENCY_USE_BUFF)
 endif()
 
 if(DEFINED DEPEDENCY_USE_IOCMD)
-    #Add buff library
+    #Add iocmd library
     FetchContent_Declare(iocmd_repository
         GIT_REPOSITORY      https://github.com/piotreklc60/iocmd.git
         GIT_TAG             main
         SOURCE_DIR          ${CMAKE_CURRENT_LIST_DIR}/iocmd
+        UPDATE_DISCONNECTED ON
+    )
+endif()
+
+if(DEFINED DEPEDENCY_USE_OSAL)
+    #Add osal library
+    FetchContent_Declare(osal_repository
+        GIT_REPOSITORY      https://github.com/piotreklc60/osal.git
+        GIT_TAG             main
+        SOURCE_DIR          ${CMAKE_CURRENT_LIST_DIR}/osal
         UPDATE_DISCONNECTED ON
     )
 endif()
@@ -65,5 +75,12 @@ if(DEFINED DEPEDENCY_USE_IOCMD)
     FetchContent_GetProperties(iocmd_repository)
     if(NOT iocmd_repository_POPULATED)
         FetchContent_MakeAvailable(iocmd_repository)
+    endif()
+endif()
+
+if(DEFINED DEPEDENCY_USE_OSAL)
+    FetchContent_GetProperties(osal_repository)
+    if(NOT osal_repository_POPULATED)
+        FetchContent_MakeAvailable(osal_repository)
     endif()
 endif()
