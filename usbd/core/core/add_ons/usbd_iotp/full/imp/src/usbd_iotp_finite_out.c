@@ -135,11 +135,23 @@ static void USBD_IOTP_recv_invoked_connect_data_ring(
    USBD_IO_Inout_Data_Size_DT size)
 {
    Buff_Ring_XT *ring = (Buff_Ring_XT*)data;
+   Buff_Ring_Extensions_XT *extension;
+
    tp->core.transfer_params.data.data.ring               = ring;
    tp->core.transfer_params.data.offset                  = 0;
    tp->core.transfer_params.data.size                    = size;
    tp->core.transfer_params.dir.out.next_contineous_part = 0;
    tp->core.transfer_params.data_type                    = USBD_IOTP_DATA_RING;
+
+   extension = ring->extension;
+
+   if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
+   {
+      extension->on_read_params  = tp;
+      extension->on_remove_params= tp;
+      extension->on_read         = USBD_IOTP_Ring_Extension_On_Read;
+      extension->on_remove       = USBD_IOTP_Ring_Extension_On_Remove;
+   }
 } /* USBD_IOTP_recv_invoked_connect_data_ring */
 #endif
 

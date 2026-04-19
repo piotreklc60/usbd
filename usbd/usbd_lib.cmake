@@ -154,6 +154,7 @@ else()
             ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp_finite_in.c
             ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp_finite_out.c
             ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp_ring_infinite.c
+            ${USBD_CORE_IOTP_PATH}/imp/src/usbd_iotp_ring_extensions.c
         )
     endif()
 endif()
@@ -177,6 +178,8 @@ endif()
 if(DEFINED USBD_USE_MASS_STORAGE AND USBD_USE_MASS_STORAGE MATCHES ON)
     target_sources(usbd_lib INTERFACE
         ${MASS_STORAGE_PATH}/imp/src/mass_storage.c
+        ${MASS_STORAGE_PATH}/imp/src/mass_storage_pipe.c
+        ${MASS_STORAGE_PATH}/imp/src/mass_storage_scsi.c
     )
     target_include_directories(usbd_lib INTERFACE
         ${MASS_STORAGE_PATH}/api/

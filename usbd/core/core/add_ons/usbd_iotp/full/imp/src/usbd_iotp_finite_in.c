@@ -316,6 +316,7 @@ static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_ring(
    USBD_IO_Inout_Data_Size_DT size)
 {
    Buff_Ring_XT *ring = (Buff_Ring_XT*)data;
+   Buff_Ring_Extensions_XT *extension;
    USBD_Bool_DT result = USBD_TRUE;
 
    tp->core.transfer_params.data.data.ring                  = ring;
@@ -325,10 +326,12 @@ static USBD_Bool_DT USBD_IOTP_send_invoked_connect_data_ring(
    tp->core.transfer_params.data.size                       = size;
    tp->core.transfer_params.data_type                       = USBD_IOTP_DATA_RING;
 
-   if(Buff_Ring_Is_Empty(ring, BUFF_TRUE))
+   extension = ring->extension;
+
+   if(BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, extension))
    {
-      // TODO: connect buffer extensions
-      result = USBD_FALSE;
+      extension->on_write_params = tp;
+      extension->on_write        = USBD_IOTP_Ring_Extension_On_Write;
    }
 
    return result;
@@ -1089,6 +1092,14 @@ static void USBD_IOTP_io_data_memcpy_in(
             USBD_IO_SET_IN_PROVIDE_HANDLER(transaction, USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
             USBD_IO_SET_IN_MEMCPY_HANDLER(transaction,  USBD_MAKE_INVALID_HANDLER(USBD_IO_IN_Data_Method_TP_HT));
 
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS)
+            if((USBD_IOTP_DATA_RING == tp->core.transfer_params.data_type)
+               && BUFF_CHECK_PTR(Buff_Ring_Extensions_XT, tp->core.transfer_params.data.data.ring->extension))
+            {
+               tp->core.transfer_params.data.data.ring->extension->on_write_params = BUFF_MAKE_INVALID_PTR(void);
+               tp->core.transfer_params.data.data.ring->extension->on_write        = BUFF_MAKE_INVALID_HANDLER(Buff_Ring_Extension_On_Write);
+            }
+#endif
             USBD_ATOMIC_BOOL_SET(tp->core.transfer_params.transfer_active, USBD_FALSE);
          }
          else if(tp->core.transfer_params.dir.in.next_contineous_part.size <= tp->core.pipe_params.data.mps)

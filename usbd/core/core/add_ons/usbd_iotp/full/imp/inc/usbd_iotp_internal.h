@@ -150,17 +150,7 @@ Buff_Size_DT USBD_IOTP_Ring_Vendor_Memcpy_In(const Buff_Memcpy_Params_XT *params
  */
 Buff_Size_DT USBD_IOTP_Ring_Vendor_Memcpy_Out(const Buff_Memcpy_Params_XT *params);
 
-#if(USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS == USBD_FEATURE_PRESENT)
-/**
- * Function to initialize RING_INFINITE transfer type
- *
- * \param tp pointer to transport protocol structure to be initialized
- * \param ring pointer to ring buffer to be connected
- * \param result USBD_TRUE if succeeded, USBD_FALSE otherwise.
- * \return always USBD_TRUE as this is callback for INVOKE mechanism where always USBD_TRUE is expected.
- */
-USBD_Bool_DT USBD_IOTP_Ring_Start_Transfer_Infinitely_Invoked(
-   USBD_IOTP_Params_XT *tp, Buff_Ring_XT *ring, USBD_Bool_DT *result);
+#if((USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_BUFFERS) || (USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS))
 
 /**
  * Function to trigger IN transaction on the pipe.
@@ -179,6 +169,52 @@ USBD_Bool_DT USBD_IOTP_Trigger_In_Invoked(USBD_Params_XT *usbd, uint8_t ep_num);
  * \return always USBD_TRUE as this is callback for INVOKE mechanism where always USBD_TRUE is expected.
  */
 USBD_Bool_DT USBD_IOTP_Trigger_Out_Invoked(USBD_Params_XT *usbd, uint8_t ep_num);
+
+/**
+ * \brief function called as ring buffer extension after user read data from OUT buffer.
+ *
+ * \param buf pointer to ring buffer
+ * \param extension pointer to the structure with buffer extensions
+ * \size size of data that just has been read
+ * \rewind_occured BUFF_TRUE if during read procedure rewind occured (part of data has been read at the end of the buffer, part at the begining)
+ */
+void USBD_IOTP_Ring_Extension_On_Read(
+   Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, Buff_Bool_DT rewind_occured);
+
+/**
+ * \brief function called as ring buffer extension after user removed data from OUT buffer.
+ *
+ * \param buf pointer to ring buffer
+ * \param extension pointer to the structure with buffer extensions
+ * \rewind_occured BUFF_TRUE if during read procedure rewind occured (part of data has been read at the end of the buffer, part at the begining)
+ */
+void USBD_IOTP_Ring_Extension_On_Remove(Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Bool_DT rewind_occured);
+
+/**
+ * \brief function called as ring buffer extension after user wrote data to the IN buffer.
+ *
+ * \param buf pointer to ring buffer
+ * \param extension pointer to the structure with buffer extensions
+ * \size size of data that just has been written
+ * \rewind_occured BUFF_TRUE if during write procedure rewind occured (part of data has been stored at the end of the buffer, part at the begining)
+ */
+void USBD_IOTP_Ring_Extension_On_Write(
+   Buff_Ring_XT *buf, Buff_Ring_Extensions_XT *extension, Buff_Size_DT size, Buff_Bool_DT rewind_occured);
+
+#endif
+
+#if(USBD_FEATURE_PRESENT == USBD_IOTP_SUPPORT_RING_INFINITE_BUFFERS)
+
+/**
+ * Function to initialize RING_INFINITE transfer type
+ *
+ * \param tp pointer to transport protocol structure to be initialized
+ * \param ring pointer to ring buffer to be connected
+ * \param result USBD_TRUE if succeeded, USBD_FALSE otherwise.
+ * \return always USBD_TRUE as this is callback for INVOKE mechanism where always USBD_TRUE is expected.
+ */
+USBD_Bool_DT USBD_IOTP_Ring_Start_Transfer_Infinitely_Invoked(
+   USBD_IOTP_Params_XT *tp, Buff_Ring_XT *ring, USBD_Bool_DT *result);
 
 /**
  * Function to clear the ring buffer and connect all functions needed for it.
@@ -217,6 +253,7 @@ void USBD_IOTP_Ring_Io_Evdata_In(
    USBD_IO_UP_DOWN_Transaction_Params_XT *transaction,
    USBD_IO_Inout_Data_Size_DT size,
    USBD_IO_IN_Data_Method_Port_HT mem_cpy);
+
 #endif
 #endif
 
@@ -265,6 +302,7 @@ USBD_Bool_DT USBD_IOTP_check_both_tp_owners(void *tp_owner);
 #else
 #define USBD_IOTP_check_both_tp_owners(_tp_owner)  USBD_COMPARE_PTRS(void, _tp_owner, void, USBD_IOTP_not_ring_infinite_owner)
 #endif
+
 
 
 #endif

@@ -1729,7 +1729,7 @@ static USBD_Bool_DT port_stm32_cat_a_io_trigger(USBD_Params_XT *usbd, uint8_t ep
             ep->out.is_ep_waiting      = USBD_FALSE;
 
             if((port_stm32_cat_a_req_params.ep_setup_ongoing != ep_num)
-            || (0 == (USBD_STM32_REG->EP_REG[ep->out.hw.ep_reg_num] & USBDEP_STM32_CAT_A__CTR_RX)))
+            && (0 == (USBD_STM32_REG->EP_REG[ep->out.hw.ep_reg_num] & USBDEP_STM32_CAT_A__CTR_RX)))
             {
                /* set registers to allow receiving next packets */
                port_stm32_cat_a_release_out_buffer(ep);
