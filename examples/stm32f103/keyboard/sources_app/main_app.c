@@ -81,6 +81,8 @@ void Task_Logger_Commander(void *pvParameters)
    Buff_Size_DT size;
    uint8_t data[64];
 
+   Cmd_Init();
+
    USBD_UNUSED_PARAM(pvParameters);
 
    OSAL_Sleep_Ms(1);

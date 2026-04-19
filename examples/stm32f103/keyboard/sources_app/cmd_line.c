@@ -53,17 +53,7 @@ static const IOCMD_Command_Tree_List_XT cmds_tree[] =
       .branch_num_elems = Num_Elems(vcom_cmds_tab)
    }
 };
-static IOCMD_Line_Collector_Params_XT line_collector =
-{
-   .cmds_tree = cmds_tree,
-   .cmds_tree_num_elems = Num_Elems(cmds_tree),
-   .line_pos = 0,
-#ifdef IOCMD_USE_LOG
-   .parse_also_lib_cmds = IOCMD_TRUE
-#else
-   .parse_also_lib_cmds = IOCMD_FALSE
-#endif
-};
+static IOCMD_Line_Collector_Params_XT line_collector;
 
 static void usbd_dump(IOCMD_Arg_DT *arg)
 {
@@ -140,6 +130,17 @@ static void key(IOCMD_Arg_DT *arg)
    Keybord_Send_Ascii_Char(key);
 }
 
+void Cmd_Init(void)
+{
+   line_collector.cmds_tree            = cmds_tree;
+   line_collector.cmds_tree_num_elems  = Num_Elems(cmds_tree);
+#ifdef IOCMD_USE_LOG
+   line_collector.parse_also_lib_cmds  = IOCMD_TRUE;
+#else
+   line_collector.parse_also_lib_cmds  = IOCMD_FALSE;
+#endif
+}
+
 void Cmd_Parse_Bytes(const IOCMD_Print_Exe_Params_XT *exe, uint8_t *recv_bytes, size_t num_recv_bytes)
 {
    IOCMD_Line_Collector_Parse_Bytes(&line_collector, exe, (char*)recv_bytes, num_recv_bytes);
@@ -147,6 +148,6 @@ void Cmd_Parse_Bytes(const IOCMD_Print_Exe_Params_XT *exe, uint8_t *recv_bytes, 
 
 const char *Cmd_Parser_Get_Current_Line(void)
 {
-   return line_collector.line;
+   return line_collector.history[line_collector.current_history_record].line;
 }
 
